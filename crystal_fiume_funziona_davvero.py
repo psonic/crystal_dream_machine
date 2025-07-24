@@ -406,13 +406,18 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
             scaled_contour = scaled_contour.astype(np.int32)
             cv2.fillPoly(mask, [scaled_contour], 255)
         
-        # ESTRAI SOLO I BORDI usando operazioni morfologiche
-        # Usa erosion per ottenere l'interno delle forme
-        kernel = np.ones((3,3), np.uint8)
-        eroded = cv2.erode(mask, kernel, iterations=1)
+        # ESTRAI SOLO I BORDI usando operazioni morfologiche AGGRESSIVE
+        # Usa erosion più forte per ottenere solo i bordi sottili
+        kernel = np.ones((5,5), np.uint8)  # Kernel più grande per erosione più forte
+        eroded = cv2.erode(mask, kernel, iterations=2)  # Più iterazioni
         
         # Sottrai l'interno dall'originale per ottenere solo i bordi
         edges = mask - eroded
+        
+        # Applica scheletonizzazione per ottenere linee sottili
+        from skimage.morphology import skeletonize
+        skeleton = skeletonize(edges > 0)
+        edges = (skeleton * 255).astype(np.uint8)
         
         # Trova i contorni dei bordi
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
