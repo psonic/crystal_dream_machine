@@ -42,7 +42,7 @@ class Config:
     PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
-    TEXTURE_ENABLED = True
+    TEXTURE_ENABLED = False
     TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
