@@ -1447,15 +1447,10 @@ def main():
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
     # MODALITÀ TEST: Riduci dimensioni di 1/3 per rendering più veloce
-    print(f"🔧 DEBUG: Controllo TEST_MODE = {Config.TEST_MODE}")
     if Config.TEST_MODE:
-        print(f"🔧 DEBUG: TEST_MODE è attivo, riduco dimensioni da {Config.WIDTH}x{Config.HEIGHT}")
         Config.WIDTH = int(Config.WIDTH / 3)
         Config.HEIGHT = int(Config.HEIGHT / 3)
         Config.SVG_PADDING = int(Config.SVG_PADDING / 3)
-        print(f"🔧 DEBUG: Nuove dimensioni: {Config.WIDTH}x{Config.HEIGHT}")
-    else:
-        print(f"🔧 DEBUG: TEST_MODE non è attivo")
     
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
     print(f"📐 Dimensioni SVG originali: {svg_width}x{svg_height}")
