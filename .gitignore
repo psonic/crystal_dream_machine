@@ -8,14 +8,16 @@ ehthumbs.db
 Thumbs.db
 
 # Video files grandi (per evitare problemi GitHub file size limit)
-*.MOV
-*.mov
-*.MP4
-*.mp4
-*.AVI
-*.avi
-*.mkv
-*.MKV
+# Esclude solo i file video di input grandi, mantiene gli MP4 generati in output
+input/*.MOV
+input/*.mov
+input/*.AVI
+input/*.avi
+input/*.mkv
+input/*.MKV
+
+# Opzionalmente, se gli MP4 in output diventano troppo grandi:
+# output/*.mp4
 
 # File temporanei e cache
 *.tmp
