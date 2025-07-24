@@ -42,7 +42,7 @@ class Config:
     PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
-    TEXTURE_ENABLED = True
+    TEXTURE_ENABLED = False
     TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
 
     # --- Parametri Video (MODALITÀ TEST) ---
@@ -61,7 +61,7 @@ class Config:
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_CROP_Y_START = 100  # Spostato più in alto
     BG_CROP_Y_END = 350    # Spostato più in alto
-    BG_DARKEN_FACTOR = 0.03 # Ancora più scuro per massimo contrasto logo
+    BG_DARKEN_FACTOR = 0.3 # Ancora più scuro per massimo contrasto logo
     BG_CONTRAST_FACTOR = 8 # Contrasto aumentato
     
     # --- Effetto Glow (Bagliore) ---
