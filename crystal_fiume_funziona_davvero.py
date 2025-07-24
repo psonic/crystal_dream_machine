@@ -1567,7 +1567,7 @@ def main():
             
             if os.path.exists(version_manager_path):
                 result = subprocess.run(
-                    [sys.executable, version_manager_path, source_script_path, output_filename],
+                    [sys.executable, version_manager_path, output_filename, source_script_path],
                     capture_output=True,
                     text=True,
                     check=False # Mettiamo a False per gestire l'errore manualmente
