@@ -1401,27 +1401,31 @@ def main():
         # --- GESTIONE VERSIONAMENTO ---
         try:
             print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
-            source_script_path = os.path.abspath(__file__)
-            # Assicurati che il percorso di version_manager.py sia corretto
-            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
             
-            if os.path.exists(version_manager_path):
-                result = subprocess.run(
-                    [sys.executable, version_manager_path, source_script_path, output_filename],
-                    capture_output=True,
-                    text=True,
-                    check=False # Mettiamo a False per gestire l'errore manualmente
-                )
-                # Stampa sempre stdout e stderr per il debug
-                print(result.stdout)
-                if result.stderr:
-                    # Gestisce il caso "nothing to commit" come un'informazione, non un errore
-                    if "nothing to commit" in result.stderr.lower():
-                         print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
-                    else:
-                        print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
-            else:
-                print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
+            # Importa e usa il VersionManager
+            try:
+                from version_manager import VersionManager
+                
+                # Crea una descrizione della configurazione corrente
+                config_summary = f"""Configurazione video:
+- Modalità: {'TEST' if Config.TEST_MODE else 'PRODUZIONE'}
+- Risoluzione: {Config.WIDTH}x{Config.HEIGHT}
+- FPS: {Config.FPS}, Durata: {Config.DURATION_SECONDS}s
+- Sorgente: {'SVG' if Config.USE_SVG_SOURCE else 'PDF'}
+- Deformazione organica: {'ON' if Config.DEFORMATION_ENABLED else 'OFF'}
+- Lenti cinematografiche: {Config.NUM_LENSES if Config.LENS_DEFORMATION_ENABLED else 'OFF'}
+- Glow: {'ON' if Config.GLOW_ENABLED else 'OFF'}
+- Texture: {'ON' if Config.TEXTURE_ENABLED else 'OFF'}
+- WhatsApp compatible: {'ON' if Config.WHATSAPP_COMPATIBLE else 'OFF'}"""
+                
+                # Crea il version manager e genera la versione
+                vm = VersionManager()
+                vm.create_version_for_video(os.path.basename(output_filename), config_summary)
+                
+            except ImportError as e:
+                print(f"{C_YELLOW}Errore importazione version_manager: {e}{C_END}")
+            except Exception as e:
+                print(f"{C_YELLOW}Errore nel version manager: {e}{C_END}")
 
         except Exception as e:
             print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
