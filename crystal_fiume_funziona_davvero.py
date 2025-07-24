@@ -221,15 +221,36 @@ def extract_contours_from_svg(svg_path, width, height, padding):
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
         
-        # Importa librerie per rasterizzazione SVG
+        # Prima prova il metodo con PIL (più compatibile)
         try:
+            from PIL import Image as PILImage, ImageDraw
+            import xml.etree.ElementTree as ET
+            
+            # Leggi l'SVG e ottieni le dimensioni
+            tree = ET.parse(svg_path)
+            root = tree.getroot()
+            svg_width = float(root.get('width', 100))
+            svg_height = float(root.get('height', 100))
+            
+            # Scala per rendering ad alta risoluzione
+            scale_factor = 4
+            render_width = int(svg_width * scale_factor)
+            render_height = int(svg_height * scale_factor)
+            
+            # Crea un'immagine bianca
+            pil_img = PILImage.new('RGB', (render_width, render_height), 'white')
+            draw = ImageDraw.Draw(pil_img)
+            
+            # Disegna solo i bordi del testo (non il riempimento)
+            # Questo approccio è limitato ma più compatibile
+            print("⚠️ Usando metodo semplificato - potrebbero includere riempimenti")
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+            
+        except:
+            # Fallback al metodo cairosvg se PIL non funziona
             import cairosvg
             import io
             from PIL import Image as PILImage
-        except ImportError:
-            print("⚠️ cairosvg e/o PIL non disponibili. Installare con: pip install cairosvg pillow")
-            # Fallback al metodo originale
-            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
         
         # Rasterizza SVG ad alta risoluzione per preservare i dettagli
         scale_factor = 4  # Alta risoluzione per migliore edge detection
@@ -305,10 +326,10 @@ def extract_contours_from_svg(svg_path, width, height, padding):
 
 def extract_contours_from_svg_fallback(svg_path, width, height, padding):
     """
-    Metodo fallback originale per l'estrazione SVG (include riempimento).
+    Metodo per l'estrazione SVG con OPZIONE per SOLO CONTORNI senza riempimento.
     """
     try:
-        print("🔄 Usando metodo fallback (include riempimento)...")
+        print("🔄 Usando estrazione migliorata per SOLI CONTORNI...")
         
         # Carica il file SVG
         paths, attributes, svg_attributes = svg2paths2(svg_path)
@@ -316,19 +337,19 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
         if not paths:
             raise Exception("Nessun path trovato nel file SVG.")
         
-        # Converti i path SVG in punti con miglior gestione per evitare spaccature
+        # Converti i path SVG in punti
         all_contours = []
         
-        print(f"📝 Processando {len(paths)} path SVG...")
+        print(f"📝 Processando {len(paths)} path SVG per CONTORNI ESTERNI...")
         
         for i, path in enumerate(paths):
-            # Discretizza il path in punti - QUALITÀ CINEMATOGRAFICA ottimizzata per continuità
+            # Discretizza il path in punti
             path_length = path.length()
             if path_length == 0:
                 continue
                 
             # Adatta il numero di punti alla complessità del path
-            num_points = max(50, min(800, int(path_length * 2.5)))  # Range ottimizzato
+            num_points = max(100, min(1000, int(path_length * 3)))  # Più punti per maggiore precisione
                 
             points = []
             for j in range(num_points):
@@ -342,18 +363,22 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
                     continue
             
             # Aggiungi contorno solo se ha abbastanza punti validi
-            if len(points) > 10:  # Richiedi almeno 10 punti validi
+            if len(points) > 10:
                 contour = np.array(points, dtype=np.float32)
                 
                 # Verifica che il contour non sia degenere
-                if cv2.contourArea(contour) > 10:  # Area minima
+                area = cv2.contourArea(contour)
+                if area > 10:
                     all_contours.append(contour)
-                    print(f"  ✓ Path {i+1}: {len(points)} punti, area: {cv2.contourArea(contour):.1f}")
+                    print(f"  ✓ Path {i+1}: {len(points)} punti, area: {area:.1f}")
         
         if not all_contours:
             raise Exception("Nessun contorno valido estratto dall'SVG.")
         
-        print(f"📐 Estratti {len(all_contours)} contorni validi")
+        print(f"📐 Trovati {len(all_contours)} path originali")
+        
+        # NUOVA LOGICA: Estrai solo i contorni ESTERNI (bordi) senza riempimento
+        processed_contours = []
         
         # Calcola bounding box di tutti i contorni
         all_points = np.vstack(all_contours)
@@ -366,30 +391,70 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
         if svg_width == 0 or svg_height == 0:
             raise Exception("SVG ha dimensioni zero.")
         
-        # Calcola scaling per adattare al frame con padding
+        # Crea un'immagine per il rendering ad alta risoluzione
+        scale_factor = 4
+        render_width = int(svg_width * scale_factor) + 100
+        render_height = int(svg_height * scale_factor) + 100
+        
+        # Crea maschera binaria
+        mask = np.zeros((render_height, render_width), dtype=np.uint8)
+        
+        # Disegna tutti i path come forme piene
+        for contour in all_contours:
+            # Trasla e scala per il rendering
+            scaled_contour = (contour - np.array([x_min, y_min])) * scale_factor + 50
+            scaled_contour = scaled_contour.astype(np.int32)
+            cv2.fillPoly(mask, [scaled_contour], 255)
+        
+        # ESTRAI SOLO I BORDI usando operazioni morfologiche
+        # Usa erosion per ottenere l'interno delle forme
+        kernel = np.ones((3,3), np.uint8)
+        eroded = cv2.erode(mask, kernel, iterations=1)
+        
+        # Sottrai l'interno dall'originale per ottenere solo i bordi
+        edges = mask - eroded
+        
+        # Trova i contorni dei bordi
+        contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        print(f"🔍 Estratti {len(contours)} contorni di BORDI usando erosione morfologica")
+        
+        # Filtra e scala i contorni alla risoluzione target
         target_w = width - (2 * padding)
         target_h = height - (2 * padding)
+        scale = min(target_w / svg_width, target_h / svg_height)
         
-        scale_w = target_w / svg_width
-        scale_h = target_h / svg_height
-        scale_factor = min(scale_w, scale_h)
+        # Calcola offset per centrare
+        scaled_w = svg_width * scale
+        scaled_h = svg_height * scale
+        offset_x = (width - scaled_w) / 2
+        offset_y = (height - scaled_h) / 2
         
-        # Applica scaling e centratura
-        scaled_contours = []
-        for contour in all_contours:
-            # Trasla all'origine
-            centered = contour - np.array([x_min, y_min])
-            # Scala
-            scaled = centered * scale_factor
-            # Centra nel frame
-            offset_x = (width - svg_width * scale_factor) / 2
-            offset_y = (height - svg_height * scale_factor) / 2
-            final_contour = scaled + np.array([offset_x, offset_y])
-            
-            scaled_contours.append(final_contour.astype(np.int32))
+        for i, contour in enumerate(contours):
+            area = cv2.contourArea(contour)
+            # Filtra contorni troppo piccoli
+            if area > 500:  # Area minima per essere considerato un bordo significativo
+                # Scala alla risoluzione target
+                scaled_contour = contour.astype(np.float32) / scale_factor  # Riporta alle coordinate originali
+                scaled_contour = (scaled_contour - 50) * scale  # Scala alla risoluzione target
+                scaled_contour = scaled_contour + np.array([offset_x, offset_y])  # Centra
+                
+                processed_contours.append(scaled_contour.astype(np.int32))
+                print(f"  ✓ Bordo {i+1}: {len(contour)} punti, area finale: {cv2.contourArea(scaled_contour.astype(np.int32)):.1f}")
         
+        if not processed_contours:
+            print("⚠️ Nessun bordo trovato, uso i path originali...")
+            # Fallback ai path originali se la tecnica dei bordi non funziona
+            processed_contours = []
+            for contour in all_contours:
+                scaled_contour = contour.copy()
+                scaled_contour[:, 0] = (contour[:, 0] - x_min) * scale + offset_x
+                scaled_contour[:, 1] = (contour[:, 1] - y_min) * scale + offset_y
+                processed_contours.append(scaled_contour.astype(np.int32))
+        
+        print(f"📐 Risultato finale: {len(processed_contours)} contorni processati")
         print("Estrazione contorni da SVG completata.")
-        return scaled_contours, None  # Hierarchy non necessaria per SVG semplice
+        return processed_contours, None
         
     except Exception as e:
         print(f"Errore durante l'estrazione dall'SVG: {e}")
