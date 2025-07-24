@@ -215,10 +215,100 @@ def load_texture(texture_path, width, height):
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
-    Estrae i contorni da un file SVG e li converte in contorni OpenCV.
+    Estrae SOLO I CONTORNI/BORDI da un file SVG, senza riempimento.
+    Utilizza rasterizzazione + edge detection per ottenere linee precise.
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
+        
+        # Importa librerie per rasterizzazione SVG
+        try:
+            import cairosvg
+            import io
+            from PIL import Image as PILImage
+        except ImportError:
+            print("⚠️ cairosvg e/o PIL non disponibili. Installare con: pip install cairosvg pillow")
+            # Fallback al metodo originale
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+        
+        # Rasterizza SVG ad alta risoluzione per preservare i dettagli
+        scale_factor = 4  # Alta risoluzione per migliore edge detection
+        render_width = width * scale_factor
+        render_height = height * scale_factor
+        
+        # Converti SVG in PNG ad alta risoluzione
+        png_data = cairosvg.svg2png(
+            url=svg_path,
+            output_width=render_width,
+            output_height=render_height
+        )
+        
+        # Carica l'immagine
+        pil_image = PILImage.open(io.BytesIO(png_data))
+        img_array = np.array(pil_image)
+        
+        # Converti RGBA in RGB se necessario
+        if img_array.shape[2] == 4:
+            # Rimuovi il canale alpha, assume sfondo bianco
+            img_rgb = img_array[:,:,:3]
+            alpha = img_array[:,:,3] / 255.0
+            img_rgb = img_rgb * alpha[:,:,np.newaxis] + 255 * (1 - alpha[:,:,np.newaxis])
+            img_array = img_rgb.astype(np.uint8)
+        
+        # Converti in BGR per OpenCV
+        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        
+        # Converti in scala di grigi
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        
+        # EDGE DETECTION per ottenere SOLO i contorni/bordi
+        # Applica filtro Gaussiano per ridurre il rumore
+        blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+        
+        # Usa Canny edge detection per ottenere solo i bordi
+        edges = cv2.Canny(blurred, 50, 150, apertureSize=3)
+        
+        # Dilata leggermente i bordi per assicurarsi che siano connessi
+        kernel = np.ones((2, 2), np.uint8)
+        edges = cv2.dilate(edges, kernel, iterations=1)
+        
+        # Trova i contorni dei bordi
+        contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if not contours:
+            raise Exception("Nessun contorno trovato nell'SVG.")
+        
+        print(f"📝 Trovati {len(contours)} contorni di bordi...")
+        
+        # Filtra e processa i contorni
+        processed_contours = []
+        for i, contour in enumerate(contours):
+            area = cv2.contourArea(contour)
+            # Filtra contorni troppo piccoli (rumore)
+            if area > 100:  # Area minima per essere considerato valido
+                # Scala il contorno alla risoluzione target
+                scaled_contour = contour.astype(np.float32) / scale_factor
+                processed_contours.append(scaled_contour.astype(np.int32))
+                print(f"  ✓ Contorno {i+1}: {len(contour)} punti, area: {area/scale_factor/scale_factor:.1f}")
+        
+        if not processed_contours:
+            raise Exception("Nessun contorno valido trovato dopo il filtraggio.")
+        
+        print(f"📐 Estratti {len(processed_contours)} contorni di BORDI (no riempimento)")
+        print("Estrazione contorni da SVG completata.")
+        return processed_contours, None
+        
+    except Exception as e:
+        print(f"Errore durante l'estrazione dall'SVG: {e}")
+        print("Tentativo fallback al metodo originale...")
+        return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+
+def extract_contours_from_svg_fallback(svg_path, width, height, padding):
+    """
+    Metodo fallback originale per l'estrazione SVG (include riempimento).
+    """
+    try:
+        print("🔄 Usando metodo fallback (include riempimento)...")
         
         # Carica il file SVG
         paths, attributes, svg_attributes = svg2paths2(svg_path)
