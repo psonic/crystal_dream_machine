@@ -28,6 +28,61 @@ os.environ['DYLD_LIBRARY_PATH'] = '/opt/homebrew/opt/cairo/lib:' + os.environ.ge
 # Importa solo le funzioni essenziali dal main
 sys.path.append('.')
 
+# Import delle funzioni utili dal main
+from crystal_fiume_funziona_bello import extract_contours_from_svg, Config
+
+def apply_organic_deformation(mask, frame_index, speed, scale, intensity):
+    """Applica una deformazione organica usando noise Perlin."""
+    h, w = mask.shape
+    
+    time_component = frame_index * speed
+    
+    # Griglia ridotta per performance
+    grid_size = 6
+    h_grid = h // grid_size + 1
+    w_grid = w // grid_size + 1
+    
+    # Calcolo noise sulla griglia
+    noise_x = np.zeros((h_grid, w_grid), dtype=np.float32)
+    noise_y = np.zeros((h_grid, w_grid), dtype=np.float32)
+    
+    for y in range(h_grid):
+        for x in range(w_grid):
+            real_x = x * grid_size
+            real_y = y * grid_size
+            
+            noise_x[y, x] = pnoise2(
+                real_x * scale, 
+                real_y * scale + time_component, 
+                octaves=4, persistence=0.5, lacunarity=2.0
+            )
+            noise_y[y, x] = pnoise2(
+                real_x * scale + time_component, 
+                real_y * scale, 
+                octaves=4, persistence=0.5, lacunarity=2.0
+            )
+    
+    # Interpola per riempire tutti i pixel
+    noise_x_full = cv2.resize(noise_x, (w, h), interpolation=cv2.INTER_CUBIC)
+    noise_y_full = cv2.resize(noise_y, (w, h), interpolation=cv2.INTER_CUBIC)
+    
+    # Applica deformazione
+    displacement_x = noise_x_full * intensity
+    displacement_y = noise_y_full * intensity
+    
+    # Crea mappa di rimappatura
+    x_indices, y_indices = np.meshgrid(np.arange(w), np.arange(h))
+    map_x = (x_indices + displacement_x).astype(np.float32)
+    map_y = (y_indices + displacement_y).astype(np.float32)
+    
+    # Applica deformazione
+    deformed_mask = cv2.remap(mask, map_x, map_y, 
+                             interpolation=cv2.INTER_CUBIC, 
+                             borderMode=cv2.BORDER_CONSTANT, 
+                             borderValue=0)
+    
+    return deformed_mask
+
 def main_cairo_fixed():
     """Main corretto che usa CairoSVG senza crash"""
     
