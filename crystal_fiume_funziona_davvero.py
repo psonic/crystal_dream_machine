@@ -64,7 +64,7 @@ class Config:
     BG_CONTRAST_FACTOR = 1.2     # Leggermente aumentato per definizione
     
     # --- Effetto Glow (Bagliore) ---
-    GLOW_ENABLED = False
+    GLOW_ENABLED = True
     GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
