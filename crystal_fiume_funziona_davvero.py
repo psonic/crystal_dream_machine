@@ -49,11 +49,11 @@ class Config:
     # Le dimensioni del video saranno calcolate dall'SVG + padding
     SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
     FPS = 30
-    DURATION_SECONDS = 2 # Durata normale per il rendering finale
+    DURATION_SECONDS = 10 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
-    LOGO_COLOR = (230, 230, 255)  # BGR - Colore bianco-lavanda luminoso
+    LOGO_COLOR = (50, 50, 50)   # BGR - Colore scuro per contrasto su sfondo chiaro
     LOGO_ALPHA = 1.0 # Aumentata a 1.0 per un logo solido e visibile
     
     # --- Video di Sfondo - SENZA CROP, COME BACKGROUND ORIGINALE ---
@@ -70,7 +70,7 @@ class Config:
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
     DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
-    DEFORMATION_SPEED = 0.05 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
+    DEFORMATION_SPEED = 0.02 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
@@ -81,12 +81,12 @@ class Config:
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
     LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
-    LENS_SPEED_FACTOR = 0.5  # VELOCITÀ AUMENTATA per movimento ultra-evidente
+    LENS_SPEED_FACTOR = 0.2  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
     LENS_HORIZONTAL_BIAS = 0.85  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
-    LENS_PULSATION_SPEED = 0.05  # AUMENTATO: pulsazione più rapida e visibile
+    LENS_PULSATION_SPEED = 0.02  # AUMENTATO: pulsazione più rapida e visibile
     LENS_PULSATION_AMPLITUDE = 0.3  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
     LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
@@ -1551,9 +1551,10 @@ def main():
                 if not ret:
                     bg_video.set(cv2.CAP_PROP_POS_FRAMES, 0)
                     ret, bg_frame = bg_video.read()
-                # Ridimensiona il frame di sfondo alle dimensioni del video di output
-                bg_frame = cv2.resize(bg_frame, (Config.WIDTH, Config.HEIGHT))
+                # RIMOSSO: Non ridimensionare qui, lo fa process_background
+                # bg_frame = cv2.resize(bg_frame, (Config.WIDTH, Config.HEIGHT))
             else:
+                # Crea uno sfondo nero se non c'è video
                 bg_frame = np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
 
             frame_result = render_frame(contours, hierarchy, Config.WIDTH, Config.HEIGHT, i, Config.TOTAL_FRAMES, Config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses)
