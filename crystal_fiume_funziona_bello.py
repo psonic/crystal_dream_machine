@@ -66,18 +66,18 @@ class Config:
     BG_CONTRAST_FACTOR = 8 # Contrasto aumentato
     
     # --- Effetto Glow (Bagliore) ---
-    GLOW_ENABLED = False
+    GLOW_ENABLED = False  # DISABILITATO per test Cairo
     GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = False # RIABILITATA per ridare movimento al logo
+    DEFORMATION_ENABLED = False # DISABILITATO per test Cairo
     DEFORMATION_SPEED = 0.05 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = False # RIATTIVATA per combo effetti
+    LENS_DEFORMATION_ENABLED = False # DISABILITATO per test Cairo
     NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
@@ -228,36 +228,50 @@ def extract_contours_from_svg(svg_path, width, height, padding):
             from PIL import Image
             import io
             
-            print("📝 Usando renderizzazione SVG nativa per preservare i buchi delle lettere...")
+            print("📝 Usando renderizzazione CairoSVG per preservare i buchi delle lettere...")
             
-            # Leggi le dimensioni originali dell'SVG
-            with open(svg_path, 'r') as f:
-                svg_content = f.read()
+            # Genera nome file cache basato sui parametri
+            cache_filename = f"cairo_mask_{width}x{height}_p{padding}.png"
             
-            # Renderizza l'SVG come PNG in memoria con alta qualità
-            render_width = width * 2  # Oversampling per qualità migliore
-            render_height = height * 2
-            
-            png_data = cairosvg.svg2png(
-                bytestring=svg_content.encode('utf-8'), 
-                output_width=render_width, 
-                output_height=render_height,
-                background_color='transparent'
-            )
-            
-            # Converti in immagine PIL
-            pil_image = Image.open(io.BytesIO(png_data)).convert('RGBA')
-            img_array = np.array(pil_image)
-            
-            # Estrai il canale alpha come maschera (il testo sarà opaco, lo sfondo trasparente)
-            alpha_channel = img_array[:, :, 3]
-            
-            # Crea la maschera binaria
-            mask = np.where(alpha_channel > 128, 255, 0).astype(np.uint8)
-            
-            # Ridimensiona alla dimensione target se necessario
-            if mask.shape[0] != height or mask.shape[1] != width:
-                mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_AREA)
+            # Verifica se abbiamo già una versione in cache
+            if os.path.exists(cache_filename):
+                print(f"💾 Usando maschera CairoSVG dalla cache: {cache_filename}")
+                mask = cv2.imread(cache_filename, cv2.IMREAD_GRAYSCALE)
+            else:
+                print("🎨 Generando nuova maschera CairoSVG...")
+                
+                # Leggi le dimensioni originali dell'SVG
+                with open(svg_path, 'r') as f:
+                    svg_content = f.read()
+                
+                # Renderizza l'SVG come PNG in memoria con alta qualità
+                render_width = width * 2  # Oversampling per qualità migliore
+                render_height = height * 2
+                
+                png_data = cairosvg.svg2png(
+                    bytestring=svg_content.encode('utf-8'), 
+                    output_width=render_width, 
+                    output_height=render_height,
+                    background_color='transparent'
+                )
+                
+                # Converti in immagine PIL
+                pil_image = Image.open(io.BytesIO(png_data)).convert('RGBA')
+                img_array = np.array(pil_image)
+                
+                # Estrai il canale alpha come maschera (il testo sarà opaco, lo sfondo trasparente)
+                alpha_channel = img_array[:, :, 3]
+                
+                # Crea la maschera binaria
+                mask = np.where(alpha_channel > 128, 255, 0).astype(np.uint8)
+                
+                # Ridimensiona alla dimensione target se necessario
+                if mask.shape[0] != height or mask.shape[1] != width:
+                    mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_AREA)
+                
+                # Salva in cache per evitare rigenerazioni
+                cv2.imwrite(cache_filename, mask)
+                print(f"💾 Maschera CairoSVG salvata in cache: {cache_filename}")
             
             # Applica padding se richiesto
             if padding > 0:
