@@ -116,7 +116,7 @@ class Config:
     BG_TRACER_THRESHOLD2 = 70
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
-    ADVANCED_BLENDING = False # Abilita il blending avanzato scritta-sfondo
+    ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
     LOGO_BLEND_FACTOR = 0.1 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
     BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
