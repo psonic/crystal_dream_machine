@@ -13,6 +13,7 @@ from svgpathtools import svg2paths2
 import re
 import subprocess
 import sys
+from io import BytesIO
 
 # Import condizionale per PDF
 try:
@@ -317,8 +318,8 @@ def extract_contours_from_svg(svg_path, width, height, padding):
             
             return filtered_contours, hierarchy
             
-        except ImportError:
-            print("⚠️ cairosvg non disponibile, usando metodo fallback...")
+        except (ImportError, OSError) as import_error:
+            print(f"⚠️ cairosvg non disponibile ({import_error}), usando metodo fallback...")
             return extract_contours_from_svg_fallback(svg_path, width, height, padding)
         except Exception as cairo_error:
             print(f"⚠️ Errore con cairosvg: {cairo_error}, usando metodo fallback...")
