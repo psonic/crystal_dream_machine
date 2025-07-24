@@ -60,8 +60,8 @@ class Config:
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_USE_ORIGINAL_SIZE = True  # NUOVO: usa dimensioni originali senza crop
     BG_SLOWDOWN_FACTOR = 1.5     # NUOVO: rallentamento ridotto (era 2.0 = metà velocità)
-    BG_DARKEN_FACTOR = 0.06 # Ancora più scuro per massimo contrasto logo
-    BG_CONTRAST_FACTOR = 1 # Contrasto aumentato
+    BG_DARKEN_FACTOR = 0.4       # CORRETTO: sfondo visibile ma non invadente (era 0.06)
+    BG_CONTRAST_FACTOR = 1.2     # Leggermente aumentato per definizione
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
