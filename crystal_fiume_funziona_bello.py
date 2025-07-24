@@ -215,8 +215,8 @@ def load_texture(texture_path, width, height):
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
-    Estrae i contorni da un file SVG con gestione solida e robusta.
-    Approccio migliorato per preservare la forma delle lettere.
+    Estrae i contorni da un file SVG con eliminazione automatica delle spaccature.
+    Crea una maschera unificata senza discontinuità nel tracciato.
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
@@ -227,10 +227,7 @@ def extract_contours_from_svg(svg_path, width, height, padding):
         if not paths:
             raise Exception("Nessun path trovato nel file SVG.")
         
-        print(f"📝 Processando {len(paths)} path SVG con approccio solido...")
-        
-        # Crea una singola maschera usando renderizzazione diretta
-        mask = np.zeros((height, width), dtype=np.uint8)
+        print(f"📝 Processando {len(paths)} path SVG con eliminazione spaccature...")
         
         # Calcola bounding box globale di tutti i path
         all_points = []
@@ -240,9 +237,9 @@ def extract_contours_from_svg(svg_path, width, height, padding):
             if path.length() == 0:
                 continue
                 
-            # Discretizza il path con densità ottimizzata
+            # Discretizza il path con alta densità per catturare tutti i dettagli
             path_length = path.length()
-            num_points = max(100, min(1000, int(path_length * 2)))
+            num_points = max(150, min(1500, int(path_length * 3)))  # Più punti per precisione
             
             points = []
             for j in range(num_points):
@@ -254,7 +251,7 @@ def extract_contours_from_svg(svg_path, width, height, padding):
                 except:
                     continue
             
-            if len(points) >= 10:
+            if len(points) >= 15:  # Richiedi più punti per path validi
                 valid_paths.append(np.array(points, dtype=np.float32))
                 all_points.extend(points)
         
@@ -286,24 +283,65 @@ def extract_contours_from_svg(svg_path, width, height, padding):
         offset_x = (width - final_w) / 2 - x_min * scale
         offset_y = (height - final_h) / 2 - y_min * scale
         
-        # Scala e trasla tutti i path
-        scaled_contours = []
+        # Crea maschera unificata senza spaccature
+        mask = np.zeros((height, width), dtype=np.uint8)
+        
+        # Renderizza tutti i path sulla stessa maschera
         for path_points in valid_paths:
             # Scala e trasla
             scaled = path_points * scale
             scaled[:, 0] += offset_x
             scaled[:, 1] += offset_y
-            scaled_contours.append(scaled.astype(np.int32))
+            scaled_points = scaled.astype(np.int32)
+            
+            # Disegna il path sulla maschera con linee spesse per eliminare gap
+            for i in range(len(scaled_points) - 1):
+                cv2.line(mask, tuple(scaled_points[i]), tuple(scaled_points[i + 1]), 255, thickness=3)
+            
+            # Chiudi il path se necessario
+            if len(scaled_points) > 2:
+                cv2.line(mask, tuple(scaled_points[-1]), tuple(scaled_points[0]), 255, thickness=3)
         
-        print(f"📐 Estratti {len(scaled_contours)} path validi")
+        # FASE 1: Riempimento morfologico per eliminare spaccature
+        # Dilatazione per connettere parti vicine
+        kernel_connect = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        mask = cv2.dilate(mask, kernel_connect, iterations=2)
+        
+        # Riempimento delle aree interne
+        # Trova il contorno esterno e riempilo
+        contours_temp, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if contours_temp:
+            # Prendi il contorno più grande (dovrebbe essere la scritta)
+            main_contour = max(contours_temp, key=cv2.contourArea)
+            mask.fill(0)  # Reset della maschera
+            cv2.fillPoly(mask, [main_contour], 255)
+        
+        # FASE 2: Smoothing per contorni perfetti
+        mask = cv2.GaussianBlur(mask, (3, 3), 1.0)
+        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+        
+        # Operazioni morfologiche finali per pulizia
+        kernel_smooth = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_smooth, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_smooth, iterations=1)
+        
+        # Estrai il contorno finale dalla maschera unificata
+        final_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if not final_contours:
+            raise Exception("Nessun contorno finale estratto.")
+        
+        # Restituisci solo il contorno principale
+        main_contour = max(final_contours, key=cv2.contourArea)
+        
+        print(f"📐 Estratto 1 contorno unificato senza spaccature")
         print(f"🎯 Logo ridimensionato: {final_w:.0f}x{final_h:.0f} (scala: {scale:.3f})")
         
-        return scaled_contours, None  # None per hierarchy (approccio SVG semplificato)
+        return [main_contour], None  # Un singolo contorno unificato
     
     except Exception as e:
         print(f"❌ Errore nell'estrazione SVG: {e}")
         return [], None
-
 def extract_contours_from_pdf(pdf_path, width, height, padding):
     """
     Estrae i contorni da un file PDF e li converte in contorni OpenCV.
