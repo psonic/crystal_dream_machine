@@ -13,7 +13,16 @@ from svgpathtools import svg2paths2
 import re
 import subprocess
 import sys
-from io import BytesIO
+
+# --- Codici ANSI per colori e stili nel terminale ---
+C_CYAN = '\033[96m'
+C_GREEN = '\033[92m'
+C_YELLOW = "\033[93m"
+C_MAGENTA = '\033[95m'
+C_BLUE = '\033[94m'
+C_BOLD = '\033[1m'
+C_END = '\033[0m'
+SPINNER_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 # Import condizionale per PDF
 try:
@@ -40,17 +49,17 @@ class Config:
     # --- Sorgente Logo e Texture ---
     USE_SVG_SOURCE = True  # True = SVG, False = PDF
     SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
-    PDF_PATH = ''  # Opzione PDF alternativa
+    PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa - CORRETTO
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
-    TEXTURE_FALLBACK_PATH = 'input/texture.jpg'  # Fallback se non trova texture.*
-    TEXTURE_ENABLED = False
+    TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
+    TEXTURE_ENABLED = True
     TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
 
     # --- Parametri Video (MODALITÀ TEST) ---
     WIDTH = 960 if TEST_MODE else 1920
     HEIGHT = 540 if TEST_MODE else 1080
     FPS = 30
-    DURATION_SECONDS = 2 # Durata normale per il rendering finale
+    DURATION_SECONDS = 3 if TEST_MODE else 30 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -59,25 +68,25 @@ class Config:
     LOGO_PADDING = 1 # Leggermente aumentato per l'alta risoluzione
     
     # --- Video di Sfondo e Traccianti ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.mp4'
+    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_CROP_Y_START = 100  # Spostato più in alto
     BG_CROP_Y_END = 350    # Spostato più in alto
     BG_DARKEN_FACTOR = 0.03 # Ancora più scuro per massimo contrasto logo
     BG_CONTRAST_FACTOR = 8 # Contrasto aumentato
     
     # --- Effetto Glow (Bagliore) ---
-    GLOW_ENABLED = True  # RIATTIVATO: Primo effetto da testare con Cairo
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
+    GLOW_ENABLED = True
+    GLOW_KERNEL_SIZE = 35 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = False # DISABILITATO per test Cairo
+    DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
     DEFORMATION_SPEED = 0.05 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = False # DISABILITATO per test Cairo
+    LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
     NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
@@ -87,22 +96,22 @@ class Config:
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
     LENS_HORIZONTAL_BIAS = 0.85  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
-    LENS_PULSATION_ENABLED = False  # Abilita pulsazione/ridimensionamento delle lenti
+    LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.05  # AUMENTATO: pulsazione più rapida e visibile
     LENS_PULSATION_AMPLITUDE = 0.3  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
-    LENS_FORCE_PULSATION_ENABLED = False  # NUOVO: anche la forza pulsa insieme al raggio
+    LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
     
-    WORM_SHAPE_ENABLED = False # NUOVA OPZIONE per lenti a forma di verme
+    WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
     WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
     WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
-    SMOOTHING_ENABLED = False
+    SMOOTHING_ENABLED = True
     SMOOTHING_FACTOR = 0.00001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
-    TRACER_ENABLED = False
+    TRACER_ENABLED = True
     TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
     TRACER_MAX_OPACITY = 0.1 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
@@ -110,7 +119,7 @@ class Config:
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = False
+    BG_TRACER_ENABLED = True
     BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
     BG_TRACER_MAX_OPACITY = 0.3 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
@@ -118,7 +127,7 @@ class Config:
     BG_TRACER_THRESHOLD2 = 100
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
-    ADVANCED_BLENDING = False # Abilita il blending avanzato scritta-sfondo
+    ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
     LOGO_BLEND_FACTOR = 0.1 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
     BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
@@ -128,7 +137,7 @@ class Config:
     DEBUG_MASK = False  # Disabilitato per performance migliori
     
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
-    DYNAMIC_VARIATION_ENABLED = False
+    DYNAMIC_VARIATION_ENABLED = True
     VARIATION_AMPLITUDE = 0.3 # ±10% di variazione massima
     VARIATION_SPEED_SLOW = 0.02  # Velocità variazione lenta (per deformazioni)
     VARIATION_SPEED_MEDIUM = 0.05 # Velocità variazione media (per traccianti)
@@ -216,177 +225,58 @@ def load_texture(texture_path, width, height):
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
-    Estrae i contorni da un file SVG usando renderizzazione nativa con cairosvg.
-    Questo preserva automaticamente tutti i buchi delle lettere (A, O, P, R, etc).
+    Estrae i contorni da un file SVG e li converte in contorni OpenCV.
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
         
-        # Prima prova il metodo cairosvg per renderizzazione perfetta
-        try:
-            import cairosvg
-            from PIL import Image
-            import io
-            
-            print("📝 Usando renderizzazione CairoSVG per preservare i buchi delle lettere...")
-            
-            # Genera nome file cache basato sui parametri
-            cache_filename = f"cairo_mask_{width}x{height}_p{padding}.png"
-            
-            # Verifica se abbiamo già una versione in cache
-            if os.path.exists(cache_filename):
-                print(f"💾 Usando maschera CairoSVG dalla cache: {cache_filename}")
-                mask = cv2.imread(cache_filename, cv2.IMREAD_GRAYSCALE)
-            else:
-                print("🎨 Generando nuova maschera CairoSVG...")
-                
-                # Leggi le dimensioni originali dell'SVG
-                with open(svg_path, 'r') as f:
-                    svg_content = f.read()
-                
-                # Renderizza l'SVG come PNG in memoria con alta qualità
-                render_width = width * 2  # Oversampling per qualità migliore
-                render_height = height * 2
-                
-                png_data = cairosvg.svg2png(
-                    bytestring=svg_content.encode('utf-8'), 
-                    output_width=render_width, 
-                    output_height=render_height,
-                    background_color='transparent'
-                )
-                
-                # Converti in immagine PIL
-                pil_image = Image.open(io.BytesIO(png_data)).convert('RGBA')
-                img_array = np.array(pil_image)
-                
-                # Estrai il canale alpha come maschera (il testo sarà opaco, lo sfondo trasparente)
-                alpha_channel = img_array[:, :, 3]
-                
-                # Crea la maschera binaria
-                mask = np.where(alpha_channel > 128, 255, 0).astype(np.uint8)
-                
-                # Ridimensiona alla dimensione target se necessario
-                if mask.shape[0] != height or mask.shape[1] != width:
-                    mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_AREA)
-                
-                # Salva in cache per evitare rigenerazioni
-                cv2.imwrite(cache_filename, mask)
-                print(f"💾 Maschera CairoSVG salvata in cache: {cache_filename}")
-            
-            # Applica padding se richiesto
-            if padding > 0:
-                # Calcola il bounding box del contenuto
-                coords = cv2.findNonZero(mask)
-                if coords is not None:
-                    x, y, w, h = cv2.boundingRect(coords)
-                    
-                    # Calcola il fattore di scala per rispettare il padding
-                    max_w = width - 2 * padding
-                    max_h = height - 2 * padding
-                    
-                    scale_x = max_w / w if w > 0 else 1
-                    scale_y = max_h / h if h > 0 else 1
-                    scale = min(scale_x, scale_y, 1.0)  # Non ingrandire mai
-                    
-                    if scale < 1.0:
-                        # Scala la maschera
-                        new_w = int(w * scale)
-                        new_h = int(h * scale)
-                        
-                        # Estrai la regione con il logo
-                        logo_region = mask[y:y+h, x:x+w]
-                        logo_resized = cv2.resize(logo_region, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                        
-                        # Crea una nuova maschera centrata
-                        mask = np.zeros((height, width), dtype=np.uint8)
-                        start_x = (width - new_w) // 2
-                        start_y = (height - new_h) // 2
-                        mask[start_y:start_y+new_h, start_x:start_x+new_w] = logo_resized
-            
-            # Trova i contorni nella maschera con hierarchy per preservare i buchi
-            contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # Filtra contorni troppo piccoli
-            filtered_contours = []
-            filtered_hierarchy = []
-            
-            if hierarchy is not None:
-                for i, contour in enumerate(contours):
-                    if cv2.contourArea(contour) > 20:  # Area minima
-                        filtered_contours.append(contour)
-                        filtered_hierarchy.append(hierarchy[0][i])
-                
-                # Ricostruisci la hierarchy
-                if filtered_hierarchy:
-                    hierarchy = np.array([filtered_hierarchy])
-                else:
-                    hierarchy = None
-            else:
-                filtered_contours = [c for c in contours if cv2.contourArea(c) > 20]
-            
-            print(f"📐 Estratti {len(filtered_contours)} contorni con renderizzazione SVG nativa")
-            if hierarchy is not None:
-                external_count = sum(1 for h in hierarchy[0] if h[3] == -1)
-                internal_count = len(filtered_contours) - external_count
-                print(f"   🔹 {external_count} contorni esterni, {internal_count} buchi interni")
-            
-            return filtered_contours, hierarchy
-            
-        except (ImportError, OSError) as import_error:
-            print(f"⚠️ cairosvg non disponibile ({import_error}), usando metodo fallback...")
-            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
-        except Exception as cairo_error:
-            print(f"⚠️ Errore con cairosvg: {cairo_error}, usando metodo fallback...")
-            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
-        
-    except Exception as e:
-        print(f"❌ Errore nell'estrazione SVG: {e}")
-        return [], None
-
-def extract_contours_from_svg_fallback(svg_path, width, height, padding):
-    """
-    Metodo fallback per l'estrazione SVG usando svgpathtools.
-    """
-    try:
         # Carica il file SVG
         paths, attributes, svg_attributes = svg2paths2(svg_path)
         
         if not paths:
             raise Exception("Nessun path trovato nel file SVG.")
         
-        print(f"📝 Processando {len(paths)} path SVG con metodo fallback...")
+        # Converti i path SVG in punti con miglior gestione per evitare spaccature
+        all_contours = []
         
-        # Calcola bounding box globale di tutti i path
-        all_points = []
-        valid_paths = []
+        print(f"📝 Processando {len(paths)} path SVG...")
         
-        for path in paths:
-            if path.length() == 0:
+        for i, path in enumerate(paths):
+            # Discretizza il path in punti - QUALITÀ CINEMATOGRAFICA ottimizzata per continuità
+            path_length = path.length()
+            if path_length == 0:
                 continue
                 
-            # Discretizza il path con densità ottimizzata
-            path_length = path.length()
-            num_points = max(100, min(1000, int(path_length * 2)))
-            
+            # Adatta il numero di punti alla complessità del path
+            num_points = max(50, min(800, int(path_length * 2.5)))  # Range ottimizzato
+                
             points = []
             for j in range(num_points):
                 t = j / (num_points - 1)
                 try:
                     point = path.point(t)
+                    # Verifica che il punto sia valido
                     if not (np.isnan(point.real) or np.isnan(point.imag)):
                         points.append([point.real, point.imag])
                 except:
                     continue
             
-            if len(points) >= 10:
-                valid_paths.append(np.array(points, dtype=np.float32))
-                all_points.extend(points)
+            # Aggiungi contorno solo se ha abbastanza punti validi
+            if len(points) > 10:  # Richiedi almeno 10 punti validi
+                contour = np.array(points, dtype=np.float32)
+                
+                # Verifica che il contour non sia degenere
+                if cv2.contourArea(contour) > 10:  # Area minima
+                    all_contours.append(contour)
+                    print(f"  ✓ Path {i+1}: {len(points)} punti, area: {cv2.contourArea(contour):.1f}")
         
-        if not all_points:
-            raise Exception("Nessun punto valido estratto dall'SVG.")
+        if not all_contours:
+            raise Exception("Nessun contorno valido estratto dall'SVG.")
         
-        # Calcola bounding box globale
-        all_points = np.array(all_points, dtype=np.float32)
+        print(f"📐 Estratti {len(all_contours)} contorni validi")
+        
+        # Calcola bounding box di tutti i contorni
+        all_points = np.vstack(all_contours)
         x_min, y_min = np.min(all_points, axis=0)
         x_max, y_max = np.max(all_points, axis=0)
         
@@ -400,33 +290,32 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
         target_w = width - (2 * padding)
         target_h = height - (2 * padding)
         
-        scale_x = target_w / svg_width
-        scale_y = target_h / svg_height
-        scale = min(scale_x, scale_y)
+        scale_w = target_w / svg_width
+        scale_h = target_h / svg_height
+        scale_factor = min(scale_w, scale_h)
         
-        # Centra il logo
-        final_w = svg_width * scale
-        final_h = svg_height * scale
-        offset_x = (width - final_w) / 2 - x_min * scale
-        offset_y = (height - final_h) / 2 - y_min * scale
-        
-        # Scala e trasla tutti i path
+        # Applica scaling e centratura
         scaled_contours = []
-        for path_points in valid_paths:
-            # Scala e trasla
-            scaled = path_points * scale
-            scaled[:, 0] += offset_x
-            scaled[:, 1] += offset_y
-            scaled_contours.append(scaled.astype(np.int32))
+        for contour in all_contours:
+            # Trasla all'origine
+            centered = contour - np.array([x_min, y_min])
+            # Scala
+            scaled = centered * scale_factor
+            # Centra nel frame
+            offset_x = (width - svg_width * scale_factor) / 2
+            offset_y = (height - svg_height * scale_factor) / 2
+            final_contour = scaled + np.array([offset_x, offset_y])
+            
+            scaled_contours.append(final_contour.astype(np.int32))
         
-        print(f"📐 Estratti {len(scaled_contours)} path validi (metodo fallback)")
-        print(f"🎯 Logo ridimensionato: {final_w:.0f}x{final_h:.0f} (scala: {scale:.3f})")
+        print("Estrazione contorni da SVG completata.")
+        return scaled_contours, None  # Hierarchy non necessaria per SVG semplice
         
-        return scaled_contours, None  # None per hierarchy (approccio SVG semplificato)
-    
     except Exception as e:
-        print(f"❌ Errore nell'estrazione SVG fallback: {e}")
-        return [], None
+        print(f"Errore durante l'estrazione dall'SVG: {e}")
+        print("Assicurati che 'svgpathtools' sia installato: pip install svgpathtools")
+        return None, None
+
 def extract_contours_from_pdf(pdf_path, width, height, padding):
     """
     Estrae i contorni da un file PDF e li converte in contorni OpenCV.
@@ -525,7 +414,7 @@ def smooth_contour(contour, smoothing_factor):
         return contour.astype(np.int32)
 
 def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, smoothing_factor):
-    """Crea una maschera unificata con algoritmo robusto per SVG."""
+    """Crea una maschera unificata con algoritmo avanzato per eliminare spaccature SVG."""
     mask = np.zeros((height, width), dtype=np.uint8)
     
     if not contours:
@@ -538,29 +427,56 @@ def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, s
         else:
             smoothed_contours.append(contour)
     
-    # Per SVG con hierarchy, usa drawContours solo se hierarchy è corretta
-    if hierarchy is not None:
-        try:
-            # Prova a usare drawContours con hierarchy per preservare i buchi
-            cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
-        except:
-            # Se fallisce, usa fillPoly come fallback
-            print("⚠️ Hierarchy non compatibile, usando fillPoly")
+    # Per SVG (hierarchy=None) usa algoritmo avanzato di unificazione
+    if hierarchy is None:
+        # --- TERZO APPROCCIO: FLOOD FILL - Il più robusto ---
+        
+        # FASE 1: Disegna tutti i contorni, sia esterni che interni, come linee su una maschera vuota.
+        # Questo crea una "gabbia" che delimita tutte le aree da riempire.
+        outline_mask = np.zeros((height, width), dtype=np.uint8)
+        cv2.drawContours(outline_mask, smoothed_contours, -1, 255, 1) # Spessore 1 per linee precise
+
+        # FASE 2: Trova un punto di partenza sicuro per il riempimento.
+        # Usiamo il centroide del contorno più grande come punto di partenza.
+        if smoothed_contours:
+            # Unisci tutti i punti per trovare il bounding box generale e il centroide
+            all_points = np.vstack(smoothed_contours)
+            M = cv2.moments(all_points)
+            if M["m00"] > 0:
+                # Centroide di tutta la forma
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                seed_point = (cX, cY)
+
+                # FASE 3: Esegui il Flood Fill.
+                # Copiamo la maschera di contorni per non modificarla direttamente.
+                # Il flood fill partirà dal seed_point e riempirà l'area fino a quando non incontra
+                # le linee bianche che abbiamo disegnato.
+                filled_mask = outline_mask.copy()
+                cv2.floodFill(filled_mask, None, seedPoint=seed_point, newVal=255)
+
+                # FASE 4: Combina la maschera riempita con i contorni originali.
+                # Questo assicura che i bordi siano perfetti e senza buchi dal flood fill.
+                final_mask = cv2.bitwise_or(filled_mask, outline_mask)
+
+                # FASE 5: Pulizia finale per rimuovere eventuali artefatti e ammorbidire.
+                kernel_clean = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel_clean, iterations=1)
+                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_CLOSE, kernel_clean, iterations=1)
+                
+                mask = final_mask
+            else:
+                # Fallback se non si trova il centroide
+                cv2.fillPoly(mask, smoothed_contours, 255)
+        else:
+            # Fallback se non ci sono contorni
             cv2.fillPoly(mask, smoothed_contours, 255)
     else:
-        # Nessuna hierarchy, usa fillPoly semplice
-        cv2.fillPoly(mask, smoothed_contours, 255)
-    
-    # Applica smoothing leggero per migliorare la qualità
-    if smoothing_enabled:
-        mask = cv2.GaussianBlur(mask, (3, 3), 0.8)
-        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-    
-    # Post-processing minimo per pulire i bordi
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-    
+        # Per PDF usa drawContours con hierarchy
+        cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
+            
     return mask
+
 
 def create_gap_free_mask(contours, width, height):
     """
@@ -1275,106 +1191,100 @@ def find_texture_file():
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
-    # --- Codici ANSI per colori e stili nel terminale ---
-    C_CYAN = '\033[96m'
-    C_GREEN = '\033[92m'
-    C_YELLOW = '\033[93m'
-    C_BLUE = '\033[94m'
-    C_MAGENTA = '\033[95m'
-    C_BOLD = '\033[1m'
-    C_END = '\033[0m'
-    SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
-
-    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
-    print(f"� TEST MODE: 30fps, 10s, codec multipli per compatibilità")
-    source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
-    print(f"� Sorgente: {source_type} con smoothing ottimizzato")
-    print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
-    print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
-    print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
-    print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
-    print(f"� Variazione dinamica + codec video testati")
-    print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
-    
-    # Carica contorni da SVG o PDF
-    if Config.USE_SVG_SOURCE:
-        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
-    else:
-        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
-
-    if not contours:
-        source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
-        print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
-        return
-
-    print("Estrazione contorni riuscita.")
-
-    # --- Caricamento Texture (se abilitata) ---
-    texture_image = None
-    if Config.TEXTURE_ENABLED:
-        # Prima cerca la texture automaticamente
-        texture_path = find_texture_file()
-        # Poi carica la texture trovata (o fallback se non trovata)
-        texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
-        if texture_image is not None:
-            print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
-    else:
-        print("La texturizzazione del logo è disabilitata.")
-
-    # --- Apertura Video di Sfondo ---
-    bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
-    if not bg_video.isOpened():
-        print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
-        # Crea uno sfondo nero di fallback
-        bg_video = None
-    else:
-        # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
-        bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
-        bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
-        print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
-        print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
-    
-    # Setup video writer con codec ottimizzato per WhatsApp
-    if Config.WHATSAPP_COMPATIBLE:
-        # H.264 è il migliore per WhatsApp
-        fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
-        print("🔄 Usando H.264 per compatibilità WhatsApp...")
-    else:
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
-        
-    output_filename = get_timestamp_filename()
-    out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-    
-    if not out.isOpened():
-        print("TENTATIVO 1 FALLITO. Provo con mp4v...")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-        
-    if not out.isOpened():
-        print("TENTATIVO 2 FALLITO. Provo con XVID...")
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-        
-    if not out.isOpened():
-        print("ERRORE CRITICO: Nessun codec video funziona!")
-        return
-    
-    # --- Inizializzazione Effetti ---
-    tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
-    
-    # --- NUOVO: Inizializzazione Traccianti Sfondo ---
-    bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
-
-    # --- Inizializzazione per Effetto Lenti (NUOVO) ---
-    lenses = []
-    if Config.LENS_DEFORMATION_ENABLED:
-        lenses = initialize_lenses(Config)
-        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
-
-    print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
-    start_time = time.time()
+    output_filename = None
+    out = None
+    bg_video = None
     
     try:
+        print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
+        print(f"✓ TEST MODE: 30fps, 10s, codec multipli per compatibilità")
+        source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
+        print(f"✓ Sorgente: {source_type} con smoothing ottimizzato")
+        print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
+        print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
+        print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
+        print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
+        print(f"✓ Variazione dinamica + codec video testati")
+        print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
+        
+        # Carica contorni da SVG o PDF
+        if Config.USE_SVG_SOURCE:
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+        else:
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+
+        if not contours:
+            source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
+            print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
+            return
+
+        print("Estrazione contorni riuscita.")
+
+        # --- Caricamento Texture (se abilitata) ---
+        texture_image = None
+        if Config.TEXTURE_ENABLED:
+            # Prima cerca la texture automaticamente
+            texture_path = find_texture_file()
+            # Poi carica la texture trovata (o fallback se non trovata)
+            texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
+            if texture_image is not None:
+                print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
+        else:
+            print("La texturizzazione del logo è disabilitata.")
+
+        # --- Apertura Video di Sfondo ---
+        bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
+        if not bg_video.isOpened():
+            print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
+            # Crea uno sfondo nero di fallback
+            bg_video = None
+        else:
+            # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
+            bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+            bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
+            print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+            print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
+        
+        # Setup video writer con codec ottimizzato per WhatsApp
+        if Config.WHATSAPP_COMPATIBLE:
+            # H.264 è il migliore per WhatsApp
+            fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
+            print("🔄 Usando H.264 per compatibilità WhatsApp...")
+        else:
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
+            
+        output_filename = get_timestamp_filename()
+        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+        
+        if not out.isOpened():
+            print("TENTATIVO 1 FALLITO. Provo con mp4v...")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+            
+        if not out.isOpened():
+            print("TENTATIVO 2 FALLITO. Provo con XVID...")
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+            
+        if not out.isOpened():
+            print("ERRORE CRITICO: Nessun codec video funziona!")
+            return
+        
+        # --- Inizializzazione Effetti ---
+        tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
+        
+        # --- NUOVO: Inizializzazione Traccianti Sfondo ---
+        bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
+
+        # --- Inizializzazione per Effetto Lenti (NUOVO) ---
+        lenses = []
+        if Config.LENS_DEFORMATION_ENABLED:
+            lenses = initialize_lenses(Config)
+            print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
+
+        print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
+        start_time = time.time()
+        
         for i in range(Config.TOTAL_FRAMES):
             # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
             if bg_video:
@@ -1448,48 +1358,52 @@ def main():
         
         print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
         print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
-        print(f"� Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
+        print(f"✓ Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
         print(f"💎 Qualità SUPREMA (1000 DPI, smoothing perfetto)!")
         print(f"🔮 Movimento IPNOTICO e curioso - Alex Ortiga & TV Int ULTIMATE!")
-        
+
+    except Exception as e:
+        print(f"\n{C_BOLD}{C_YELLOW}An error occurred during rendering: {e}{C_END}")
+
     finally:
         # Assicurati sempre di chiudere correttamente i file video
-        out.release()
-        if bg_video: 
+        if out and out.isOpened():
+            out.release()
+        if bg_video and bg_video.isOpened(): 
             bg_video.release()
-        print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
+        
+        if output_filename and os.path.exists(output_filename):
+            print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
 
-        # --- GESTIONE VERSIONAMENTO ---
-        try:
-            print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
-            
-            # Importa e usa il VersionManager
+            # --- GESTIONE VERSIONAMENTO ---
             try:
-                from version_manager import VersionManager
+                print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
+                source_script_path = os.path.abspath(__file__)
+                # Assicurati che il percorso di version_manager.py sia corretto
+                version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
                 
-                # Crea una descrizione della configurazione corrente
-                config_summary = f"""Configurazione video:
-- Modalità: {'TEST' if Config.TEST_MODE else 'PRODUZIONE'}
-- Risoluzione: {Config.WIDTH}x{Config.HEIGHT}
-- FPS: {Config.FPS}, Durata: {Config.DURATION_SECONDS}s
-- Sorgente: {'SVG' if Config.USE_SVG_SOURCE else 'PDF'}
-- Deformazione organica: {'ON' if Config.DEFORMATION_ENABLED else 'OFF'}
-- Lenti cinematografiche: {Config.NUM_LENSES if Config.LENS_DEFORMATION_ENABLED else 'OFF'}
-- Glow: {'ON' if Config.GLOW_ENABLED else 'OFF'}
-- Texture: {'ON' if Config.TEXTURE_ENABLED else 'OFF'}
-- WhatsApp compatible: {'ON' if Config.WHATSAPP_COMPATIBLE else 'OFF'}"""
-                
-                # Crea il version manager e genera la versione
-                vm = VersionManager()
-                vm.create_version_for_video(os.path.basename(output_filename), config_summary)
-                
-            except ImportError as e:
-                print(f"{C_YELLOW}Errore importazione version_manager: {e}{C_END}")
-            except Exception as e:
-                print(f"{C_YELLOW}Errore nel version manager: {e}{C_END}")
+                if os.path.exists(version_manager_path):
+                    result = subprocess.run(
+                        [sys.executable, version_manager_path, source_script_path, output_filename],
+                        capture_output=True,
+                        text=True,
+                        check=False # Mettiamo a False per gestire l'errore manualmente
+                    )
+                    # Stampa sempre stdout e stderr per il debug
+                    print(result.stdout)
+                    if result.stderr:
+                        # Gestisce il caso "nothing to commit" come un'informazione, non un errore
+                        if "nothing to commit" in result.stderr.lower():
+                             print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
+                        else:
+                            print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
+                else:
+                    print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
 
-        except Exception as e:
-            print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
+            except Exception as e:
+                print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
+        else:
+            print(f"{C_YELLOW}Nessun file di output generato o trovato. Saltando il versionamento.{C_END}")
 
 if __name__ == "__main__":
     main()
