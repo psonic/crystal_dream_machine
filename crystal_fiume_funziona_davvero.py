@@ -81,7 +81,7 @@ class Config:
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 20     # Aumentato per copertura maggiore
     LENS_MAX_RADIUS = 100    # Lenti ancora più grandi per effetti ampi
-    LENS_SPEED_FACTOR = 0.1  # VELOCITÀ AUMENTATA per movimento ultra-evidente
+    LENS_SPEED_FACTOR = 0.001  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
     LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
