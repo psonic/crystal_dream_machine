@@ -127,10 +127,10 @@ class Config:
     
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
     DYNAMIC_VARIATION_ENABLED = True
-    VARIATION_AMPLITUDE = 0.3 # ±10% di variazione massima
-    VARIATION_SPEED_SLOW = 0.02  # Velocità variazione lenta (per deformazioni)
-    VARIATION_SPEED_MEDIUM = 0.05 # Velocità variazione media (per traccianti)
-    VARIATION_SPEED_FAST = 0.08  # Velocità variazione veloce (per effetti minori)
+    VARIATION_AMPLITUDE = 0.5 # ±10% di variazione massima
+    VARIATION_SPEED_SLOW = 0.002  # Velocità variazione lenta (per deformazioni)
+    VARIATION_SPEED_MEDIUM = 0.005 # Velocità variazione media (per traccianti)
+    VARIATION_SPEED_FAST = 0.001  # Velocità variazione veloce (per effetti minori)
 
 # --- FUNZIONI DI SUPPORTO ---
 
