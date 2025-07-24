@@ -37,7 +37,7 @@ class Config:
     CREATE_WHATSAPP_VERSION = True  # True = crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True  # True = SVG, False = PDF
+    USE_SVG_SOURCE = False  # True = SVG, False = PDF
     SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
     PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
