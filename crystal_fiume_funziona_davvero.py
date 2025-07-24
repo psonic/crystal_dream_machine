@@ -30,7 +30,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
@@ -47,9 +47,9 @@ class Config:
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 50  # Padding attorno all'SVG (bei bordi)
+    SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
     FPS = 30
-    DURATION_SECONDS = 5 if TEST_MODE else 20 # Durata normale per il rendering finale
+    DURATION_SECONDS = 5 if TEST_MODE else 60 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -65,18 +65,18 @@ class Config:
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50 # Aumentato per un glow più diffuso in HD
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
     DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
-    DEFORMATION_SPEED = 0.01 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
+    DEFORMATION_SPEED = 0.001 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
     LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 20 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
+    NUM_LENSES = 70 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 20     # Aumentato per copertura maggiore
@@ -93,7 +93,7 @@ class Config:
     
     WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
     WORM_LENGTH = 3 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 5 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    WORM_COMPLEXITY = 7 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
     SMOOTHING_ENABLED = True
@@ -101,16 +101,16 @@ class Config:
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
     TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.1 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
+    TRACER_TRAIL_LENGTH = 35 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
+    TRACER_MAX_OPACITY = 0.05 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
-    TRACER_THRESHOLD1 = 100  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
+    TRACER_THRESHOLD1 = 50  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = False
-    BG_TRACER_TRAIL_LENGTH = 10 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_ENABLED = True
+    BG_TRACER_TRAIL_LENGTH = 20 # Scie più lunghe per lo sfondo
+    BG_TRACER_MAX_OPACITY = 0.01 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
     BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
     BG_TRACER_THRESHOLD2 = 100
