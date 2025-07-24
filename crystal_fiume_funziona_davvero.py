@@ -61,8 +61,8 @@ class Config:
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_CROP_Y_START = 100  # Spostato più in alto
     BG_CROP_Y_END = 350    # Spostato più in alto
-    BG_DARKEN_FACTOR = 0.3 # Ancora più scuro per massimo contrasto logo
-    BG_CONTRAST_FACTOR = 8 # Contrasto aumentato
+    BG_DARKEN_FACTOR = 0.06 # Ancora più scuro per massimo contrasto logo
+    BG_CONTRAST_FACTOR = 1 # Contrasto aumentato
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = False
