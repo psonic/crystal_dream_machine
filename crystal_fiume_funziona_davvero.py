@@ -3,26 +3,12 @@ import numpy as np
 import datetime
 from scipy.interpolate import splprep, splev
 from noise import pnoise2
-import multiprocessing
-from functools import partial
 import time
 import os
 from collections import deque
-import xml.etree.ElementTree as ET
 from svgpathtools import svg2paths2
-import re
 import subprocess
 import sys
-
-# --- Codici ANSI per colori e stili nel terminale ---
-C_CYAN = '\033[96m'
-C_GREEN = '\033[92m'
-C_YELLOW = "\033[93m"
-C_MAGENTA = '\033[95m'
-C_BLUE = '\033[94m'
-C_BOLD = '\033[1m'
-C_END = '\033[0m'
-SPINNER_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 # Import condizionale per PDF
 try:
@@ -40,7 +26,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = True # Disabilitato per la massima qualità, come richiesto
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
@@ -48,90 +34,92 @@ class Config:
     
     # --- Sorgente Logo e Texture ---
     USE_SVG_SOURCE = True  # True = SVG, False = PDF
-    SVG_PATH = 'input/logo_convertito_online.svg'  # SVG con tracciato unificato
-    PDF_PATH = 'input/diocane.pdf'  # Opzione PDF alternativa - CORRETTO
+    SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
+    PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
-    TEXTURE_ENABLED = True
+    TEXTURE_ENABLED = False # DISABILITATA come richiesto per test
     TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
 
     # --- Parametri Video (MODALITÀ TEST) ---
-    WIDTH = 960 if TEST_MODE else 1920
-    HEIGHT = 540 if TEST_MODE else 1080
+    WIDTH = 640 if TEST_MODE else 1280  # QUALITÀ INTERMEDIA HD Ready per rendering più veloce
+    HEIGHT = 360 if TEST_MODE else 720   # QUALITÀ INTERMEDIA HD Ready
     FPS = 30
-    DURATION_SECONDS = 3 if TEST_MODE else 30 # Durata normale per il rendering finale
+    DURATION_SECONDS = 2 if TEST_MODE else 30  # 15 secondi in test mode, 30 in finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
     LOGO_COLOR = (230, 230, 255)  # BGR - Colore bianco-lavanda luminoso
     LOGO_ALPHA = 1.0 # Aumentata a 1.0 per un logo solido e visibile
-    LOGO_PADDING = 1 # Leggermente aumentato per l'alta risoluzione
+    LOGO_PADDING = 1 # RIDOTTO DRASTICAMENTE: Scritta molto più grande che occupa lo schermo
     
     # --- Video di Sfondo e Traccianti ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
-    BG_CROP_Y_START = 100  # Spostato più in alto
-    BG_CROP_Y_END = 350    # Spostato più in alto
-    BG_DARKEN_FACTOR = 0.03 # Ancora più scuro per massimo contrasto logo
-    BG_CONTRAST_FACTOR = 8 # Contrasto aumentato
-    
+    BACKGROUND_VIDEO_PATH = 'input/no.MOV'
+    # I parametri di crop sono ignorati dalla nuova funzione process_background
+    BG_DARKEN_FACTOR = 0.6  # AUMENTATO: Per un contrasto più forte con il logo
+    BG_CONTRAST_FACTOR = 1.3  # AUMENTATO: Contrasto leggermente aumentato come richiesto
+
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 # Aumentato per un glow più diffuso in HD
-    GLOW_INTENSITY = 0.2
+    GLOW_KERNEL_SIZE = 25 # Aumentato per un glow più diffuso in HD
+    GLOW_INTENSITY = 0.15 # AUMENTATO: Per uno scintillio più visibile
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
     DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
-    DEFORMATION_SPEED = 0.05 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
-    DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
-    DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
+    DEFORMATION_SPEED = 0.01 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
+    DEFORMATION_SCALE = 0.01 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
+    DEFORMATION_INTENSITY = 20.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
-    # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
-    LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
-    LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
+    # --- Deformazione a Lenti (NUOVO SISTEMA: MOVIMENTO LUNGO I CONTORNI) ---
+    LENS_DEFORMATION_ENABLED = True
+    NUM_LENSES = 100 # AUMENTATO: Più lenti che viaggiano sul logo
+    LENS_MIN_STRENGTH = -0.8 # Leggermente ridotto per un effetto più sottile
+    LENS_MAX_STRENGTH = 0.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
-    LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
-    LENS_SPEED_FACTOR = 0.5  # VELOCITÀ AUMENTATA per movimento ultra-evidente
+    LENS_MAX_RADIUS = 40    # Lenti ancora più grandi per effetti ampi
+    LENS_SPEED_FACTOR = 0.01  # RALLENTATO: Velocità di "scivolamento" globale delle lenti
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 0.85  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
-    LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
-    LENS_PULSATION_SPEED = 0.05  # AUMENTATO: pulsazione più rapida e visibile
-    LENS_PULSATION_AMPLITUDE = 0.3  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
-    LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
+    LENS_HORIZONTAL_BIAS = 0.5  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
+
+    # --- Pulsazione Lenti (Rallentata) ---
+    LENS_PULSATION_ENABLED = True
+    LENS_PULSATION_SPEED = 0.003  # Rallentata per un effetto più calmo
+    LENS_PULSATION_AMPLITUDE = 0.2
+    LENS_FORCE_PULSATION_ENABLED = True
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.2
     
-    WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
-    WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    # --- NUOVO: Parametri Worm (disabilitati ma necessari per compatibilità) ---
+    WORM_SHAPE_ENABLED = True
+    WORM_LENGTH = 1.5
+    WORM_COMPLEXITY = 3
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
     SMOOTHING_ENABLED = True
-    SMOOTHING_FACTOR = 0.00001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
+    SMOOTHING_FACTOR = 0.000005 # ULTRA-RAFFINATO: Curve ancora più perfette per la massima qualità
 
-    # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
+    # --- Effetto Traccianti (PIÙ NUMEROSI E LEGGERI) ---
     TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.1 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
-    TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
-    TRACER_THRESHOLD1 = 100  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
-    TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
+    TRACER_TRAIL_LENGTH = 60 # AUMENTATO: Scia più lunga per effetto "contorno multiplo"
+    TRACER_MAX_OPACITY = 0.08 # RIDOTTO: Traccianti molto più leggeri e sfumati
+    TRACER_BASE_COLOR = (255, 200, 220)
+    TRACER_THRESHOLD1 = 30  # RIDOTTO: Più sensibile per catturare più dettagli
+    TRACER_THRESHOLD2 = 100 # RIDOTTO: Range più ampio per più contorni
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
     BG_TRACER_ENABLED = True
-    BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.3 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_TRAIL_LENGTH = 10 # Scie più lunghe per lo sfondo
+    BG_TRACER_MAX_OPACITY = 0.03 # AUMENTATO per traccianti sfondo più visibili
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
-    BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
-    BG_TRACER_THRESHOLD2 = 100
+    BG_TRACER_THRESHOLD1 = 10   # Soglie più basse per catturare più contorni dello sfondo
+    BG_TRACER_THRESHOLD2 = 200
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
     ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
-    LOGO_BLEND_FACTOR = 0.1 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
-    EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
-    BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
-    COLOR_BLENDING_STRENGTH = 0.3 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
+    LOGO_BLEND_FACTOR = 0.8 # AUMENTATO per più fusione con sfondo
+    EDGE_SOFTNESS = 90 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
+    BLEND_TRANSPARENCY = 0.7 # AUMENTATO per un logo più integrato
+    COLOR_BLENDING_STRENGTH = 0.65 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
     
     # --- Debug e Qualità ---
     DEBUG_MASK = False  # Disabilitato per performance migliori
@@ -359,28 +347,18 @@ def extract_contours_from_pdf(pdf_path, width, height, padding):
         # Soglia per ottenere una maschera binaria
         _, binary = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
         
-        # Trova i contorni
-        contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Trova i contorni con la gerarchia completa
+        contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         
         if not contours:
             raise Exception("Nessun contorno trovato nel PDF.")
-        
-        # Filtra e processa i contorni
-        processed_contours = []
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > 100:  # Filtra contorni troppo piccoli
-                processed_contours.append(contour)
-        
-        if not processed_contours:
-            raise Exception("Nessun contorno valido trovato nel PDF.")
         
         # Ridimensiona i contorni alla risoluzione target
         scale_x = width / binary.shape[1]
         scale_y = height / binary.shape[0]
         
         scaled_contours = []
-        for contour in processed_contours:
+        for contour in contours:
             scaled_contour = contour.copy().astype(np.float32)
             scaled_contour[:, 0, 0] *= scale_x
             scaled_contour[:, 0, 1] *= scale_y
@@ -388,10 +366,11 @@ def extract_contours_from_pdf(pdf_path, width, height, padding):
         
         doc.close()
         
-        print(f"📐 Estratti {len(scaled_contours)} contorni da PDF")
+        print(f"📐 Estratti {len(scaled_contours)} contorni da PDF con gerarchia.")
         print("Estrazione contorni da PDF completata.")
         
-        return scaled_contours, None  # Hierarchy non necessaria per PDF
+        # Restituisci sia i contorni scalati che la gerarchia per gestire i buchi
+        return scaled_contours, hierarchy
         
     except Exception as e:
         print(f"❌ Errore nell'estrazione contorni da PDF: {e}")
@@ -414,7 +393,7 @@ def smooth_contour(contour, smoothing_factor):
         return contour.astype(np.int32)
 
 def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, smoothing_factor):
-    """Crea una maschera unificata con algoritmo avanzato per eliminare spaccature SVG."""
+    """Crea una maschera unificata con algoritmo avanzato per gestire i buchi del PDF."""
     mask = np.zeros((height, width), dtype=np.uint8)
     
     if not contours:
@@ -423,164 +402,37 @@ def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, s
     smoothed_contours = []
     for contour in contours:
         if smoothing_enabled:
-            smoothed_contours.append(smooth_contour(contour, smoothing_factor))
+            # Applica lo smoothing solo se il contorno è abbastanza complesso
+            if len(contour) > 5:
+                smoothed_contours.append(smooth_contour(contour, smoothing_factor))
+            else:
+                smoothed_contours.append(contour)
         else:
             smoothed_contours.append(contour)
     
-    # Per SVG (hierarchy=None) usa algoritmo avanzato di unificazione
-    if hierarchy is None:
-        # --- TERZO APPROCCIO: FLOOD FILL - Il più robusto ---
+    # Se la gerarchia è disponibile (dal PDF), usala per disegnare i buchi.
+    if hierarchy is not None:
+        # Disegna prima tutti i contorni esterni (bianco)
+        for i, contour in enumerate(smoothed_contours):
+            # Un contorno è esterno se non ha un genitore (parent == -1)
+            if hierarchy[0][i][3] == -1:
+                cv2.drawContours(mask, [contour], -1, 255, -1)
         
-        # FASE 1: Disegna tutti i contorni, sia esterni che interni, come linee su una maschera vuota.
-        # Questo crea una "gabbia" che delimita tutte le aree da riempire.
-        outline_mask = np.zeros((height, width), dtype=np.uint8)
-        cv2.drawContours(outline_mask, smoothed_contours, -1, 255, 1) # Spessore 1 per linee precise
-
-        # FASE 2: Trova un punto di partenza sicuro per il riempimento.
-        # Usiamo il centroide del contorno più grande come punto di partenza.
-        if smoothed_contours:
-            # Unisci tutti i punti per trovare il bounding box generale e il centroide
-            all_points = np.vstack(smoothed_contours)
-            M = cv2.moments(all_points)
-            if M["m00"] > 0:
-                # Centroide di tutta la forma
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-                seed_point = (cX, cY)
-
-                # FASE 3: Esegui il Flood Fill.
-                # Copiamo la maschera di contorni per non modificarla direttamente.
-                # Il flood fill partirà dal seed_point e riempirà l'area fino a quando non incontra
-                # le linee bianche che abbiamo disegnato.
-                filled_mask = outline_mask.copy()
-                cv2.floodFill(filled_mask, None, seedPoint=seed_point, newVal=255)
-
-                # FASE 4: Combina la maschera riempita con i contorni originali.
-                # Questo assicura che i bordi siano perfetti e senza buchi dal flood fill.
-                final_mask = cv2.bitwise_or(filled_mask, outline_mask)
-
-                # FASE 5: Pulizia finale per rimuovere eventuali artefatti e ammorbidire.
-                kernel_clean = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel_clean, iterations=1)
-                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_CLOSE, kernel_clean, iterations=1)
-                
-                mask = final_mask
-            else:
-                # Fallback se non si trova il centroide
-                cv2.fillPoly(mask, smoothed_contours, 255)
-        else:
-            # Fallback se non ci sono contorni
-            cv2.fillPoly(mask, smoothed_contours, 255)
+        # Poi disegna tutti i contorni interni (i buchi) in nero per "cancellarli"
+        for i, contour in enumerate(smoothed_contours):
+            # Un contorno è interno se ha un genitore
+            if hierarchy[0][i][3] != -1:
+                cv2.drawContours(mask, [contour], -1, 0, -1)
     else:
-        # Per PDF usa drawContours con hierarchy
-        cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
-            
+        # Per SVG (o se la gerarchia non è disponibile), usa il vecchio metodo di riempimento.
+        # Questo non gestisce i buchi ma funziona per SVG con tracciato singolo.
+        cv2.fillPoly(mask, smoothed_contours, 255)
+
+    # --- DEBUG: Salva la maschera finale per ispezione ---
+    if Config.DEBUG_MASK:
+        cv2.imwrite('debug/debug_mask_final.png', mask)
+        
     return mask
-
-
-def create_gap_free_mask(contours, width, height):
-    """
-    Crea una maschera SVG senza spaccature usando algoritmi geometrici avanzati.
-    Approccio multi-fase per eliminare definitivamente le discontinuità.
-    """
-    if not contours:
-        return np.zeros((height, width), dtype=np.uint8)
-    
-    # FASE 1: Crea maschera base combinando tutti i contorni
-    base_mask = np.zeros((height, width), dtype=np.uint8)
-    cv2.fillPoly(base_mask, contours, 255)
-    
-    # FASE 2: Analisi delle componenti connesse
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(base_mask, connectivity=8)
-    
-    if num_labels <= 2:  # Solo background + una componente = già connesso
-        return base_mask
-    
-    # FASE 3: Trova le componenti principali (esclude background)
-    main_components = []
-    min_area = (width * height) * 0.001  # Soglia minima 0.1% dell'area totale
-    
-    for i in range(1, num_labels):  # Salta il background (0)
-        area = stats[i, cv2.CC_STAT_AREA]
-        if area > min_area:
-            component_mask = (labels == i).astype(np.uint8) * 255
-            main_components.append(component_mask)
-    
-    if len(main_components) <= 1:
-        return base_mask
-    
-    # FASE 4: Calcola i centroidi delle componenti principali
-    component_centroids = []
-    for component in main_components:
-        moments = cv2.moments(component)
-        if moments['m00'] > 0:
-            cx = int(moments['m10'] / moments['m00'])
-            cy = int(moments['m01'] / moments['m00'])
-            component_centroids.append((cx, cy))
-    
-    # FASE 5: Trova coppie di componenti che dovrebbero essere connesse
-    # Usa distanza euclidea e vicinanza per identificare lettere che si toccano
-    connections_needed = []
-    max_connection_distance = min(width, height) * 0.15  # 15% della dimensione minore
-    
-    for i in range(len(component_centroids)):
-        for j in range(i + 1, len(component_centroids)):
-            cx1, cy1 = component_centroids[i]
-            cx2, cy2 = component_centroids[j]
-            distance = np.sqrt((cx2 - cx1)**2 + (cy2 - cy1)**2)
-            
-            if distance < max_connection_distance:
-                connections_needed.append((i, j, distance))
-    
-    # FASE 6: Crea connessioni tra componenti vicine
-    connected_mask = base_mask.copy()
-    
-    for i, j, distance in connections_needed:
-        # Trova i punti più vicini tra le due componenti
-        component1 = main_components[i]
-        component2 = main_components[j]
-        
-        # Estrai i contorni delle componenti
-        contours1, _ = cv2.findContours(component1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours2, _ = cv2.findContours(component2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        if contours1 and contours2:
-            # Trova i punti più vicini tra i contorni
-            min_dist = float('inf')
-            closest_points = None
-            
-            for c1 in contours1:
-                for c2 in contours2:
-                    for pt1 in c1:
-                        for pt2 in c2:
-                            dist = np.linalg.norm(pt1[0] - pt2[0])
-                            if dist < min_dist:
-                                min_dist = dist
-                                closest_points = (tuple(pt1[0]), tuple(pt2[0]))
-            
-            # Disegna una linea di connessione spessa
-            if closest_points and min_dist < max_connection_distance:
-                pt1, pt2 = closest_points
-                # Calcola thickness basato sulla distanza
-                thickness = max(3, int(15 - (min_dist / max_connection_distance) * 10))
-                cv2.line(connected_mask, pt1, pt2, 255, thickness)
-    
-    # FASE 7: Post-processing morfologico per smoothing finale
-    # Operazione di chiusura per unificare le connessioni
-    kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-    connected_mask = cv2.morphologyEx(connected_mask, cv2.MORPH_CLOSE, kernel_close, iterations=2)
-    
-    # Operazione di apertura per rimuovere artefatti
-    kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    connected_mask = cv2.morphologyEx(connected_mask, cv2.MORPH_OPEN, kernel_open, iterations=1)
-    
-    # FASE 8: Smooth finale con gaussian blur
-    connected_mask = cv2.GaussianBlur(connected_mask, (3, 3), 0.5)
-    _, connected_mask = cv2.threshold(connected_mask, 127, 255, cv2.THRESH_BINARY)
-    
-    return connected_mask
-
-# Rimuovo la vettorizzazione che rallentava invece di velocizzare
 
 def generate_cinematic_path(width, height, path_type, total_frames):
     """
@@ -590,7 +442,7 @@ def generate_cinematic_path(width, height, path_type, total_frames):
     center_x, center_y = width // 2, height // 2
     points = []
     
-    # BIAS ORIZZONTALE ULTRA-POTENZIATA: Aumentiamo drasticamente i movimenti orizzontali
+    # BIAS ORIZZONTALE ULTRA-POTENZIATO: Aumentiamo drasticamente i movimenti orizzontali
     horizontal_scale = 0.8  # AUMENTATO: movimento orizzontale ultra-amplificato per seguire la scritta
     vertical_scale = 0.2   # RIDOTTO: movimento verticale minimizzato per rimanere sulla scritta
     
@@ -736,66 +588,47 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         final_map_x[lens_mask] += dx[lens_mask] * displacement
         final_map_y[lens_mask] += dy[lens_mask] * displacement
 
-    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA ULTRA-POTENZIATA
+    # SISTEMA AGGIORNATO: Movimento "scivolato" lento e armonioso
     for lens in lenses:
-        # === PULSAZIONE DINAMICA ULTRA-MIGLIORATA ===
+        # === PULSAZIONE DINAMICA (invariata) ===
         if config.LENS_PULSATION_ENABLED:
             # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
             pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
             
             # Pulsazione del raggio con pattern complesso per più "vita"
             base_pulsation = np.sin(pulsation_time)
-            secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # Frequenza diversa
-            tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # Ancora più complessa
+            secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)
+            tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)
             
             total_pulsation = base_pulsation + secondary_pulsation + tertiary_pulsation
             pulsation_factor = 1.0 + config.LENS_PULSATION_AMPLITUDE * total_pulsation
             lens['radius'] = lens['base_radius'] * pulsation_factor
             
-            # NUOVO: Pulsazione anche della forza per effetto drammatico
             if config.LENS_FORCE_PULSATION_ENABLED:
-                force_pulsation_time = pulsation_time * 1.8  # Velocità leggermente diversa
+                force_pulsation_time = pulsation_time * 1.8
                 force_pulsation = np.sin(force_pulsation_time) + 0.5 * np.cos(force_pulsation_time * 1.6)
                 force_factor = 1.0 + config.LENS_FORCE_PULSATION_AMPLITUDE * force_pulsation
                 lens['strength'] = lens['base_strength'] * force_factor
         
-        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
-        # Velocità drasticamente aumentata per movimento ultra-evidente
-        movement_speed_multiplier = 8.5  # AUMENTATO da 6.0 a 8.5 per movimento ancora più veloce
-        path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
-        current_target = lens['path'][int(path_progress)]
+        # === MOVIMENTO LUNGO IL PERCORSO (NUOVA LOGICA "SCIVOLATA") ===
+        # Calcola il progresso lungo il percorso usando la velocità globale e quella individuale della lente
+        path_progress = ((frame_index * config.LENS_SPEED_FACTOR * lens['individual_speed_factor']) + lens['path_offset']) % len(lens['path'])
         
-        # Interpolazione ultra-fluida tra i punti del percorso
-        next_index = (int(path_progress) + 1) % len(lens['path'])
+        # Trova il punto corrente e quello successivo per l'interpolazione
+        current_index = int(path_progress)
+        next_index = (current_index + 1) % len(lens['path'])
+        
+        current_target = lens['path'][current_index]
         next_target = lens['path'][next_index]
-        interpolation_factor = path_progress - int(path_progress)
         
-        # Interpolazione con curva smooth per movimento più naturale
-        smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
-        smooth_target = current_target + (next_target - current_target) * smooth_factor
+        # Calcola quanto siamo "in mezzo" tra i due punti
+        interpolation_factor = path_progress - current_index
         
-        # Movimento ultra-aggressivo e reattivo verso il target
-        direction = smooth_target - lens['pos']
-        distance_to_target = np.linalg.norm(direction)
+        # Interpolazione lineare per un movimento perfettamente fluido e "scivolato"
+        lens['pos'] = current_target + (next_target - current_target) * interpolation_factor
         
-        if distance_to_target > 0:
-            # Velocità ultra-alta con adattamento dinamico alla distanza
-            base_speed = config.LENS_SPEED_FACTOR * 1.4  # Velocità base aumentata
-            adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
-            desired_velocity = (direction / distance_to_target) * adaptive_speed
-            
-            # Inerzia ridotta per movimento ultra-reattivo
-            inertia_strength = 0.75  # RIDOTTA ulteriormente da 0.85 per massima reattività
-            lens['velocity'] = lens['velocity'] * inertia_strength + desired_velocity * (1 - inertia_strength)
-        
-        # Aggiorna posizione e angolo con velocità ultra-aumentata
-        lens['pos'] += lens['velocity']
-        lens['angle'] += lens['rotation_speed'] * 7.0  # AUMENTATA: rotazione ultra-veloce
-        
-        # Assicurati che rimanga nei limiti con margini morbidi
-        margin = config.LENS_MIN_RADIUS
-        lens['pos'][0] = np.clip(lens['pos'][0], margin, w - margin)
-        lens['pos'][1] = np.clip(lens['pos'][1], margin, h - margin)
+        # La rotazione può rimanere per un po' di dinamismo
+        lens['angle'] += lens['rotation_speed']
 
     deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return deformed_mask
@@ -863,15 +696,12 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
 
 def process_background(bg_frame, config):
     """
-    Processa il frame di sfondo: lo ritaglia, lo scurisce e ne estrae i contorni per i traccianti.
+    Processa il frame di sfondo: lo ridimensiona (senza croppare), lo scurisce e ne estrae i contorni.
     """
-    h, w, _ = bg_frame.shape
+    # 1. Ridimensiona alla dimensione finale (NESSUN CROP)
+    final_bg = cv2.resize(bg_frame, (config.WIDTH, config.HEIGHT), interpolation=cv2.INTER_AREA)
     
-    # 1. Ritaglia la fascia specificata
-    cropped_bg = bg_frame[config.BG_CROP_Y_START : config.BG_CROP_Y_END, :]
-    
-    # 2. Ridimensiona alla dimensione finale, scurisce e contrasta
-    final_bg = cv2.resize(cropped_bg, (config.WIDTH, config.HEIGHT))
+    # 2. Scurisce e contrasta
     if config.BG_DARKEN_FACTOR < 1.0:
         # Applica lo scurimento in modo più "morbido"
         final_bg = cv2.addWeighted(final_bg, config.BG_DARKEN_FACTOR, np.zeros_like(final_bg), 1 - config.BG_DARKEN_FACTOR, 0)
@@ -1023,9 +853,22 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     if config.ADVANCED_BLENDING:
         final_frame = apply_advanced_blending(final_frame_with_glow, final_logo_layer, logo_mask, config)
     else:
-        # Metodo tradizionale: sovrapponi il logo pulito allo sfondo con glow
-        final_frame_with_glow[logo_mask_bool] = 0
-        final_frame = cv2.add(final_frame_with_glow, final_logo_layer)
+        # --- LOGICA DI BLENDING CORRETTA PER GESTIRE I BUCHI ---
+        # 1. Crea una maschera invertita per lo sfondo.
+        # Dove la maschera del logo è 0 (sfondo e buchi), questa sarà 255.
+        background_mask = cv2.bitwise_not(logo_mask)
+        
+        # 2. Isola lo sfondo che deve rimanere visibile (incluse le aree dei buchi).
+        # Usa la maschera invertita per mantenere le parti dello sfondo.
+        background_part = cv2.bitwise_and(final_frame_with_glow, final_frame_with_glow, mask=background_mask)
+        
+        # 3. Isola il logo. `final_logo_layer` contiene già il logo colorato/texturizzato
+        # su uno sfondo nero, quindi non serve un'altra mascheratura.
+        
+        # 4. Somma lo sfondo preservato con il layer del logo.
+        # Dove c'erano i buchi, lo sfondo è preservato e viene sommato al nero del logo_layer.
+        # Dove c'era il logo, lo sfondo è nero e viene sommato al colore del logo.
+        final_frame = cv2.add(background_part, final_logo_layer)
 
     return final_frame, combined_logo_edges, current_bg_edges
 
@@ -1096,26 +939,19 @@ def extract_logo_tracers(logo_mask, config):
     
     return logo_edges
 
-def initialize_lenses(config):
-    """Inizializza una lista di lenti con percorsi cinematografici predefiniti per movimenti ampi e fluidi."""
+def initialize_lenses(config, logo_contour_path):
+    """Inizializza le lenti, posizionandole e facendole muovere lungo i contorni del logo."""
     lenses = []
     
-    # Tipi di percorsi cinematografici - ULTRA-BIAS ORIZZONTALE per seguire la scritta
-    horizontal_paths = ['horizontal_sweep', 'horizontal_zigzag', 'horizontal_wave_complex', 'wave']  # Percorsi orizzontali privilegiati
-    mixed_paths = ['figure_eight', 'spiral', 'circular', 'cross']  # Percorsi misti
+    if logo_contour_path is None or len(logo_contour_path) == 0:
+        print("⚠️ Percorso del logo non valido, le lenti non verranno inizializzate.")
+        return lenses
+
+    total_path_points = len(logo_contour_path)
     
-    # BIAS ORIZZONTALE: 70% delle lenti usa percorsi orizzontali
-    horizontal_lens_count = int(config.NUM_LENSES * 0.7)
-    mixed_lens_count = config.NUM_LENSES - horizontal_lens_count
-    
-    # Lista combinata con bias orizzontale
-    path_assignments = []
-    # Assegna percorsi orizzontali alla maggior parte delle lenti
-    for i in range(horizontal_lens_count):
-        path_assignments.append(horizontal_paths[i % len(horizontal_paths)])
-    # Aggiungi alcuni percorsi misti per varietà
-    for i in range(mixed_lens_count):
-        path_assignments.append(mixed_paths[i % len(mixed_paths)])
+    # Assegna un tipo di percorso casuale a ciascuna lente per varietà nei movimenti
+    path_types = ['figure_eight', 'spiral', 'wave', 'circular', 'cross', 'horizontal_sweep', 'horizontal_zigzag', 'horizontal_wave_complex']
+    path_assignments = np.random.choice(path_types, config.NUM_LENSES, replace=True)
     
     # Mescola per evitare che tutte le lenti orizzontali siano consecutive
     np.random.shuffle(path_assignments)
@@ -1127,42 +963,40 @@ def initialize_lenses(config):
         # Usa il tipo di percorso assegnato con bias orizzontale
         path_type = path_assignments[i]
         
-        # Genera il percorso cinematografico completo
+        # Genera un percorso cinematografico basato sul tipo assegnato
         path = generate_cinematic_path(config.WIDTH, config.HEIGHT, path_type, total_frames)
         
-        # Posizione iniziale casuala lungo il percorso
+        # Posizione iniziale casuale lungo il percorso (offset temporale)
         path_offset = np.random.randint(0, len(path))
         initial_pos = path[path_offset]
         
         # NUOVA: Base radius variabile per pulsazioni più interessanti
         base_radius = np.random.uniform(config.LENS_MIN_RADIUS, config.LENS_MAX_RADIUS)
-        current_radius = base_radius  # Inizia con il raggio base
+        current_radius = base_radius
         
-        # NUOVA: Forza base che verrà modulata dalla pulsazione
+        # Forza iniziale della lente con variazione casuale
         base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
         
         lens = {
             'pos': np.array(initial_pos, dtype=np.float32),
-            'velocity': np.array([0.0, 0.0]),  # Inizia ferma, si muove verso il percorso
+            'velocity': np.array([0.0, 0.0]),
             'radius': current_radius,
-            'base_radius': base_radius,  # Raggio base per pulsazione
+            'base_radius': base_radius,
             'strength': base_strength,
-            'base_strength': base_strength,  # NUOVO: forza base per pulsazione
+            'base_strength': base_strength,
             'angle': np.random.uniform(0, 2 * np.pi),
-            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
-            'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
-            'path': path,  # Percorso cinematografico completo
-            'path_offset': path_offset,  # Offset iniziale nel percorso
-            'path_type': path_type  # Tipo di percorso per debug
+            'rotation_speed': np.random.uniform(-0.008, 0.008),
+            'pulsation_offset': np.random.uniform(0, 2 * np.pi),
+            'path': path,
+            'path_offset': path_offset,
+            'path_type': path_type,
+            'individual_speed_factor': np.random.uniform(0.7, 1.5) # NUOVO: Velocità individuale per ogni lente
         }
         lenses.append(lens)
     
     print(f"🔮 Inizializzate {config.NUM_LENSES} lenti ULTRA-CINEMATOGRAFICHE:")
-    print(f"   📏 {horizontal_lens_count} lenti con percorsi ORIZZONTALI (bias 70%)")
-    print(f"   🌀 {mixed_lens_count} lenti con percorsi MISTI per varietà")
     for i, lens in enumerate(lenses):
-        movement_type = "ORIZZONTALE" if lens['path_type'] in horizontal_paths else "MISTO"
-        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type})")
+        print(f"  Lente {i+1}: Pos={lens['pos']}, Raggio={lens['radius']:.2f}, Forza={lens['strength']:.2f}, Tipo Percorso={lens['path_type']}")
     
     return lenses
 
@@ -1191,119 +1025,152 @@ def find_texture_file():
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
-    output_filename = None
-    out = None
-    bg_video = None
+    # --- Codici ANSI per colori e stili nel terminale ---
+    C_CYAN = '\033[96m'
+    C_GREEN = '\033[92m'
+    C_YELLOW = '\033[93m'
+    C_BLUE = '\033[94m'
+    C_MAGENTA = '\033[95m'
+    C_BOLD = '\033[1m'
+    C_END = '\033[0m'
+    SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
+
+    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - Edizione Super Qualità...{C_END}")
+    print(f"🙏 Un grazie speciale a Barbara e Syria per il nuovo sfondo! 🙏")
+    source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
+    print(f"💎 Sorgente: {source_type} con smoothing ULTRA-PERFETTO")
+    print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
+    print(f"✨ Traccianti scintillanti + Blending + Glow COMPATIBILE")
+    print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
     
-    try:
-        print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
-        print(f"✓ TEST MODE: 30fps, 10s, codec multipli per compatibilità")
-        source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
-        print(f"✓ Sorgente: {source_type} con smoothing ottimizzato")
-        print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
-        print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
-        print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
-        print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
-        print(f"✓ Variazione dinamica + codec video testati")
-        print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
+    # Carica contorni da SVG o PDF
+    if Config.USE_SVG_SOURCE:
+        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+    else:
+        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+
+    if not contours:
+        source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
+        print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
+        return
+
+    print("Estrazione contorni riuscita.")
+
+    # --- NUOVO: Creazione di un percorso unificato per le lenti dai contorni del logo ---
+    logo_contour_path = None
+    if Config.LENS_DEFORMATION_ENABLED and contours:
+        print("🧬 Creazione del percorso unificato per le lenti dai contorni del logo...")
+        # Concatena tutti i punti di tutti i contorni in un unico array
+        # FILTRO AGGIUNTO: Usa solo contorni con abbastanza punti (>= 4) per la spline
+        all_points_list = [c.squeeze() for c in contours if c.shape[0] > 3]
         
-        # Carica contorni da SVG o PDF
-        if Config.USE_SVG_SOURCE:
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+        if not all_points_list:
+            print("  ❌ Nessun contorno valido per creare il percorso lenti.")
+            logo_contour_path = None
         else:
-            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
-
-        if not contours:
-            source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
-            print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
-            return
-
-        print("Estrazione contorni riuscita.")
-
-        # --- Caricamento Texture (se abilitata) ---
-        texture_image = None
-        if Config.TEXTURE_ENABLED:
-            # Prima cerca la texture automaticamente
-            texture_path = find_texture_file()
-            # Poi carica la texture trovata (o fallback se non trovata)
-            texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
-            if texture_image is not None:
-                print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
-        else:
-            print("La texturizzazione del logo è disabilitata.")
-
-        # --- Apertura Video di Sfondo ---
-        bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
-        if not bg_video.isOpened():
-            print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
-            # Crea uno sfondo nero di fallback
-            bg_video = None
-        else:
-            # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
-            bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
-            bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
-            print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
-            print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
-        
-        # Setup video writer con codec ottimizzato per WhatsApp
-        if Config.WHATSAPP_COMPATIBLE:
-            # H.264 è il migliore per WhatsApp
-            fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
-            print("🔄 Usando H.264 per compatibilità WhatsApp...")
-        else:
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
+            all_points = np.vstack(all_points_list)
             
-        output_filename = get_timestamp_filename()
+            # Smussa e ricampiona il percorso per un movimento fluido
+            try:
+                # Chiudi il percorso per un loop perfetto
+                all_points = np.vstack([all_points, all_points[0]])
+                
+                # Usa splprep per creare una spline che rappresenti l'intero percorso
+                tck, u = splprep([all_points[:, 0], all_points[:, 1]], s=1000, per=True) # s alto per più smoothing
+                
+                # Ricampiona la spline con un numero elevato di punti per la massima fluidità
+                num_path_points = 5000 # Tanti punti per un movimento super liscio
+                u_new = np.linspace(u.min(), u.max(), num_path_points)
+                x_new, y_new = splev(u_new, tck, der=0)
+                
+                logo_contour_path = np.c_[x_new, y_new]
+                print(f"  ✓ Percorso lenti creato con {len(logo_contour_path)} punti.")
+            except Exception as e:
+                print(f"  ❌ Errore nella creazione del percorso lenti: {e}. Le lenti useranno un fallback.")
+                # Fallback: usa semplicemente i punti grezzi se la spline fallisce
+                logo_contour_path = all_points
+
+
+    # --- Caricamento Texture (se abilitata) ---
+    texture_image = None
+    if Config.TEXTURE_ENABLED:
+        # Prima cerca la texture automaticamente
+        texture_path = find_texture_file()
+        # Poi carica la texture trovata (o fallback se non trovata)
+        texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
+        if texture_image is not None:
+            print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
+    else:
+        print("La texturizzazione del logo è disabilitata.")
+
+    # --- Apertura Video di Sfondo ---
+    bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
+    if not bg_video.isOpened():
+        print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
+        # Crea uno sfondo nero di fallback
+        bg_video = None
+    else:
+        bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+        bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
+        print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps:.2f}fps. Verrà riprodotto a velocità naturale.")
+    
+    # Setup video writer con codec ottimizzato per WhatsApp
+    if Config.WHATSAPP_COMPATIBLE:
+
+        # H.264 è il migliore per WhatsApp
+        fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
+        print("🔄 Usando H.264 per compatibilità WhatsApp...")
+    else:
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
+        
+    output_filename = get_timestamp_filename()
+    out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+    
+    if not out.isOpened():
+        print("TENTATIVO 1 FALLITO. Provo con mp4v...")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
         
-        if not out.isOpened():
-            print("TENTATIVO 1 FALLITO. Provo con mp4v...")
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-            
-        if not out.isOpened():
-            print("TENTATIVO 2 FALLITO. Provo con XVID...")
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-            
-        if not out.isOpened():
-            print("ERRORE CRITICO: Nessun codec video funziona!")
-            return
+    if not out.isOpened():
+        print("TENTATIVO 2 FALLITO. Provo con XVID...")
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
         
-        # --- Inizializzazione Effetti ---
-        tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
-        
-        # --- NUOVO: Inizializzazione Traccianti Sfondo ---
-        bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
+    if not out.isOpened():
+        print("ERRORE CRITICO: Nessun codec video funziona!")
+        return
+    
+    # --- Inizializzazione Effetti ---
+    tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
+    
+    # --- NUOVO: Inizializzazione Traccianti Sfondo ---
+    bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
 
-        # --- Inizializzazione per Effetto Lenti (NUOVO) ---
-        lenses = []
-        if Config.LENS_DEFORMATION_ENABLED:
-            lenses = initialize_lenses(Config)
-            print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
+    # --- Inizializzazione per Effetto Lenti (NUOVO SISTEMA) ---
+    lenses = []
+    if Config.LENS_DEFORMATION_ENABLED:
+        lenses = initialize_lenses(Config, logo_contour_path)
+        if lenses:
+            print(f"🌊 Liberate {len(lenses)} creature liquide che seguiranno la forma del logo.")
 
-        print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
-        start_time = time.time()
-        
+    print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
+    start_time = time.time()
+    
+    try:
         for i in range(Config.TOTAL_FRAMES):
-            # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
+            # --- Gestione Frame di Sfondo (velocità naturale) ---
+            bg_frame = None
             if bg_video:
-                # NUOVO: Calcola il frame del video di sfondo rallentato (metà velocità)
-                # Frame normale: i
-                # Frame rallentato: i / 2 (metà velocità)
-                bg_frame_index = int(i / 2.0)  # Rallentamento a metà velocità
-                
-                # Imposta la posizione nel video di sfondo
-                bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
                 ret, bg_frame = bg_video.read()
                 
-                # Se arriviamo alla fine del video, riavvolgi
+                # Se il video di sfondo finisce, riavvolgilo per un loop continuo
                 if not ret:
+                    print("\nVideo di sfondo terminato. Riavvolgimento...")
                     bg_video.set(cv2.CAP_PROP_POS_FRAMES, 0)
                     ret, bg_frame = bg_video.read()
-                # Ridimensiona il frame di sfondo alle dimensioni del video di output
-                bg_frame = cv2.resize(bg_frame, (Config.WIDTH, Config.HEIGHT))
-            else:
+            
+            # Se ancora non c'è un frame (es. file non trovato), usa uno sfondo nero
+            if bg_frame is None:
                 bg_frame = np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
 
             frame_result = render_frame(contours, hierarchy, Config.WIDTH, Config.HEIGHT, i, Config.TOTAL_FRAMES, Config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses)
@@ -1322,10 +1189,15 @@ def main():
             if hasattr(Config, 'BG_TRACER_ENABLED') and Config.BG_TRACER_ENABLED and current_bg_edges is not None:
                 bg_tracer_history.append(current_bg_edges)
             
+
+            
+
+            
             out.write(frame)
             
             # --- Log di Avanzamento Magico (aggiornamento per frame) ---
             elapsed = time.time() - start_time
+           
             fps = (i + 1) / elapsed if elapsed > 0 else 0
             
             # Calcolo ETA
@@ -1354,56 +1226,40 @@ def main():
                 f"| {C_YELLOW}FPS: {fps:.2f}{C_END} "
                 f"| {C_MAGENTA}ETA: {eta_str}{C_END} "
             )
-            print(log_message, end="")
+            print(log_message, end="", flush=True)
         
         print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
         print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
-        print(f"✓ Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
+        print(f"� Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
         print(f"💎 Qualità SUPREMA (1000 DPI, smoothing perfetto)!")
         print(f"🔮 Movimento IPNOTICO e curioso - Alex Ortiga & TV Int ULTIMATE!")
-
-    except Exception as e:
-        print(f"\n{C_BOLD}{C_YELLOW}An error occurred during rendering: {e}{C_END}")
-
+        
     finally:
         # Assicurati sempre di chiudere correttamente i file video
-        if out and out.isOpened():
-            out.release()
-        if bg_video and bg_video.isOpened(): 
+        out.release()
+        if bg_video: 
             bg_video.release()
-        
-        if output_filename and os.path.exists(output_filename):
-            print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
+        print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
 
-            # --- GESTIONE VERSIONAMENTO ---
-            try:
-                print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
-                source_script_path = os.path.abspath(__file__)
-                # Assicurati che il percorso di version_manager.py sia corretto
-                version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
-                
-                if os.path.exists(version_manager_path):
-                    result = subprocess.run(
-                        [sys.executable, version_manager_path, source_script_path, output_filename],
-                        capture_output=True,
-                        text=True,
-                        check=False # Mettiamo a False per gestire l'errore manualmente
-                    )
-                    # Stampa sempre stdout e stderr per il debug
-                    print(result.stdout)
-                    if result.stderr:
-                        # Gestisce il caso "nothing to commit" come un'informazione, non un errore
-                        if "nothing to commit" in result.stderr.lower():
-                             print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
-                        else:
-                            print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
-                else:
-                    print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
+        # --- NUOVO: Chiamata allo script di versioning ---
+        try:
+            print(f"{C_BLUE}🚀 Avvio del gestore di versioni...{C_END}")
+            # Assicurati di usare il percorso corretto per l'interprete python, se necessario
+            python_executable = sys.executable
+            subprocess.run(
+                [python_executable, 'version_manager.py', __file__, output_filename],
+                check=True,
+                capture_output=True, # Cattura l'output per stamparlo
+                text=True # Decodifica l'output come testo
+            )
+            print(f"{C_GREEN}✅ Gestore di versioni completato con successo.{C_END}")
+        except subprocess.CalledProcessError as e:
+            print(f"{C_YELLOW}⚠️  Il gestore di versioni ha terminato con un errore:{C_END}")
+            print(e.stdout)
+            print(e.stderr)
+        except FileNotFoundError:
+            print(f"{C_YELLOW}⚠️  'version_manager.py' non trovato. Salto il versioning.{C_END}")
 
-            except Exception as e:
-                print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
-        else:
-            print(f"{C_YELLOW}Nessun file di output generato o trovato. Saltando il versionamento.{C_END}")
 
 if __name__ == "__main__":
     main()
