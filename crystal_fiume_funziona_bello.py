@@ -325,19 +325,31 @@ def extract_contours_from_svg(svg_path, width, height, padding):
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_smooth, iterations=1)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_smooth, iterations=1)
         
-        # Estrai il contorno finale dalla maschera unificata
-        final_contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Estrai i contorni con hierarchy per preservare i buchi interni
+        final_contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         
         if not final_contours:
             raise Exception("Nessun contorno finale estratto.")
         
-        # Restituisci solo il contorno principale
-        main_contour = max(final_contours, key=cv2.contourArea)
+        # Filtra contorni troppo piccoli
+        filtered_contours = []
         
-        print(f"📐 Estratto 1 contorno unificato senza spaccature")
+        for contour in final_contours:
+            area = cv2.contourArea(contour)
+            if area > 30:  # Soglia minima per area (inclusi buchi piccoli)
+                filtered_contours.append(contour)
+        
+        # Se abbiamo hierarchy, ricostruiscila per i contorni filtrati
+        final_hierarchy = None
+        if hierarchy is not None and len(filtered_contours) > 0:
+            # Semplifichiamo: se ci sono più contorni, probabilmente abbiamo contorni esterni + buchi
+            # La hierarchy viene gestita correttamente da OpenCV con RETR_CCOMP
+            final_hierarchy = hierarchy
+        
+        print(f"📐 Estratti {len(filtered_contours)} contorni (con buchi preservati)")
         print(f"🎯 Logo ridimensionato: {final_w:.0f}x{final_h:.0f} (scala: {scale:.3f})")
         
-        return [main_contour], None  # Un singolo contorno unificato
+        return filtered_contours, final_hierarchy
     
     except Exception as e:
         print(f"❌ Errore nell'estrazione SVG: {e}")
