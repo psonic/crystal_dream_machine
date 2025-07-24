@@ -47,9 +47,9 @@ class Config:
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
-    FPS = 30
-    DURATION_SECONDS = 2 # Durata normale per il rendering finale
+    SVG_PADDING = 50  # Padding attorno all'SVG (bei bordi)
+    FPS = 15 if TEST_MODE else 30
+    DURATION_SECONDS = 2 if TEST_MODE else 20 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -59,18 +59,18 @@ class Config:
     # --- Video di Sfondo - SENZA CROP, COME BACKGROUND ORIGINALE ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_USE_ORIGINAL_SIZE = True  # NUOVO: usa dimensioni originali senza crop
-    BG_SLOWDOWN_FACTOR = 1.5     # NUOVO: rallentamento ridotto (era 2.0 = metà velocità)
+    BG_SLOWDOWN_FACTOR = 1.2     # NUOVO: rallentamento ridotto (era 2.0 = metà velocità)
     BG_DARKEN_FACTOR = 0.4       # CORRETTO: sfondo visibile ma non invadente (era 0.06)
     BG_CONTRAST_FACTOR = 1.2     # Leggermente aumentato per definizione
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 70 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
     DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
-    DEFORMATION_SPEED = 0.02 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
+    DEFORMATION_SPEED = 0.01 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
@@ -81,12 +81,12 @@ class Config:
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
     LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
-    LENS_SPEED_FACTOR = 0.2  # VELOCITÀ AUMENTATA per movimento ultra-evidente
+    LENS_SPEED_FACTOR = 0.1  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
     LENS_HORIZONTAL_BIAS = 0.85  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
-    LENS_PULSATION_SPEED = 0.02  # AUMENTATO: pulsazione più rapida e visibile
+    LENS_PULSATION_SPEED = 0.01  # AUMENTATO: pulsazione più rapida e visibile
     LENS_PULSATION_AMPLITUDE = 0.3  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
     LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
@@ -109,8 +109,8 @@ class Config:
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
     BG_TRACER_ENABLED = True
-    BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.3 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_TRAIL_LENGTH = 10 # Scie più lunghe per lo sfondo
+    BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
     BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
     BG_TRACER_THRESHOLD2 = 100
