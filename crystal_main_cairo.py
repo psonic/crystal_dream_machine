@@ -83,6 +83,21 @@ def apply_organic_deformation(mask, frame_index, speed, scale, intensity):
     
     return deformed_mask
 
+def load_texture(texture_path, width, height):
+    """Carica e ridimensiona l'immagine di texture."""
+    if not os.path.exists(texture_path):
+        print(f"ATTENZIONE: File texture non trovato in '{texture_path}'. Il logo non verrà texturizzato.")
+        return None
+    try:
+        texture = cv2.imread(texture_path, cv2.IMREAD_COLOR)
+        if texture is None:
+            raise Exception("cv2.imread ha restituito None.")
+        # Ridimensiona la texture per adattarla al frame
+        return cv2.resize(texture, (width, height), interpolation=cv2.INTER_LINEAR)
+    except Exception as e:
+        print(f"Errore durante il caricamento della texture: {e}")
+        return None
+
 def main_cairo_fixed():
     """Main corretto che usa CairoSVG senza crash"""
     
@@ -107,6 +122,13 @@ def main_cairo_fixed():
         if mask is None:
             print("❌ Maschera non trovata, usando fallback")
             return False
+        
+        # Carica texture (se disponibile)
+        texture_image = load_texture("input/texture.jpg", width, height)
+        if texture_image is not None:
+            print("🎨 Texture caricata con successo!")
+        else:
+            print("⚠️ Texture non disponibile, usando colore solido")
         
         # Setup video
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -161,8 +183,27 @@ def main_cairo_fixed():
                 current_mask = apply_organic_deformation(current_mask, i, 
                                                        deform_speed, deform_scale, deform_intensity)
             
-            # Applica logo base
-            frame[current_mask > 0] = logo_color
+            # NUOVO: Applica logo con texture (se disponibile)
+            if texture_image is not None:
+                # Applica texture + colore
+                texture_alpha = 0.4  # Intensità texture
+                
+                # Crea layer con colore solido
+                solid_color_layer = np.zeros_like(frame)
+                solid_color_layer[current_mask > 0] = logo_color
+                
+                # Crea layer texture mascherata
+                textured_logo_masked = cv2.bitwise_and(texture_image, texture_image, mask=current_mask)
+                
+                # Combina colore e texture
+                logo_layer = cv2.addWeighted(solid_color_layer, 1.0 - texture_alpha, 
+                                           textured_logo_masked, texture_alpha, 0)
+                
+                # Applica al frame
+                frame[current_mask > 0] = logo_layer[current_mask > 0]
+            else:
+                # Usa solo colore solido se texture non disponibile
+                frame[current_mask > 0] = logo_color
             
             # NUOVO: Effetto GLOW
             if True:  # Glow sempre attivo per test
