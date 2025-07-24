@@ -87,9 +87,9 @@ class Config:
     LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.01  # AUMENTATO: pulsazione più rapida e visibile
-    LENS_PULSATION_AMPLITUDE = 0.5  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
+    LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
     LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.5  # NUOVO: variazione forza +/-50%
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
     
     WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
     WORM_LENGTH = 3 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
