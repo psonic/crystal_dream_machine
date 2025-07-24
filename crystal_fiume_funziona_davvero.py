@@ -47,7 +47,7 @@ class Config:
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 50  # Padding attorno all'SVG (bei bordi)
+    SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
     FPS = 10  if TEST_MODE else 30
     DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
@@ -69,7 +69,7 @@ class Config:
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = False # RIABILITATA per ridare movimento al logo
+    DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
     DEFORMATION_SPEED = 0.02 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
