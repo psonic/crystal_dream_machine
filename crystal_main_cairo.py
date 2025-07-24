@@ -151,6 +151,16 @@ def main_cairo_fixed():
             else:
                 current_mask = mask
             
+            # NUOVO: Effetto DEFORMAZIONE ORGANICA
+            if True:  # Deformazione sempre attiva per test
+                # Parametri deformazione dal main originale
+                deform_speed = 0.05
+                deform_scale = 0.008
+                deform_intensity = 8.0  # Ridotto rispetto al main per essere più delicato
+                
+                current_mask = apply_organic_deformation(current_mask, i, 
+                                                       deform_speed, deform_scale, deform_intensity)
+            
             # Applica logo base
             frame[current_mask > 0] = logo_color
             

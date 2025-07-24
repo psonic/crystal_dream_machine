@@ -48,7 +48,7 @@ class Config:
     
     # --- Sorgente Logo e Texture ---
     USE_SVG_SOURCE = True  # True = SVG, False = PDF
-    SVG_PATH = 'input/logo-final-extracted.svg'  # SVG con tracciato unificato
+    SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
     PDF_PATH = 'input/diocane.pdf'  # Opzione PDF alternativa - CORRETTO
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
