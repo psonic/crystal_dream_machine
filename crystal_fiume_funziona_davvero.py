@@ -30,7 +30,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
@@ -117,10 +117,10 @@ class Config:
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
     ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
-    LOGO_BLEND_FACTOR = 0.2 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
+    LOGO_BLEND_FACTOR = 0.4 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
-    BLEND_TRANSPARENCY = 0.4 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
-    COLOR_BLENDING_STRENGTH = 0.5 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
+    BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
+    COLOR_BLENDING_STRENGTH = 0.6 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
     
     # --- Debug e Qualità ---
     DEBUG_MASK = False  # Disabilitato per performance migliori
