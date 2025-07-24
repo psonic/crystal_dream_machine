@@ -14,16 +14,6 @@ import re
 import subprocess
 import sys
 
-# --- Codici ANSI per colori e stili nel terminale ---
-C_CYAN = '\033[96m'
-C_GREEN = '\033[92m'
-C_YELLOW = "\033[93m"
-C_MAGENTA = '\033[95m'
-C_BLUE = '\033[94m'
-C_BOLD = '\033[1m'
-C_END = '\033[0m'
-SPINNER_CHARS = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-
 # Import condizionale per PDF
 try:
     import fitz  # PyMuPDF per PDF
@@ -49,7 +39,7 @@ class Config:
     # --- Sorgente Logo e Texture ---
     USE_SVG_SOURCE = True  # True = SVG, False = PDF
     SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
-    PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa - CORRETTO
+    PDF_PATH = 'input/crystal_therapy_logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
     TEXTURE_ENABLED = True
@@ -59,7 +49,7 @@ class Config:
     WIDTH = 960 if TEST_MODE else 1920
     HEIGHT = 540 if TEST_MODE else 1080
     FPS = 30
-    DURATION_SECONDS = 3 if TEST_MODE else 30 # Durata normale per il rendering finale
+    DURATION_SECONDS = 10 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -68,7 +58,7 @@ class Config:
     LOGO_PADDING = 1 # Leggermente aumentato per l'alta risoluzione
     
     # --- Video di Sfondo e Traccianti ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
+    BACKGROUND_VIDEO_PATH = 'input/sfondo.mp4'
     BG_CROP_Y_START = 100  # Spostato più in alto
     BG_CROP_Y_END = 350    # Spostato più in alto
     BG_DARKEN_FACTOR = 0.03 # Ancora più scuro per massimo contrasto logo
@@ -76,7 +66,7 @@ class Config:
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 # Aumentato per un glow più diffuso in HD
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
@@ -429,54 +419,87 @@ def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, s
     
     # Per SVG (hierarchy=None) usa algoritmo avanzato di unificazione
     if hierarchy is None:
-        # --- TERZO APPROCCIO: FLOOD FILL - Il più robusto ---
+        # FASE 1: Crea maschere separate per ogni contorno
+        individual_masks = []
+        for contour in smoothed_contours:
+            temp_mask = np.zeros((height, width), dtype=np.uint8)
+            cv2.fillPoly(temp_mask, [contour], 255)
+            individual_masks.append(temp_mask)
         
-        # FASE 1: Disegna tutti i contorni, sia esterni che interni, come linee su una maschera vuota.
-        # Questo crea una "gabbia" che delimita tutte le aree da riempire.
-        outline_mask = np.zeros((height, width), dtype=np.uint8)
-        cv2.drawContours(outline_mask, smoothed_contours, -1, 255, 1) # Spessore 1 per linee precise
-
-        # FASE 2: Trova un punto di partenza sicuro per il riempimento.
-        # Usiamo il centroide del contorno più grande come punto di partenza.
-        if smoothed_contours:
-            # Unisci tutti i punti per trovare il bounding box generale e il centroide
-            all_points = np.vstack(smoothed_contours)
-            M = cv2.moments(all_points)
-            if M["m00"] > 0:
-                # Centroide di tutta la forma
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-                seed_point = (cX, cY)
-
-                # FASE 3: Esegui il Flood Fill.
-                # Copiamo la maschera di contorni per non modificarla direttamente.
-                # Il flood fill partirà dal seed_point e riempirà l'area fino a quando non incontra
-                # le linee bianche che abbiamo disegnato.
-                filled_mask = outline_mask.copy()
-                cv2.floodFill(filled_mask, None, seedPoint=seed_point, newVal=255)
-
-                # FASE 4: Combina la maschera riempita con i contorni originali.
-                # Questo assicura che i bordi siano perfetti e senza buchi dal flood fill.
-                final_mask = cv2.bitwise_or(filled_mask, outline_mask)
-
-                # FASE 5: Pulizia finale per rimuovere eventuali artefatti e ammorbidire.
-                kernel_clean = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel_clean, iterations=1)
-                final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_CLOSE, kernel_clean, iterations=1)
+        # FASE 2: Unisci le maschere con operazioni morfologiche progressive
+        unified_mask = None
+        if individual_masks:
+            # Inizia con la prima maschera
+            unified_mask = individual_masks[0].copy()
+            
+            # Unisci progressivamente le altre maschere
+            for mask_to_add in individual_masks[1:]:
+                # Union diretta
+                unified_mask = cv2.bitwise_or(unified_mask, mask_to_add)
                 
-                mask = final_mask
-            else:
-                # Fallback se non si trova il centroide
-                cv2.fillPoly(mask, smoothed_contours, 255)
+                # Operazione di connessione per lettere vicine
+                kernel_connect = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+                unified_mask = cv2.dilate(unified_mask, kernel_connect, iterations=2)
+                unified_mask = cv2.erode(unified_mask, kernel_connect, iterations=2)
+            
+            mask = unified_mask
         else:
-            # Fallback se non ci sono contorni
+            # Fallback se non ci sono maschere individuali
             cv2.fillPoly(mask, smoothed_contours, 255)
+        
+        # FASE 3: Post-processing avanzato per eliminare spaccature residue
+        # 1. Chiusura morfologica per colmare piccoli gap
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close, iterations=2)
+        
+        # 2. Riempimento buchi basato su contorni
+        contours_found, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if contours_found:
+            # Trova il contorno più grande (dovrebbe essere la scritta principale)
+            largest_contour = max(contours_found, key=cv2.contourArea)
+            
+            # Crea una nuova maschera solo con il contorno più grande riempito
+            temp_mask = np.zeros((height, width), dtype=np.uint8)
+            cv2.fillPoly(temp_mask, [largest_contour], 255)
+            
+            # Trova e riempi tutti i buchi interni
+            contours_with_holes, hierarchy_holes = cv2.findContours(temp_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+            
+            final_mask = np.zeros((height, width), dtype=np.uint8)
+            for i, contour in enumerate(contours_with_holes):
+                # Riempi solo i contorni esterni (hierarchy[i][3] == -1)
+                if hierarchy_holes is None or hierarchy_holes[0][i][3] == -1:
+                    cv2.fillPoly(final_mask, [contour], 255)
+            
+            mask = final_mask
+        
+        # FASE 4: Smoothing finale ottimizzato
+        # Blur leggero per eliminare pixelatura
+        mask = cv2.GaussianBlur(mask, (5, 5), 1.0)
+        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+        
+        # Operazione finale di pulizia per contorni perfetti
+        kernel_final = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_final, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_final, iterations=1)
+        
+        # FASE 5: Verifica se ci sono ancora spaccature e applica algoritmo avanzato
+        # Controlla il numero di componenti connesse
+        num_labels, labels = cv2.connectedComponents(mask)
+        if num_labels > 2:  # Più di background + una componente = spaccature presenti            
+            gap_free_mask = create_gap_free_mask(smoothed_contours, width, height)
+            
+            # Usa il meglio tra la maschera corrente e quella gap-free
+            # Se quella gap-free ha meno componenti, usala
+            num_labels_gap_free, _ = cv2.connectedComponents(gap_free_mask)
+            if num_labels_gap_free < num_labels:
+                mask = gap_free_mask                            
+        
     else:
         # Per PDF usa drawContours con hierarchy
         cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
             
     return mask
-
 
 def create_gap_free_mask(contours, width, height):
     """
@@ -1191,100 +1214,106 @@ def find_texture_file():
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
-    output_filename = None
-    out = None
-    bg_video = None
+    # --- Codici ANSI per colori e stili nel terminale ---
+    C_CYAN = '\033[96m'
+    C_GREEN = '\033[92m'
+    C_YELLOW = '\033[93m'
+    C_BLUE = '\033[94m'
+    C_MAGENTA = '\033[95m'
+    C_BOLD = '\033[1m'
+    C_END = '\033[0m'
+    SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
+
+    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
+    print(f"� TEST MODE: 30fps, 10s, codec multipli per compatibilità")
+    source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
+    print(f"� Sorgente: {source_type} con smoothing ottimizzato")
+    print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
+    print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
+    print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
+    print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
+    print(f"� Variazione dinamica + codec video testati")
+    print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
     
-    try:
-        print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
-        print(f"✓ TEST MODE: 30fps, 10s, codec multipli per compatibilità")
-        source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
-        print(f"✓ Sorgente: {source_type} con smoothing ottimizzato")
-        print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
-        print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
-        print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
-        print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
-        print(f"✓ Variazione dinamica + codec video testati")
-        print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
+    # Carica contorni da SVG o PDF
+    if Config.USE_SVG_SOURCE:
+        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+    else:
+        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+
+    if not contours:
+        source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
+        print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
+        return
+
+    print("Estrazione contorni riuscita.")
+
+    # --- Caricamento Texture (se abilitata) ---
+    texture_image = None
+    if Config.TEXTURE_ENABLED:
+        # Prima cerca la texture automaticamente
+        texture_path = find_texture_file()
+        # Poi carica la texture trovata (o fallback se non trovata)
+        texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
+        if texture_image is not None:
+            print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
+    else:
+        print("La texturizzazione del logo è disabilitata.")
+
+    # --- Apertura Video di Sfondo ---
+    bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
+    if not bg_video.isOpened():
+        print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
+        # Crea uno sfondo nero di fallback
+        bg_video = None
+    else:
+        # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
+        bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+        bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
+        print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+        print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
+    
+    # Setup video writer con codec ottimizzato per WhatsApp
+    if Config.WHATSAPP_COMPATIBLE:
+        # H.264 è il migliore per WhatsApp
+        fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
+        print("🔄 Usando H.264 per compatibilità WhatsApp...")
+    else:
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
         
-        # Carica contorni da SVG o PDF
-        if Config.USE_SVG_SOURCE:
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
-        else:
-            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
-
-        if not contours:
-            source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
-            print(f"Errore critico: nessun contorno valido trovato nel {source_name}. Uscita.")
-            return
-
-        print("Estrazione contorni riuscita.")
-
-        # --- Caricamento Texture (se abilitata) ---
-        texture_image = None
-        if Config.TEXTURE_ENABLED:
-            # Prima cerca la texture automaticamente
-            texture_path = find_texture_file()
-            # Poi carica la texture trovata (o fallback se non trovata)
-            texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
-            if texture_image is not None:
-                print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
-        else:
-            print("La texturizzazione del logo è disabilitata.")
-
-        # --- Apertura Video di Sfondo ---
-        bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
-        if not bg_video.isOpened():
-            print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
-            # Crea uno sfondo nero di fallback
-            bg_video = None
-        else:
-            # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
-            bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
-            bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
-            print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
-            print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
-        
-        # Setup video writer con codec ottimizzato per WhatsApp
-        if Config.WHATSAPP_COMPATIBLE:
-            # H.264 è il migliore per WhatsApp
-            fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
-            print("🔄 Usando H.264 per compatibilità WhatsApp...")
-        else:
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
-            
-        output_filename = get_timestamp_filename()
+    output_filename = get_timestamp_filename()
+    out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+    
+    if not out.isOpened():
+        print("TENTATIVO 1 FALLITO. Provo con mp4v...")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
         
-        if not out.isOpened():
-            print("TENTATIVO 1 FALLITO. Provo con mp4v...")
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-            
-        if not out.isOpened():
-            print("TENTATIVO 2 FALLITO. Provo con XVID...")
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-            
-        if not out.isOpened():
-            print("ERRORE CRITICO: Nessun codec video funziona!")
-            return
+    if not out.isOpened():
+        print("TENTATIVO 2 FALLITO. Provo con XVID...")
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
         
-        # --- Inizializzazione Effetti ---
-        tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
-        
-        # --- NUOVO: Inizializzazione Traccianti Sfondo ---
-        bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
+    if not out.isOpened():
+        print("ERRORE CRITICO: Nessun codec video funziona!")
+        return
+    
+    # --- Inizializzazione Effetti ---
+    tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
+    
+    # --- NUOVO: Inizializzazione Traccianti Sfondo ---
+    bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
 
-        # --- Inizializzazione per Effetto Lenti (NUOVO) ---
-        lenses = []
-        if Config.LENS_DEFORMATION_ENABLED:
-            lenses = initialize_lenses(Config)
-            print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
+    # --- Inizializzazione per Effetto Lenti (NUOVO) ---
+    lenses = []
+    if Config.LENS_DEFORMATION_ENABLED:
+        lenses = initialize_lenses(Config)
+        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
 
-        print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
-        start_time = time.time()
-        
+    print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
+    start_time = time.time()
+    
+    try:
         for i in range(Config.TOTAL_FRAMES):
             # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
             if bg_video:
@@ -1358,52 +1387,44 @@ def main():
         
         print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
         print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
-        print(f"✓ Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
+        print(f"� Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
         print(f"💎 Qualità SUPREMA (1000 DPI, smoothing perfetto)!")
         print(f"🔮 Movimento IPNOTICO e curioso - Alex Ortiga & TV Int ULTIMATE!")
-
-    except Exception as e:
-        print(f"\n{C_BOLD}{C_YELLOW}An error occurred during rendering: {e}{C_END}")
-
+        
     finally:
         # Assicurati sempre di chiudere correttamente i file video
-        if out and out.isOpened():
-            out.release()
-        if bg_video and bg_video.isOpened(): 
+        out.release()
+        if bg_video: 
             bg_video.release()
-        
-        if output_filename and os.path.exists(output_filename):
-            print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
+        print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
 
-            # --- GESTIONE VERSIONAMENTO ---
-            try:
-                print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
-                source_script_path = os.path.abspath(__file__)
-                # Assicurati che il percorso di version_manager.py sia corretto
-                version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
-                
-                if os.path.exists(version_manager_path):
-                    result = subprocess.run(
-                        [sys.executable, version_manager_path, source_script_path, output_filename],
-                        capture_output=True,
-                        text=True,
-                        check=False # Mettiamo a False per gestire l'errore manualmente
-                    )
-                    # Stampa sempre stdout e stderr per il debug
-                    print(result.stdout)
-                    if result.stderr:
-                        # Gestisce il caso "nothing to commit" come un'informazione, non un errore
-                        if "nothing to commit" in result.stderr.lower():
-                             print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
-                        else:
-                            print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
-                else:
-                    print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
+        # --- GESTIONE VERSIONAMENTO ---
+        try:
+            print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
+            source_script_path = os.path.abspath(__file__)
+            # Assicurati che il percorso di version_manager.py sia corretto
+            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
+            
+            if os.path.exists(version_manager_path):
+                result = subprocess.run(
+                    [sys.executable, version_manager_path, source_script_path, output_filename],
+                    capture_output=True,
+                    text=True,
+                    check=False # Mettiamo a False per gestire l'errore manualmente
+                )
+                # Stampa sempre stdout e stderr per il debug
+                print(result.stdout)
+                if result.stderr:
+                    # Gestisce il caso "nothing to commit" come un'informazione, non un errore
+                    if "nothing to commit" in result.stderr.lower():
+                         print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
+                    else:
+                        print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
+            else:
+                print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
 
-            except Exception as e:
-                print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
-        else:
-            print(f"{C_YELLOW}Nessun file di output generato o trovato. Saltando il versionamento.{C_END}")
+        except Exception as e:
+            print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
 
 if __name__ == "__main__":
     main()
