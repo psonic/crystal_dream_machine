@@ -47,8 +47,8 @@ class Config:
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
-    FPS = 10  if TEST_MODE else 30
+    SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
+    FPS = 30
     DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
@@ -101,19 +101,19 @@ class Config:
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
     TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 35 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.2 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
+    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
+    TRACER_MAX_OPACITY = 0.1 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
     TRACER_THRESHOLD1 = 100  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = False
+    BG_TRACER_ENABLED = True
     BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_MAX_OPACITY = 0.3 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
     BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
-    BG_TRACER_THRESHOLD2 = 70
+    BG_TRACER_THRESHOLD2 = 100
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
     ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
@@ -1443,21 +1443,13 @@ def main():
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
-    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2) 
+    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
-    # MODALITÀ TEST: Riduci dimensioni di 1/3 per rendering più veloce
-    if Config.TEST_MODE:
-        Config.WIDTH = int(Config.WIDTH / 3)
-        Config.HEIGHT = int(Config.HEIGHT / 3)
-        Config.SVG_PADDING = int(Config.SVG_PADDING / 3)
-    
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
-    print(f"📐 Dimensioni SVG originali: {svg_width}x{svg_height}")
-    if Config.TEST_MODE:
-        print(f"🚀 MODALITÀ TEST: Dimensioni ridotte a 1/3 per velocità")
+    print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
-    print(f"⏱️ TEST MODE: {Config.FPS}fps, {Config.DURATION_SECONDS}s")
+    print(f"� TEST MODE: 30fps, {Config.DURATION_SECONDS}s")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"� Sorgente: {source_type} con smoothing ottimizzato")
     print(f"� Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
