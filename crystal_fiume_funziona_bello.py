@@ -465,23 +465,27 @@ def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, s
         else:
             smoothed_contours.append(contour)
     
-    # Per SVG usa approccio unificato semplice
-    if hierarchy is None:
-        # Renderizza tutti i contorni direttamente con fillPoly
-        cv2.fillPoly(mask, smoothed_contours, 255)
-        
-        # Applica smoothing leggero per migliorare la qualità
-        if smoothing_enabled:
-            mask = cv2.GaussianBlur(mask, (3, 3), 0.8)
-            _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-        
-        # Post-processing minimo per pulire i bordi
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-        
+    # Per SVG con hierarchy, usa drawContours solo se hierarchy è corretta
+    if hierarchy is not None:
+        try:
+            # Prova a usare drawContours con hierarchy per preservare i buchi
+            cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
+        except:
+            # Se fallisce, usa fillPoly come fallback
+            print("⚠️ Hierarchy non compatibile, usando fillPoly")
+            cv2.fillPoly(mask, smoothed_contours, 255)
     else:
-        # Per PDF usa drawContours con hierarchy
-        cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
+        # Nessuna hierarchy, usa fillPoly semplice
+        cv2.fillPoly(mask, smoothed_contours, 255)
+    
+    # Applica smoothing leggero per migliorare la qualità
+    if smoothing_enabled:
+        mask = cv2.GaussianBlur(mask, (3, 3), 0.8)
+        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+    
+    # Post-processing minimo per pulire i bordi
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
     
     return mask
 
