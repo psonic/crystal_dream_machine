@@ -49,7 +49,7 @@ class Config:
     WIDTH = 960 if TEST_MODE else 1920
     HEIGHT = 540 if TEST_MODE else 1080
     FPS = 30
-    DURATION_SECONDS = 10 # Durata normale per il rendering finale
+    DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -58,7 +58,7 @@ class Config:
     LOGO_PADDING = 1 # Leggermente aumentato per l'alta risoluzione
     
     # --- Video di Sfondo e Traccianti ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.mp4'
+    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     BG_CROP_Y_START = 100  # Spostato più in alto
     BG_CROP_Y_END = 350    # Spostato più in alto
     BG_DARKEN_FACTOR = 0.03 # Ancora più scuro per massimo contrasto logo
