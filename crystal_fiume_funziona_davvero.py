@@ -75,7 +75,7 @@ class Config:
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = False # RIATTIVATA per combo effetti
+    LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
     NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
