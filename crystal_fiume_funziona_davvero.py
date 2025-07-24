@@ -47,8 +47,8 @@ class Config:
 
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
-    FPS = 30
+    SVG_PADDING = 50  # Padding attorno all'SVG (bei bordi)
+    FPS = 10  if TEST_MODE else 30
     DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
@@ -64,18 +64,18 @@ class Config:
     BG_CONTRAST_FACTOR = 1.2     # Leggermente aumentato per definizione
     
     # --- Effetto Glow (Bagliore) ---
-    GLOW_ENABLED = True
+    GLOW_ENABLED = False
     GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
+    DEFORMATION_ENABLED = False # RIABILITATA per ridare movimento al logo
     DEFORMATION_SPEED = 0.02 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
+    LENS_DEFORMATION_ENABLED = False # RIATTIVATA per combo effetti
     NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
@@ -100,23 +100,23 @@ class Config:
     SMOOTHING_FACTOR = 0.00001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
-    TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.1 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
+    TRACER_ENABLED = False
+    TRACER_TRAIL_LENGTH = 35 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
+    TRACER_MAX_OPACITY = 0.2 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
     TRACER_THRESHOLD1 = 100  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = True
+    BG_TRACER_ENABLED = False
     BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.3 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
     BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
-    BG_TRACER_THRESHOLD2 = 100
+    BG_TRACER_THRESHOLD2 = 70
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
-    ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
+    ADVANCED_BLENDING = False # Abilita il blending avanzato scritta-sfondo
     LOGO_BLEND_FACTOR = 0.1 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
     BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
@@ -126,7 +126,7 @@ class Config:
     DEBUG_MASK = False  # Disabilitato per performance migliori
     
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
-    DYNAMIC_VARIATION_ENABLED = True
+    DYNAMIC_VARIATION_ENABLED = False
     VARIATION_AMPLITUDE = 0.3 # ±10% di variazione massima
     VARIATION_SPEED_SLOW = 0.02  # Velocità variazione lenta (per deformazioni)
     VARIATION_SPEED_MEDIUM = 0.05 # Velocità variazione media (per traccianti)
@@ -1443,13 +1443,26 @@ def main():
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
-    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
+    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2) 
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
+    # MODALITÀ TEST: Riduci dimensioni di 1/3 per rendering più veloce
+    print(f"🔧 DEBUG: Controllo TEST_MODE = {Config.TEST_MODE}")
+    if Config.TEST_MODE:
+        print(f"🔧 DEBUG: TEST_MODE è attivo, riduco dimensioni da {Config.WIDTH}x{Config.HEIGHT}")
+        Config.WIDTH = int(Config.WIDTH / 3)
+        Config.HEIGHT = int(Config.HEIGHT / 3)
+        Config.SVG_PADDING = int(Config.SVG_PADDING / 3)
+        print(f"🔧 DEBUG: Nuove dimensioni: {Config.WIDTH}x{Config.HEIGHT}")
+    else:
+        print(f"🔧 DEBUG: TEST_MODE non è attivo")
+    
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
-    print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
+    print(f"📐 Dimensioni SVG originali: {svg_width}x{svg_height}")
+    if Config.TEST_MODE:
+        print(f"🚀 MODALITÀ TEST: Dimensioni ridotte a 1/3 per velocità")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
-    print(f"� TEST MODE: 30fps, {Config.DURATION_SECONDS}s")
+    print(f"⏱️ TEST MODE: {Config.FPS}fps, {Config.DURATION_SECONDS}s")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"� Sorgente: {source_type} con smoothing ottimizzato")
     print(f"� Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
