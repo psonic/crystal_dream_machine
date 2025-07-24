@@ -92,9 +92,27 @@ def main_cairo_fixed():
                     shifted_mask[:, drift:] = mask[:, :-drift]
                 else:
                     shifted_mask[:, :drift] = mask[:, -drift:]
-                frame[shifted_mask > 0] = logo_color
+                current_mask = shifted_mask
             else:
-                frame[mask > 0] = logo_color
+                current_mask = mask
+            
+            # Applica logo base
+            frame[current_mask > 0] = logo_color
+            
+            # NUOVO: Effetto GLOW
+            if True:  # Glow sempre attivo per test
+                # Crea maschera per glow (un po' espansa)
+                glow_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (35, 35))
+                glow_mask = cv2.dilate(current_mask, glow_kernel, iterations=1)
+                
+                # Applica blur per creare effetto glow
+                glow_layer = np.zeros_like(frame)
+                glow_layer[glow_mask > 0] = logo_color
+                glow_blurred = cv2.GaussianBlur(glow_layer, (35, 35), 0)
+                
+                # Combina con intensità ridotta
+                glow_intensity = 0.3
+                frame = cv2.addWeighted(frame, 1.0, glow_blurred, glow_intensity, 0)
             
             out.write(frame)
             
