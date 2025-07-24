@@ -1,0 +1,53 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Video files grandi (per evitare problemi GitHub file size limit)
+*.MOV
+*.mov
+*.MP4
+*.mp4
+*.AVI
+*.avi
+*.mkv
+*.MKV
+
+# File temporanei e cache
+*.tmp
+*.temp
+*~
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.venv/
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output temporanei (mantieni solo gli MP4 finali se necessario)
+output/*.tmp
+output/*.temp
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
