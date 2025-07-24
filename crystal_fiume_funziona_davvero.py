@@ -30,7 +30,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
@@ -76,24 +76,24 @@ class Config:
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
     LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 50 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
+    NUM_LENSES = 20 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
-    LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
-    LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
+    LENS_MIN_RADIUS = 20     # Aumentato per copertura maggiore
+    LENS_MAX_RADIUS = 100    # Lenti ancora più grandi per effetti ampi
     LENS_SPEED_FACTOR = 0.1  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 0.85  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
+    LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.01  # AUMENTATO: pulsazione più rapida e visibile
-    LENS_PULSATION_AMPLITUDE = 0.3  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
+    LENS_PULSATION_AMPLITUDE = 0.5  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
     LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.5  # NUOVO: variazione forza +/-50%
     
     WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
-    WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    WORM_LENGTH = 3 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
+    WORM_COMPLEXITY = 5 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
     SMOOTHING_ENABLED = True
@@ -108,7 +108,7 @@ class Config:
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = True
+    BG_TRACER_ENABLED = False
     BG_TRACER_TRAIL_LENGTH = 10 # Scie più lunghe per lo sfondo
     BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
@@ -117,10 +117,10 @@ class Config:
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
     ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
-    LOGO_BLEND_FACTOR = 0.4 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
+    LOGO_BLEND_FACTOR = 0.6 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
-    BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
-    COLOR_BLENDING_STRENGTH = 0.6 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
+    BLEND_TRANSPARENCY = 0.3 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
+    COLOR_BLENDING_STRENGTH = 0.3 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
     
     # --- Debug e Qualità ---
     DEBUG_MASK = False  # Disabilitato per performance migliori
