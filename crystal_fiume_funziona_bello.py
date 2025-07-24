@@ -215,19 +215,131 @@ def load_texture(texture_path, width, height):
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
-    Estrae i contorni da un file SVG con eliminazione automatica delle spaccature.
-    Crea una maschera unificata senza discontinuità nel tracciato.
+    Estrae i contorni da un file SVG usando renderizzazione nativa con cairosvg.
+    Questo preserva automaticamente tutti i buchi delle lettere (A, O, P, R, etc).
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
         
+        # Prima prova il metodo cairosvg per renderizzazione perfetta
+        try:
+            import cairosvg
+            from PIL import Image
+            import io
+            
+            print("📝 Usando renderizzazione SVG nativa per preservare i buchi delle lettere...")
+            
+            # Leggi le dimensioni originali dell'SVG
+            with open(svg_path, 'r') as f:
+                svg_content = f.read()
+            
+            # Renderizza l'SVG come PNG in memoria con alta qualità
+            render_width = width * 2  # Oversampling per qualità migliore
+            render_height = height * 2
+            
+            png_data = cairosvg.svg2png(
+                bytestring=svg_content.encode('utf-8'), 
+                output_width=render_width, 
+                output_height=render_height,
+                background_color='transparent'
+            )
+            
+            # Converti in immagine PIL
+            pil_image = Image.open(io.BytesIO(png_data)).convert('RGBA')
+            img_array = np.array(pil_image)
+            
+            # Estrai il canale alpha come maschera (il testo sarà opaco, lo sfondo trasparente)
+            alpha_channel = img_array[:, :, 3]
+            
+            # Crea la maschera binaria
+            mask = np.where(alpha_channel > 128, 255, 0).astype(np.uint8)
+            
+            # Ridimensiona alla dimensione target se necessario
+            if mask.shape[0] != height or mask.shape[1] != width:
+                mask = cv2.resize(mask, (width, height), interpolation=cv2.INTER_AREA)
+            
+            # Applica padding se richiesto
+            if padding > 0:
+                # Calcola il bounding box del contenuto
+                coords = cv2.findNonZero(mask)
+                if coords is not None:
+                    x, y, w, h = cv2.boundingRect(coords)
+                    
+                    # Calcola il fattore di scala per rispettare il padding
+                    max_w = width - 2 * padding
+                    max_h = height - 2 * padding
+                    
+                    scale_x = max_w / w if w > 0 else 1
+                    scale_y = max_h / h if h > 0 else 1
+                    scale = min(scale_x, scale_y, 1.0)  # Non ingrandire mai
+                    
+                    if scale < 1.0:
+                        # Scala la maschera
+                        new_w = int(w * scale)
+                        new_h = int(h * scale)
+                        
+                        # Estrai la regione con il logo
+                        logo_region = mask[y:y+h, x:x+w]
+                        logo_resized = cv2.resize(logo_region, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                        
+                        # Crea una nuova maschera centrata
+                        mask = np.zeros((height, width), dtype=np.uint8)
+                        start_x = (width - new_w) // 2
+                        start_y = (height - new_h) // 2
+                        mask[start_y:start_y+new_h, start_x:start_x+new_w] = logo_resized
+            
+            # Trova i contorni nella maschera con hierarchy per preservare i buchi
+            contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+            
+            # Filtra contorni troppo piccoli
+            filtered_contours = []
+            filtered_hierarchy = []
+            
+            if hierarchy is not None:
+                for i, contour in enumerate(contours):
+                    if cv2.contourArea(contour) > 20:  # Area minima
+                        filtered_contours.append(contour)
+                        filtered_hierarchy.append(hierarchy[0][i])
+                
+                # Ricostruisci la hierarchy
+                if filtered_hierarchy:
+                    hierarchy = np.array([filtered_hierarchy])
+                else:
+                    hierarchy = None
+            else:
+                filtered_contours = [c for c in contours if cv2.contourArea(c) > 20]
+            
+            print(f"📐 Estratti {len(filtered_contours)} contorni con renderizzazione SVG nativa")
+            if hierarchy is not None:
+                external_count = sum(1 for h in hierarchy[0] if h[3] == -1)
+                internal_count = len(filtered_contours) - external_count
+                print(f"   🔹 {external_count} contorni esterni, {internal_count} buchi interni")
+            
+            return filtered_contours, hierarchy
+            
+        except ImportError:
+            print("⚠️ cairosvg non disponibile, usando metodo fallback...")
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+        except Exception as cairo_error:
+            print(f"⚠️ Errore con cairosvg: {cairo_error}, usando metodo fallback...")
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+        
+    except Exception as e:
+        print(f"❌ Errore nell'estrazione SVG: {e}")
+        return [], None
+
+def extract_contours_from_svg_fallback(svg_path, width, height, padding):
+    """
+    Metodo fallback per l'estrazione SVG usando svgpathtools.
+    """
+    try:
         # Carica il file SVG
         paths, attributes, svg_attributes = svg2paths2(svg_path)
         
         if not paths:
             raise Exception("Nessun path trovato nel file SVG.")
         
-        print(f"📝 Processando {len(paths)} path SVG con eliminazione spaccature...")
+        print(f"📝 Processando {len(paths)} path SVG con metodo fallback...")
         
         # Calcola bounding box globale di tutti i path
         all_points = []
@@ -237,9 +349,9 @@ def extract_contours_from_svg(svg_path, width, height, padding):
             if path.length() == 0:
                 continue
                 
-            # Discretizza il path con alta densità per catturare tutti i dettagli
+            # Discretizza il path con densità ottimizzata
             path_length = path.length()
-            num_points = max(150, min(1500, int(path_length * 3)))  # Più punti per precisione
+            num_points = max(100, min(1000, int(path_length * 2)))
             
             points = []
             for j in range(num_points):
@@ -251,7 +363,7 @@ def extract_contours_from_svg(svg_path, width, height, padding):
                 except:
                     continue
             
-            if len(points) >= 15:  # Richiedi più punti per path validi
+            if len(points) >= 10:
                 valid_paths.append(np.array(points, dtype=np.float32))
                 all_points.extend(points)
         
@@ -283,76 +395,22 @@ def extract_contours_from_svg(svg_path, width, height, padding):
         offset_x = (width - final_w) / 2 - x_min * scale
         offset_y = (height - final_h) / 2 - y_min * scale
         
-        # Crea maschera unificata senza spaccature
-        mask = np.zeros((height, width), dtype=np.uint8)
-        
-        # Renderizza tutti i path sulla stessa maschera
+        # Scala e trasla tutti i path
+        scaled_contours = []
         for path_points in valid_paths:
             # Scala e trasla
             scaled = path_points * scale
             scaled[:, 0] += offset_x
             scaled[:, 1] += offset_y
-            scaled_points = scaled.astype(np.int32)
-            
-            # Disegna il path sulla maschera con linee spesse per eliminare gap
-            for i in range(len(scaled_points) - 1):
-                cv2.line(mask, tuple(scaled_points[i]), tuple(scaled_points[i + 1]), 255, thickness=3)
-            
-            # Chiudi il path se necessario
-            if len(scaled_points) > 2:
-                cv2.line(mask, tuple(scaled_points[-1]), tuple(scaled_points[0]), 255, thickness=3)
+            scaled_contours.append(scaled.astype(np.int32))
         
-        # FASE 1: Riempimento morfologico per eliminare spaccature
-        # Dilatazione per connettere parti vicine
-        kernel_connect = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        mask = cv2.dilate(mask, kernel_connect, iterations=2)
-        
-        # Riempimento delle aree interne
-        # Trova il contorno esterno e riempilo
-        contours_temp, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if contours_temp:
-            # Prendi il contorno più grande (dovrebbe essere la scritta)
-            main_contour = max(contours_temp, key=cv2.contourArea)
-            mask.fill(0)  # Reset della maschera
-            cv2.fillPoly(mask, [main_contour], 255)
-        
-        # FASE 2: Smoothing per contorni perfetti
-        mask = cv2.GaussianBlur(mask, (3, 3), 1.0)
-        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-        
-        # Operazioni morfologiche finali per pulizia
-        kernel_smooth = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_smooth, iterations=1)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_smooth, iterations=1)
-        
-        # Estrai i contorni con hierarchy per preservare i buchi interni
-        final_contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-        
-        if not final_contours:
-            raise Exception("Nessun contorno finale estratto.")
-        
-        # Filtra contorni troppo piccoli
-        filtered_contours = []
-        
-        for contour in final_contours:
-            area = cv2.contourArea(contour)
-            if area > 30:  # Soglia minima per area (inclusi buchi piccoli)
-                filtered_contours.append(contour)
-        
-        # Se abbiamo hierarchy, ricostruiscila per i contorni filtrati
-        final_hierarchy = None
-        if hierarchy is not None and len(filtered_contours) > 0:
-            # Semplifichiamo: se ci sono più contorni, probabilmente abbiamo contorni esterni + buchi
-            # La hierarchy viene gestita correttamente da OpenCV con RETR_CCOMP
-            final_hierarchy = hierarchy
-        
-        print(f"📐 Estratti {len(filtered_contours)} contorni (con buchi preservati)")
+        print(f"📐 Estratti {len(scaled_contours)} path validi (metodo fallback)")
         print(f"🎯 Logo ridimensionato: {final_w:.0f}x{final_h:.0f} (scala: {scale:.3f})")
         
-        return filtered_contours, final_hierarchy
+        return scaled_contours, None  # None per hierarchy (approccio SVG semplificato)
     
     except Exception as e:
-        print(f"❌ Errore nell'estrazione SVG: {e}")
+        print(f"❌ Errore nell'estrazione SVG fallback: {e}")
         return [], None
 def extract_contours_from_pdf(pdf_path, width, height, padding):
     """
