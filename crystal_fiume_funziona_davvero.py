@@ -49,7 +49,7 @@ class Config:
     # Le dimensioni del video saranno calcolate dall'SVG + padding
     SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
     FPS = 30
-    DURATION_SECONDS = 10 # Durata normale per il rendering finale
+    DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
