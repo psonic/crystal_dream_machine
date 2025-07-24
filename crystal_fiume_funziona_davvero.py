@@ -45,9 +45,9 @@ class Config:
     TEXTURE_ENABLED = False
     TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
 
-    # --- Parametri Video (MODALITÀ TEST) ---
-    WIDTH = 960 if TEST_MODE else 1920
-    HEIGHT = 540 if TEST_MODE else 1080
+    # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
+    # Le dimensioni del video saranno calcolate dall'SVG + padding
+    SVG_PADDING = 150  # Padding attorno all'SVG (bei bordi)
     FPS = 30
     DURATION_SECONDS = 2 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
@@ -55,12 +55,11 @@ class Config:
     # --- Colore e Stile ---
     LOGO_COLOR = (230, 230, 255)  # BGR - Colore bianco-lavanda luminoso
     LOGO_ALPHA = 1.0 # Aumentata a 1.0 per un logo solido e visibile
-    LOGO_PADDING = 1 # Leggermente aumentato per l'alta risoluzione
     
-    # --- Video di Sfondo e Traccianti ---
+    # --- Video di Sfondo - SENZA CROP, COME BACKGROUND ORIGINALE ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
-    BG_CROP_Y_START = 100  # Spostato più in alto
-    BG_CROP_Y_END = 350    # Spostato più in alto
+    BG_USE_ORIGINAL_SIZE = True  # NUOVO: usa dimensioni originali senza crop
+    BG_SLOWDOWN_FACTOR = 1.5     # NUOVO: rallentamento ridotto (era 2.0 = metà velocità)
     BG_DARKEN_FACTOR = 0.06 # Ancora più scuro per massimo contrasto logo
     BG_CONTRAST_FACTOR = 1 # Contrasto aumentato
     
@@ -70,7 +69,7 @@ class Config:
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = False # RIABILITATA per ridare movimento al logo
+    DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
     DEFORMATION_SPEED = 0.05 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
     DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
     DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
@@ -117,7 +116,7 @@ class Config:
     BG_TRACER_THRESHOLD2 = 100
     
     # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
-    ADVANCED_BLENDING = False # Abilita il blending avanzato scritta-sfondo
+    ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
     LOGO_BLEND_FACTOR = 0.1 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
     EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
     BLEND_TRANSPARENCY = 0.5 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
@@ -127,7 +126,7 @@ class Config:
     DEBUG_MASK = False  # Disabilitato per performance migliori
     
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
-    DYNAMIC_VARIATION_ENABLED = False
+    DYNAMIC_VARIATION_ENABLED = True
     VARIATION_AMPLITUDE = 0.3 # ±10% di variazione massima
     VARIATION_SPEED_SLOW = 0.02  # Velocità variazione lenta (per deformazioni)
     VARIATION_SPEED_MEDIUM = 0.05 # Velocità variazione media (per traccianti)
@@ -212,6 +211,39 @@ def load_texture(texture_path, width, height):
     except Exception as e:
         print(f"Errore durante il caricamento della texture: {e}")
         return None
+
+def get_svg_dimensions(svg_path):
+    """
+    Estrae le dimensioni dall'SVG per calcolare le dimensioni del video.
+    """
+    try:
+        import xml.etree.ElementTree as ET
+        
+        tree = ET.parse(svg_path)
+        root = tree.getroot()
+        
+        # Prova a leggere width/height dagli attributi
+        width = root.get('width')
+        height = root.get('height')
+        
+        if width and height:
+            # Rimuovi unità come 'px' se presenti
+            width = float(width.replace('px', '').replace('pt', ''))
+            height = float(height.replace('px', '').replace('pt', ''))
+            return int(width), int(height)
+        
+        # Se non ci sono width/height, usa viewBox
+        viewbox = root.get('viewBox')
+        if viewbox:
+            _, _, width, height = map(float, viewbox.split())
+            return int(width), int(height)
+        
+        # Fallback a dimensioni predefinite
+        return 1920, 1080
+        
+    except Exception as e:
+        print(f"⚠️ Errore lettura dimensioni SVG: {e}")
+        return 1920, 1080  # Fallback
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
@@ -1046,15 +1078,40 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
 
 def process_background(bg_frame, config):
     """
-    Processa il frame di sfondo: lo ritaglia, lo scurisce e ne estrae i contorni per i traccianti.
+    Processa il frame di sfondo: lo adatta alle dimensioni video senza crop,
+    lo scurisce e ne estrae i contorni per i traccianti.
     """
     h, w, _ = bg_frame.shape
     
-    # 1. Ritaglia la fascia specificata
-    cropped_bg = bg_frame[config.BG_CROP_Y_START : config.BG_CROP_Y_END, :]
+    # 1. NUOVO: Usa video originale senza crop, adattalo alle dimensioni target
+    if hasattr(config, 'BG_USE_ORIGINAL_SIZE') and config.BG_USE_ORIGINAL_SIZE:
+        # Scala il video originale mantenendo le proporzioni
+        target_width = config.WIDTH
+        target_height = config.HEIGHT
+        
+        # Calcola scaling per coprire tutto il frame (come background)
+        scale_x = target_width / w
+        scale_y = target_height / h
+        scale = max(scale_x, scale_y)  # Usa il maggiore per coprire tutto
+        
+        # Nuove dimensioni scalate
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        
+        # Ridimensiona
+        scaled_bg = cv2.resize(bg_frame, (new_w, new_h))
+        
+        # Centro-crop per adattare alle dimensioni esatte
+        start_x = (new_w - target_width) // 2
+        start_y = (new_h - target_height) // 2
+        final_bg = scaled_bg[start_y:start_y + target_height, start_x:start_x + target_width]
+        
+    else:
+        # Metodo originale con crop
+        cropped_bg = bg_frame[config.BG_CROP_Y_START : config.BG_CROP_Y_END, :]
+        final_bg = cv2.resize(cropped_bg, (config.WIDTH, config.HEIGHT))
     
-    # 2. Ridimensiona alla dimensione finale, scurisce e contrasta
-    final_bg = cv2.resize(cropped_bg, (config.WIDTH, config.HEIGHT))
+    # 2. Scurisce e contrasta
     if config.BG_DARKEN_FACTOR < 1.0:
         # Applica lo scurimento in modo più "morbido"
         final_bg = cv2.addWeighted(final_bg, config.BG_DARKEN_FACTOR, np.zeros_like(final_bg), 1 - config.BG_DARKEN_FACTOR, 0)
@@ -1384,20 +1441,25 @@ def main():
     C_END = '\033[0m'
     SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
 
-    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy MOVIMENTO GARANTITO...{C_END}")
-    print(f"� TEST MODE: 30fps, 10s, codec multipli per compatibilità")
+    # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
+    svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
+    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
+    Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
+    
+    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
+    print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
+    print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
+    print(f"� TEST MODE: 30fps, {Config.DURATION_SECONDS}s")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"� Sorgente: {source_type} con smoothing ottimizzato")
-    print(f"🌊 Deformazione ORGANICA POTENZIATA + LENTI DINAMICHE")
-    print(f"💫 MOVIMENTO VISIBILE: Speed x80, Lenti x27 più veloci!")
-    print(f"🐌 SFONDO RALLENTATO: Video a metà velocità!")
+    print(f"� Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
     print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
     print(f"� Variazione dinamica + codec video testati")
     print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
     
     # Carica contorni da SVG o PDF
     if Config.USE_SVG_SOURCE:
-        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
     else:
         contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
 
@@ -1431,7 +1493,7 @@ def main():
         bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
         bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
         print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
-        print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo a metà velocità")
+        print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo {Config.BG_SLOWDOWN_FACTOR}x più lento")
     
     # Setup video writer con codec ottimizzato per WhatsApp
     if Config.WHATSAPP_COMPATIBLE:
@@ -1477,10 +1539,9 @@ def main():
         for i in range(Config.TOTAL_FRAMES):
             # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
             if bg_video:
-                # NUOVO: Calcola il frame del video di sfondo rallentato (metà velocità)
-                # Frame normale: i
-                # Frame rallentato: i / 2 (metà velocità)
-                bg_frame_index = int(i / 2.0)  # Rallentamento a metà velocità
+                # NUOVO: Calcola il frame del video di sfondo rallentato
+                # Frame rallentato: i / BG_SLOWDOWN_FACTOR
+                bg_frame_index = int(i / Config.BG_SLOWDOWN_FACTOR)  # Rallentamento configurabile
                 
                 # Imposta la posizione nel video di sfondo
                 bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
