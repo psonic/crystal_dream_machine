@@ -215,8 +215,8 @@ def load_texture(texture_path, width, height):
 
 def extract_contours_from_svg(svg_path, width, height, padding):
     """
-    Estrae i contorni da un file SVG con supporto per riempimento even-odd.
-    Gestisce correttamente i buchi nelle lettere (A, O, P, R, etc).
+    Estrae i contorni da un file SVG con gestione solida e robusta.
+    Approccio migliorato per preservare la forma delle lettere.
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
@@ -227,19 +227,22 @@ def extract_contours_from_svg(svg_path, width, height, padding):
         if not paths:
             raise Exception("Nessun path trovato nel file SVG.")
         
-        print(f"📝 Processando {len(paths)} path SVG con algoritmo even-odd...")
+        print(f"📝 Processando {len(paths)} path SVG con approccio solido...")
         
-        # Per ogni path, crea una maschera usando il riempimento even-odd
-        final_mask = np.zeros((height, width), dtype=np.uint8)
+        # Crea una singola maschera usando renderizzazione diretta
+        mask = np.zeros((height, width), dtype=np.uint8)
         
-        for i, path in enumerate(paths):
-            # Discretizza il path in punti ad alta densità per catturare tutti i dettagli
-            path_length = path.length()
-            if path_length == 0:
+        # Calcola bounding box globale di tutti i path
+        all_points = []
+        valid_paths = []
+        
+        for path in paths:
+            if path.length() == 0:
                 continue
-            
-            # Aumenta significativamente la densità per catturare piccoli dettagli
-            num_points = max(200, min(2000, int(path_length * 5)))  # Più punti per precisione
+                
+            # Discretizza il path con densità ottimizzata
+            path_length = path.length()
+            num_points = max(100, min(1000, int(path_length * 2)))
             
             points = []
             for j in range(num_points):
@@ -251,108 +254,55 @@ def extract_contours_from_svg(svg_path, width, height, padding):
                 except:
                     continue
             
-            if len(points) < 10:
-                continue
-            
-            # Calcola bounding box per questo path
-            points_array = np.array(points, dtype=np.float32)
-            x_min, y_min = np.min(points_array, axis=0)
-            x_max, y_max = np.max(points_array, axis=0)
-            
-            svg_width = x_max - x_min
-            svg_height = y_max - y_min
-            
-            if svg_width == 0 or svg_height == 0:
-                continue
-            
-            # Calcola scaling per adattare al frame con padding
-            target_w = width - (2 * padding)
-            target_h = height - (2 * padding)
-            
-            scale_x = target_w / svg_width
-            scale_y = target_h / svg_height
-            scale = min(scale_x, scale_y)
-            
-            # Centra il logo
-            final_w = svg_width * scale
-            final_h = svg_height * scale
-            offset_x = (width - final_w) / 2 - x_min * scale
-            offset_y = (height - final_h) / 2 - y_min * scale
-            
-            # Scala e trasla i punti
-            scaled_points = points_array * scale
-            scaled_points[:, 0] += offset_x
-            scaled_points[:, 1] += offset_y
-            scaled_points = scaled_points.astype(np.int32)
-            
-            # Crea la maschera per questo path usando l'algoritmo even-odd
-            path_mask = create_even_odd_mask(scaled_points, width, height)
-            
-            # Combina con la maschera finale usando XOR (even-odd rule)
-            final_mask = cv2.bitwise_xor(final_mask, path_mask)
-            
-            print(f"  ✓ Path {i+1}: {len(points)} punti processati con even-odd")
+            if len(points) >= 10:
+                valid_paths.append(np.array(points, dtype=np.float32))
+                all_points.extend(points)
         
-        # Trova i contorni nella maschera finale
-        contours, hierarchy = cv2.findContours(final_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        if not all_points:
+            raise Exception("Nessun punto valido estratto dall'SVG.")
         
-        if not contours:
-            raise Exception("Nessun contorno valido estratto dall'SVG.")
+        # Calcola bounding box globale
+        all_points = np.array(all_points, dtype=np.float32)
+        x_min, y_min = np.min(all_points, axis=0)
+        x_max, y_max = np.max(all_points, axis=0)
         
-        # Filtra contorni troppo piccoli
-        filtered_contours = []
-        for contour in contours:
-            if cv2.contourArea(contour) > 50:  # Area minima più alta
-                filtered_contours.append(contour)
+        svg_width = x_max - x_min
+        svg_height = y_max - y_min
         
-        print(f"📐 Estratti {len(filtered_contours)} contorni con buchi preservati")
-        return filtered_contours, hierarchy
+        if svg_width == 0 or svg_height == 0:
+            raise Exception("SVG ha dimensioni zero.")
+        
+        # Calcola scaling per adattare al frame con padding
+        target_w = width - (2 * padding)
+        target_h = height - (2 * padding)
+        
+        scale_x = target_w / svg_width
+        scale_y = target_h / svg_height
+        scale = min(scale_x, scale_y)
+        
+        # Centra il logo
+        final_w = svg_width * scale
+        final_h = svg_height * scale
+        offset_x = (width - final_w) / 2 - x_min * scale
+        offset_y = (height - final_h) / 2 - y_min * scale
+        
+        # Scala e trasla tutti i path
+        scaled_contours = []
+        for path_points in valid_paths:
+            # Scala e trasla
+            scaled = path_points * scale
+            scaled[:, 0] += offset_x
+            scaled[:, 1] += offset_y
+            scaled_contours.append(scaled.astype(np.int32))
+        
+        print(f"📐 Estratti {len(scaled_contours)} path validi")
+        print(f"🎯 Logo ridimensionato: {final_w:.0f}x{final_h:.0f} (scala: {scale:.3f})")
+        
+        return scaled_contours, None  # None per hierarchy (approccio SVG semplificato)
     
     except Exception as e:
         print(f"❌ Errore nell'estrazione SVG: {e}")
         return [], None
-
-def create_even_odd_mask(points, width, height):
-    """
-    Crea una maschera usando il riempimento even-odd.
-    Questo algoritmo conta quante volte una linea orizzontale attraversa il poligono.
-    Se il numero è dispari, il pixel è interno; se pari, è esterno.
-    """
-    mask = np.zeros((height, width), dtype=np.uint8)
-    
-    if len(points) < 3:
-        return mask
-    
-    # Per ogni scanline (riga) dell'immagine
-    for y in range(height):
-        intersections = []
-        
-        # Trova tutte le intersezioni della scanline con i bordi del poligono
-        for i in range(len(points)):
-            p1 = points[i]
-            p2 = points[(i + 1) % len(points)]
-            
-            # Controlla se il segmento interseca la scanline y
-            if p1[1] != p2[1]:  # Evita divisioni per zero
-                # Calcola l'intersezione
-                if (p1[1] <= y < p2[1]) or (p2[1] <= y < p1[1]):
-                    # Calcola coordinate x dell'intersezione
-                    x_intersect = p1[0] + (y - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1])
-                    if 0 <= x_intersect < width:
-                        intersections.append(int(x_intersect))
-        
-        # Ordina le intersezioni per x
-        intersections.sort()
-        
-        # Riempie tra coppie di intersezioni (even-odd rule)
-        for i in range(0, len(intersections) - 1, 2):
-            if i + 1 < len(intersections):
-                x_start = max(0, intersections[i])
-                x_end = min(width - 1, intersections[i + 1])
-                if x_start <= x_end:
-                    mask[y, x_start:x_end + 1] = 255
-    
-    return mask
 
 def extract_contours_from_pdf(pdf_path, width, height, padding):
     """
@@ -452,7 +402,7 @@ def smooth_contour(contour, smoothing_factor):
         return contour.astype(np.int32)
 
 def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, smoothing_factor):
-    """Crea una maschera unificata con algoritmo avanzato per eliminare spaccature SVG."""
+    """Crea una maschera unificata con algoritmo robusto per SVG."""
     mask = np.zeros((height, width), dtype=np.uint8)
     
     if not contours:
@@ -465,95 +415,24 @@ def create_unified_mask(contours, hierarchy, width, height, smoothing_enabled, s
         else:
             smoothed_contours.append(contour)
     
-    # Se abbiamo hierarchy da SVG con even-odd, usa drawContours per mantenere i buchi
-    if hierarchy is not None and len(smoothed_contours) > 0:
-        # Usa drawContours con hierarchy per rispettare i buchi delle lettere
-        cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
+    # Per SVG usa approccio unificato semplice
+    if hierarchy is None:
+        # Renderizza tutti i contorni direttamente con fillPoly
+        cv2.fillPoly(mask, smoothed_contours, 255)
         
         # Applica smoothing leggero per migliorare la qualità
         if smoothing_enabled:
-            mask = cv2.GaussianBlur(mask, (3, 3), 0.5)
+            mask = cv2.GaussianBlur(mask, (3, 3), 0.8)
             _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
         
-        return mask
-    
-    # Codice originale per PDF o SVG legacy (hierarchy=None)
-    # FASE 1: Crea maschere separate per ogni contorno
-    individual_masks = []
-    for contour in smoothed_contours:
-        temp_mask = np.zeros((height, width), dtype=np.uint8)
-        cv2.fillPoly(temp_mask, [contour], 255)
-        individual_masks.append(temp_mask)
-    
-    # FASE 2: Unisci le maschere con operazioni morfologiche progressive
-    unified_mask = None
-    if individual_masks:
-        # Inizia con la prima maschera
-        unified_mask = individual_masks[0].copy()
+        # Post-processing minimo per pulire i bordi
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
         
-        # Unisci progressivamente le altre maschere
-        for mask_to_add in individual_masks[1:]:
-            # Union diretta
-            unified_mask = cv2.bitwise_or(unified_mask, mask_to_add)
-            
-            # Operazione di connessione per lettere vicine
-            kernel_connect = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-            unified_mask = cv2.dilate(unified_mask, kernel_connect, iterations=2)
-            unified_mask = cv2.erode(unified_mask, kernel_connect, iterations=2)
-        
-        mask = unified_mask
     else:
-        # Fallback se non ci sono maschere individuali
-        cv2.fillPoly(mask, smoothed_contours, 255)
+        # Per PDF usa drawContours con hierarchy
+        cv2.drawContours(mask, smoothed_contours, -1, 255, -1, lineType=cv2.LINE_AA, hierarchy=hierarchy)
     
-    # FASE 3: Post-processing avanzato per eliminare spaccature residue
-    # 1. Chiusura morfologica per colmare piccoli gap
-    kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close, iterations=2)
-    
-    # 2. Riempimento buchi basato su contorni
-    contours_found, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours_found:
-        # Trova il contorno più grande (dovrebbe essere la scritta principale)
-        largest_contour = max(contours_found, key=cv2.contourArea)
-        
-        # Crea una nuova maschera solo con il contorno più grande riempito
-        temp_mask = np.zeros((height, width), dtype=np.uint8)
-        cv2.fillPoly(temp_mask, [largest_contour], 255)
-        
-        # Trova e riempi tutti i buchi interni
-        contours_with_holes, hierarchy_holes = cv2.findContours(temp_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-        
-        final_mask = np.zeros((height, width), dtype=np.uint8)
-        for i, contour in enumerate(contours_with_holes):
-            # Riempi solo i contorni esterni (hierarchy[i][3] == -1)
-            if hierarchy_holes is None or hierarchy_holes[0][i][3] == -1:
-                cv2.fillPoly(final_mask, [contour], 255)
-        
-        mask = final_mask
-    
-    # FASE 4: Smoothing finale ottimizzato
-    # Blur leggero per eliminare pixelatura
-    mask = cv2.GaussianBlur(mask, (5, 5), 1.0)
-    _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-    
-    # Operazione finale di pulizia per contorni perfetti
-    kernel_final = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_final, iterations=1)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_final, iterations=1)
-    
-    # FASE 5: Verifica se ci sono ancora spaccature e applica algoritmo avanzato
-    # Controlla il numero di componenti connesse
-    num_labels, labels = cv2.connectedComponents(mask)
-    if num_labels > 2:  # Più di background + una componente = spaccature presenti            
-        gap_free_mask = create_gap_free_mask(smoothed_contours, width, height)
-        
-        # Usa il meglio tra la maschera corrente e quella gap-free
-        # Se quella gap-free ha meno componenti, usala
-        num_labels_gap_free, _ = cv2.connectedComponents(gap_free_mask)
-        if num_labels_gap_free < num_labels:
-            mask = gap_free_mask                            
-        
     return mask
 
 def create_gap_free_mask(contours, width, height):
