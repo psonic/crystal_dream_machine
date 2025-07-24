@@ -108,7 +108,7 @@ class Config:
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
     
     # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = True
+    BG_TRACER_ENABLED = False
     BG_TRACER_TRAIL_LENGTH = 50 # Scie più lunghe per lo sfondo
     BG_TRACER_MAX_OPACITY = 0.1 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
