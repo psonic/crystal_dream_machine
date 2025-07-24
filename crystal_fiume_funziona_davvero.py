@@ -1446,21 +1446,10 @@ def main():
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
-    # NUOVO: In modalità test, riduci del 50% per rendering più veloce
-    if Config.TEST_MODE:
-        Config.WIDTH = int(Config.WIDTH * 0.5)
-        Config.HEIGHT = int(Config.HEIGHT * 0.5)
-        Config.SVG_PADDING = int(Config.SVG_PADDING * 0.5)  # Scala anche il padding
-    
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
-    print(f"📐 Dimensioni SVG originali: {svg_width}x{svg_height}")
-    if Config.TEST_MODE:
-        print(f"🚀 MODALITÀ TEST: Dimensioni ridotte 50% per velocità")
-        print(f"📐 Dimensioni video test: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
-        print(f"⏱️  Durata test: {Config.DURATION_SECONDS}s @ {Config.FPS}fps")
-    else:
-        print(f"📐 Dimensioni video finali: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
-        print(f"⏱️  Durata: {Config.DURATION_SECONDS}s @ {Config.FPS}fps")
+    print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
+    print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
+    print(f"� TEST MODE: 30fps, {Config.DURATION_SECONDS}s")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"� Sorgente: {source_type} con smoothing ottimizzato")
     print(f"� Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
