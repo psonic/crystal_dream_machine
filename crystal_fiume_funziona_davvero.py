@@ -86,28 +86,28 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 30             # Numero di lenti (ridotto per movimenti più armoniosi)
-    LENS_MIN_STRENGTH = -1.0     # Forza minima ridotta per deformazioni più delicate
-    LENS_MAX_STRENGTH = 1.0      # Forza massima ridotta per deformazioni più delicate
-    LENS_MIN_RADIUS = 10         # Raggio minimo aumentato per lenti più grandi e fluide
-    LENS_MAX_RADIUS = 60         # Raggio massimo aumentato per lenti più grandi e fluide
-    LENS_SPEED_FACTOR = 0.02     # Velocità movimento drasticamente ridotta per fluidità
+    NUM_LENSES = 30             # Numero di lenti (range: 5-100, 20=poche, 30=normale, 50=molte)
+    LENS_MIN_STRENGTH = -1.0     # Forza minima (range: -3.0 a 3.0, -1=concavo leggero, 1=convesso leggero)
+    LENS_MAX_STRENGTH = 1.0      # Forza massima (range: -3.0 a 3.0, -1=concavo leggero, 1=convesso leggero)
+    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-80, 10=piccola, 30=media, 60=grande)
+    LENS_MAX_RADIUS = 60         # Raggio massimo area influenza (range: 20-150, 40=media, 80=grande, 120=molto grande)
+    LENS_SPEED_FACTOR = 0.02     # Velocità movimento (range: 0.005-0.2, 0.01=molto lenta, 0.05=normale, 0.1=veloce)
     
     # --- Parametri Movimento Lenti (molti ora inutilizzati nel nuovo sistema) ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.05    # Ridotto ma mantenuto per compatibilità
-    LENS_BASE_SPEED_MULTIPLIER = 0.05    # Ridotto ma mantenuto per compatibilità
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Ridotto per rotazione ultra-lenta
-    LENS_INERTIA = 0.98                  # Aumentato per massima fluidità
-    LENS_ROTATION_SPEED_MIN = -0.001     # Ridotto per rotazione molto lenta
-    LENS_ROTATION_SPEED_MAX = 0.001      # Ridotto per rotazione molto lenta
+    LENS_PATH_SPEED_MULTIPLIER = 0.05    # Velocità percorso (range: 0.01-1.0, 0.05=lenta, 0.2=normale, 0.5=veloce)
+    LENS_BASE_SPEED_MULTIPLIER = 0.05    # Moltiplicatore velocità base (range: 0.01-2.0, 0.1=lenta, 0.5=normale, 1.0=veloce)
+    LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Velocità rotazione verme (range: 0.001-0.1, 0.005=lenta, 0.02=normale, 0.05=veloce)
+    LENS_INERTIA = 0.98                  # Fluidità movimento (range: 0.5-0.99, 0.8=reattivo, 0.95=fluido, 0.99=molto fluido)
+    LENS_ROTATION_SPEED_MIN = -0.001     # Velocità rotazione minima (range: -0.02 a 0, -0.001=molto lenta, -0.01=normale)
+    LENS_ROTATION_SPEED_MAX = 0.001      # Velocità rotazione massima (range: 0 a 0.02, 0.001=molto lenta, 0.01=normale)
     
     # --- Movimento e Pulsazione Lenti ---
-    LENS_HORIZONTAL_BIAS = 3             # Mantenuto per seguire la scritta orizzontalmente
-    LENS_PULSATION_ENABLED = True        # Mantieni pulsazione per dinamismo
-    LENS_PULSATION_SPEED = 0.001         # Velocità pulsazione drasticamente ridotta
-    LENS_PULSATION_AMPLITUDE = 0.15      # Ampiezza pulsazione ridotta per movimenti delicati
-    LENS_FORCE_PULSATION_ENABLED = True  # Mantieni pulsazione forza
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.1 # Ampiezza pulsazione forza ridotta per delicatezza
+    LENS_HORIZONTAL_BIAS = 3             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias orizzontale, 5=solo orizzontale)
+    LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
+    LENS_PULSATION_SPEED = 0.001         # Velocità pulsazione (range: 0.0005-0.02, 0.001=molto lenta, 0.005=lenta, 0.01=normale)
+    LENS_PULSATION_AMPLITUDE = 0.15      # Ampiezza pulsazione dimensioni (range: 0.05-0.8, 0.1=leggera, 0.3=normale, 0.6=forte)
+    LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.1 # Ampiezza pulsazione forza (range: 0.05-0.5, 0.1=leggera, 0.2=normale, 0.4=forte)
     
     WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
     WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
@@ -1236,9 +1236,12 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
             dynamic_strength = lens['strength'] * lens_strength_mult
             displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
             
-            # Applica spostamento
-            final_map_x[lens_mask] += dx[lens_mask] * displacement / distance[lens_mask] * 0.1
-            final_map_y[lens_mask] += dy[lens_mask] * displacement / distance[lens_mask] * 0.1
+            # Applica spostamento (CORRETTO: senza moltiplicatore che diminuiva l'effetto)
+            direction_x = dx[lens_mask] / (distance[lens_mask] + 1e-6)  # Evita divisione per zero
+            direction_y = dy[lens_mask] / (distance[lens_mask] + 1e-6)  # Evita divisione per zero
+            
+            final_map_x[lens_mask] += direction_x * displacement
+            final_map_y[lens_mask] += direction_y * displacement
 
     deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return deformed_mask
