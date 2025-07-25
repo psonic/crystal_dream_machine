@@ -52,7 +52,7 @@ class Config:
     # Le dimensioni del video saranno calcolate dall'SVG + padding
     SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
     FPS = 10 if TEST_MODE else 30
-    DURATION_SECONDS = 3 if TEST_MODE else 60 # Durata normale per il rendering finale
+    DURATION_SECONDS = 5 if TEST_MODE else 60 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -86,8 +86,16 @@ class Config:
     LENS_MAX_RADIUS = 100    # Lenti ancora più grandi per effetti ampi
     LENS_SPEED_FACTOR = 0.001  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
+    # --- PARAMETRI MOVIMENTO LENTI (NUOVI - PRECEDENTEMENTE HARDCODED) ---
+    LENS_PATH_SPEED_MULTIPLIER = 4.5  # Velocità con cui le lenti seguono il loro percorso
+    LENS_BASE_SPEED_MULTIPLIER = 1.2  # Moltiplicatore per la velocità di base delle lenti
+    LENS_ROTATION_SPEED_MULTIPLIER = 5.0  # Velocità di rotazione delle lenti a "verme"
+    LENS_INERTIA = 0.95  # Inerzia delle lenti (0.0=scattanti, 1.0=molto fluide)
+    LENS_ROTATION_SPEED_MIN = -0.08  # Velocità di rotazione minima
+    LENS_ROTATION_SPEED_MAX = 0.08   # Velocità di rotazione massima
+    
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
+    LENS_HORIZONTAL_BIAS = 4  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.005  # RALLENTATO: pulsazione più lenta e calma
     LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
@@ -95,8 +103,8 @@ class Config:
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
     
     WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
-    WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    WORM_LENGTH = 6 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
+    WORM_COMPLEXITY = 5 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
     SMOOTHING_ENABLED = True
@@ -978,8 +986,8 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
                 lens['strength'] = lens['base_strength'] * force_factor
         
         # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
-        # Velocità drasticamente aumentata per movimento ultra-evidente
-        movement_speed_multiplier = 8.5  # AUMENTATO da 6.0 a 8.5 per movimento ancora più veloce
+        # Velocità configurabile tramite parametri della Config
+        movement_speed_multiplier = config.LENS_PATH_SPEED_MULTIPLIER
         path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
         current_target = lens['path'][int(path_progress)]
         
@@ -997,18 +1005,18 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         distance_to_target = np.linalg.norm(direction)
         
         if distance_to_target > 0:
-            # Velocità ultra-alta con adattamento dinamico alla distanza
-            base_speed = config.LENS_SPEED_FACTOR * 1.4  # Velocità base aumentata
+            # Velocità configurabile con adattamento dinamico alla distanza
+            base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
             adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
             desired_velocity = (direction / distance_to_target) * adaptive_speed
             
-            # Inerzia ridotta per movimento ultra-reattivo
-            inertia_strength = 0.75  # RIDOTTA ulteriormente da 0.85 per massima reattività
+            # Inerzia configurabile per controllo del movimento
+            inertia_strength = config.LENS_INERTIA
             lens['velocity'] = lens['velocity'] * inertia_strength + desired_velocity * (1 - inertia_strength)
         
-        # Aggiorna posizione e angolo con velocità ultra-aumentata
+        # Aggiorna posizione e angolo con velocità configurabile
         lens['pos'] += lens['velocity']
-        lens['angle'] += lens['rotation_speed'] * 7.0  # AUMENTATA: rotazione ultra-veloce
+        lens['angle'] += lens['rotation_speed'] * config.LENS_ROTATION_SPEED_MULTIPLIER
         
         # Assicurati che rimanga nei limiti con margini morbidi
         margin = config.LENS_MIN_RADIUS
@@ -1392,7 +1400,7 @@ def initialize_lenses(config):
             'strength': base_strength,
             'base_strength': base_strength,  # NUOVO: forza base per pulsazione
             'angle': np.random.uniform(0, 2 * np.pi),
-            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
+            'rotation_speed': np.random.uniform(config.LENS_ROTATION_SPEED_MIN, config.LENS_ROTATION_SPEED_MAX),
             'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
             'path': path,  # Percorso cinematografico completo
             'path_offset': path_offset,  # Offset iniziale nel percorso
