@@ -1173,13 +1173,11 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
             # Allunghiamo la forma su un asse per creare il "corpo" del verme
             dx_scaled = dx_rot / config.WORM_LENGTH
             
-            # Aggiungiamo noise per creare le curve del "verme"
-            noise_val = pnoise2(
-                (lens['pos'][0] + frame_index * 2) * 0.01 * config.WORM_COMPLEXITY, 
-                (lens['pos'][1] + frame_index * 2) * 0.01 * config.WORM_COMPLEXITY, 
-                octaves=1
-            )
-            dy_scaled = dy_rot + noise_val * 50
+            # CORREZIONE ANTI-SFARFALLIO: Sostituisco noise casuale con pattern sinusoidale predicibile
+            # Il noise casuale causava lo sfarfallio, ora uso movimento fluido e prevedibile
+            wave_time = frame_index * 0.03 + lens['pulsation_offset']  # Velocità fissa controllata
+            sinusoidal_curve = np.sin(dx_rot * 0.01 + wave_time) * 30  # Ampiezza ridotta da 50 a 30
+            dy_scaled = dy_rot + sinusoidal_curve
             
             distance = np.sqrt(dx_scaled**2 + dy_scaled**2)
         else:
@@ -1203,20 +1201,20 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
             # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
             pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
             
-            # Pulsazione del raggio con pattern complesso per più "vita"
+            # CORREZIONE ANTI-SFARFALLIO: Pulsazione semplificata per ridurre caos
+            # Rimuovo le pulsazioni secondarie e terziarie che creano sfarfallio
             base_pulsation = np.sin(pulsation_time)
-            secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # Frequenza diversa
-            tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # Ancora più complessa
+            # secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # RIMOSSA
+            # tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # RIMOSSA
             
-            total_pulsation = base_pulsation + secondary_pulsation + tertiary_pulsation
-            pulsation_factor = 1.0 + config.LENS_PULSATION_AMPLITUDE * total_pulsation
+            total_pulsation = base_pulsation  # Solo pulsazione base per fluidità
+            pulsation_factor = 1.0 + config.LENS_PULSATION_AMPLITUDE * total_pulsation * 0.5  # Ridotta ampiezza
             lens['radius'] = lens['base_radius'] * pulsation_factor
             
-            # NUOVO: Pulsazione anche della forza per effetto drammatico
+            # CORREZIONE: Pulsazione forza molto semplificata
             if config.LENS_FORCE_PULSATION_ENABLED:
-                force_pulsation_time = pulsation_time * 1.8  # Velocità leggermente diversa
-                force_pulsation = np.sin(force_pulsation_time) + 0.5 * np.cos(force_pulsation_time * 1.6)
-                force_factor = 1.0 + config.LENS_FORCE_PULSATION_AMPLITUDE * force_pulsation
+                force_pulsation = np.sin(pulsation_time * 1.2)  # Frequenza ridotta da 1.8
+                force_factor = 1.0 + config.LENS_FORCE_PULSATION_AMPLITUDE * force_pulsation * 0.3  # Ampiezza ridotta
                 lens['strength'] = lens['base_strength'] * force_factor
         
         # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
@@ -1239,14 +1237,15 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         distance_to_target = np.linalg.norm(direction)
         
         if distance_to_target > 0:
-            # Velocità configurabile con adattamento dinamico alla distanza
+            # CORREZIONE ANTI-SFARFALLIO: Velocità costante invece di adattiva per movimento fluido
+            # La velocità adattiva causava accelerazioni brusche che generavano sfarfallio
             base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
-            adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
-            desired_velocity = (direction / distance_to_target) * adaptive_speed
+            # adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))  # RIMOSSA
+            desired_velocity = (direction / distance_to_target) * base_speed  # Velocità costante
             
-            # Inerzia configurabile per controllo del movimento
-            inertia_strength = config.LENS_INERTIA
-            lens['velocity'] = lens['velocity'] * inertia_strength + desired_velocity * (1 - inertia_strength)
+            # Inerzia più alta per movimento ultra-fluido
+            enhanced_inertia = min(0.99, config.LENS_INERTIA + 0.01)  # Aumentata di 1%
+            lens['velocity'] = lens['velocity'] * enhanced_inertia + desired_velocity * (1 - enhanced_inertia)
         
         # Aggiorna posizione e angolo con velocità configurabile
         lens['pos'] += lens['velocity']
