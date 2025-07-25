@@ -729,7 +729,8 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
 
 def extract_contours_from_pdf(pdf_path, width, height, padding):
     """
-    Estrae i contorni da un file PDF e li converte in contorni OpenCV.
+    Estrae i contorni da un file PDF usando il metodo corretto di simple_logo_video.py.
+    Questo approccio gestisce correttamente i buchi nelle lettere e i contorni esterni.
     """
     if not PDF_AVAILABLE:
         raise Exception("PyMuPDF non disponibile. Installa con: pip install PyMuPDF")
@@ -737,72 +738,85 @@ def extract_contours_from_pdf(pdf_path, width, height, padding):
     try:
         print("🎨 Caricamento PDF Crystal Therapy dalle acque del Natisone...")
         
-        # Apri il PDF
+        # STEP 1: Rasterizza il PDF usando il metodo di simple_logo_video.py
         doc = fitz.open(pdf_path)
         page = doc[0]  # Prima pagina
         
-        # Converti in immagine con alta risoluzione
-        zoom_factor = 4  # Aumenta per più dettaglio
-        matrix = fitz.Matrix(zoom_factor, zoom_factor)
+        # Usa scale factor 4 per alta qualità (come simple_logo_video.py usa scale=2)
+        scale_factor = 4
+        matrix = fitz.Matrix(scale_factor, scale_factor)
         pix = page.get_pixmap(matrix=matrix)
         
-        # Converti in array numpy
-        img_data = pix.tobytes("png")
-        import io
-        from PIL import Image as PILImage
+        # Converti in array numpy (metodo simple_logo_video.py)
+        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
         
-        pil_image = PILImage.open(io.BytesIO(img_data))
-        img_array = np.array(pil_image)
+        doc.close()
         
-        # Se l'immagine è in RGBA, convertila in RGB
-        if img_array.shape[2] == 4:
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGBA2RGB)
-        
-        # Converti in BGR per OpenCV
-        img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        # STEP 2: Estrai contorni usando il metodo corretto di simple_logo_video.py
+        # Converti in BGR se necessario
+        if len(img_array.shape) == 3 and img_array.shape[2] == 4:
+            # RGBA to BGR
+            img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGBA2BGR)
+        elif len(img_array.shape) == 3 and img_array.shape[2] == 3:
+            # RGB to BGR
+            img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        else:
+            # Grayscale to BGR
+            img_bgr = cv2.cvtColor(img_array, cv2.COLOR_GRAY2BGR)
         
         # Converti in scala di grigi
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        gray_img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
         
-        # Inverti per avere il logo in bianco su sfondo nero
-        gray = 255 - gray
+        # CRUCIALE: Usa THRESH_BINARY_INV come in simple_logo_video.py
+        # Questo inverte i colori: nero su bianco diventa bianco su nero
+        _, binary_img = cv2.threshold(gray_img, 50, 255, cv2.THRESH_BINARY_INV)
         
-        # Soglia per ottenere una maschera binaria
-        _, binary = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
-        
-        # Trova i contorni
-        contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # CRUCIALE: Usa RETR_CCOMP per gestire i buchi nelle lettere
+        contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         
         if not contours:
             raise Exception("Nessun contorno trovato nel PDF.")
         
-        # Filtra e processa i contorni
-        processed_contours = []
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > 100:  # Filtra contorni troppo piccoli
-                processed_contours.append(contour)
+        print(f"📝 Estratti {len(contours)} contorni dal PDF con gestione buchi")
         
-        if not processed_contours:
+        # STEP 3: Centra e ridimensiona i contorni (adattato da simple_logo_video.py)
+        if not contours:
             raise Exception("Nessun contorno valido trovato nel PDF.")
         
-        # Ridimensiona i contorni alla risoluzione target
-        scale_x = width / binary.shape[1]
-        scale_y = height / binary.shape[0]
+        # Calcola bounding box di tutti i contorni
+        all_points = np.vstack([c for c in contours])
+        x, y, w, h = cv2.boundingRect(all_points)
         
+        # Trova centro dei contorni e del canvas target
+        contour_center_x = x + w / 2
+        contour_center_y = y + h / 2
+        canvas_center_x = width / 2
+        canvas_center_y = height / 2
+        
+        # Calcola area utilizzabile (con padding)
+        padding_fraction = (padding * 2) / min(width, height)  # Converti padding in frazione
+        canvas_drawable_width = width * (1 - padding_fraction)
+        canvas_drawable_height = height * (1 - padding_fraction)
+        
+        # Calcola scala per adattare al canvas
+        scale = min(canvas_drawable_width / w if w > 0 else 1, 
+                   canvas_drawable_height / h if h > 0 else 1)
+        
+        # Trasforma tutti i contorni
         scaled_contours = []
-        for contour in processed_contours:
-            scaled_contour = contour.copy().astype(np.float32)
-            scaled_contour[:, 0, 0] *= scale_x
-            scaled_contour[:, 0, 1] *= scale_y
-            scaled_contours.append(scaled_contour.astype(np.int32))
+        for contour in contours:
+            # Converti in float per calcoli precisi
+            c_float = contour.astype(np.float32)
+            # Trasla al centro e scala
+            c_float[:, 0, 0] = (c_float[:, 0, 0] - contour_center_x) * scale + canvas_center_x
+            c_float[:, 0, 1] = (c_float[:, 0, 1] - contour_center_y) * scale + canvas_center_y
+            # Riconverti in int32
+            scaled_contours.append(c_float.astype(np.int32))
         
-        doc.close()
+        print(f"📐 Logo PDF centrato e ridimensionato ({len(scaled_contours)} contorni)")
+        print("Estrazione contorni da PDF completata con metodo simple_logo_video.py.")
         
-        print(f"📐 Estratti {len(scaled_contours)} contorni da PDF")
-        print("Estrazione contorni da PDF completata.")
-        
-        return scaled_contours, None  # Hierarchy non necessaria per PDF
+        return scaled_contours, hierarchy
         
     except Exception as e:
         print(f"❌ Errore nell'estrazione contorni da PDF: {e}")
