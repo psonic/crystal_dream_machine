@@ -16,10 +16,11 @@ Natisone Trip is an **AI-powered mystical video generator** that transforms stat
 - **🎵 Audio-Reactive Magic**: Your visuals dance to the rhythm of sound, with bass frequencies creating organic deformations
 - **🔍 Lens Deformation Effects**: 30+ mystical lens effects that bend reality around your logo
 - **🌈 Organic Breathing Motion**: Perlin noise-based fluid deformations that make your graphics come alive  
+- **📱 Instagram Stories Ready**: Perfect 9:16 vertical format support for social media magic
 - **🎨 Advanced Blending Modes**: 10+ cinematic blending presets (Glow, Cinematic, Mystical, etc.)
-- **🌟 Dynamic Texture System**: Apply mystical textures that react to your content
+- **🌟 Dynamic Texture System**: Apply mystical textures (courtesy of TV Int) that react to your content
 - **👻 Ghost Tracers**: Leave ethereal trails that follow your logo's movement through time
-- **🎬 Background Video Integration**: Seamlessly blend with your own video backgrounds
+- **🎬 Background Video Integration**: Seamlessly blend with ice video backgrounds and custom footage
 - **⚡ Real-time Processing**: Optimized for smooth rendering with multiprocessing support
 
 ## 🚀 Quick Start Ritual
@@ -46,7 +47,7 @@ cp your_logo.svg input/
 cp background.mov input/sfondo.MOV
 cp audio.aif input/
 
-# Cast the spell
+# Cast the spell - transform your Alex Ortiga logos into flowing journeys
 python natisone_trip_generator.py
 ```
 
@@ -183,6 +184,8 @@ CrystalPython2/
 
 Natisone Trip isn't just a video generator—it's a **digital journey** that transforms static images into **living, breathing entities**. The organic deformations mirror the natural flow of the sacred river, while the audio reactivity connects your visuals to the universal rhythm that flows through all things.
 
+*Born from the creative collaboration of Alex Ortiga (logo design), TV Int (mystical textures), and Iaia & Friend (ice video backgrounds) - united by the flowing waters of the Natisone.*
+
 ## 🤝 Contributing to the Magic
 
 We welcome fellow digital mystics! To contribute:
@@ -196,32 +199,6 @@ We welcome fellow digital mystics! To contribute:
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎨 Creative Collaborators
-
-This mystical journey wouldn't be possible without our amazing creative collective:
-
-### 🖌️ **Alex Ortiga** - *Logo Visionary*
-- Master of visual identity and sacred geometry
-- Creator of the mystical logos that flow through the Natisone dimensions
-- Bringing ancient symbols into the digital realm
-
-### 🌟 **TV Int** - *Texture Alchemist*  
-- Provider of mystical textures that enhance every visual journey
-- Digital artist specializing in ethereal visual elements
-- Transforming raw materials into flowing digital essence
-
-### 🧊 **Iaia & Friend** - *Ice Video Creators*
-- Creators of the mesmerizing ice video backgrounds
-- Visual storytellers capturing the frozen essence of nature  
-- Bringing the crystal-clear energy of winter into our digital flows
-
-### 🌊 **The Natisone Collective**
-- United by the flowing waters of creativity
-- Each contribution a droplet in the infinite river of inspiration
-- Where individual talents merge into collective magic
-
----
 
 ## 🙏 Acknowledgments
 
