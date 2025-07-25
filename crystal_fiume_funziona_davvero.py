@@ -29,12 +29,21 @@ CAIROSVG_AVAILABLE = None
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
+# Import per gestione audio (opzionale)
+try:
+    import librosa
+    import librosa.display
+    AUDIO_AVAILABLE = True
+    print("🎵 Librosa disponibile - Supporto audio attivato!")
+except ImportError:
+    AUDIO_AVAILABLE = False
+    print("⚠️ Librosa non disponibile. Per supporto audio: pip install librosa")
+
 # --- CONFIGURAZIONE GLOBALE ---
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
-    SMALL = False    
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -57,8 +66,8 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 4  if TEST_MODE else 6  # Durata video in secondi
+    FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
@@ -71,6 +80,18 @@ class Config:
     BG_SLOWDOWN_FACTOR = 1.3     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
     BG_DARKEN_FACTOR = 0.5       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
     BG_CONTRAST_FACTOR = 1.3     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    
+    # --- Sistema Audio Reattivo ---
+    AUDIO_ENABLED = True         # Attiva reattività audio per lenti
+    AUDIO_FILES = ['input/audio1.aif', 'input/audio2.aif']  # Lista file audio per selezione casuale
+    AUDIO_RANDOM_SELECTION = True  # Seleziona casualmente un file dalla lista
+    AUDIO_RANDOM_START = True    # Inizia da punto casuale (max 2/3 del file)
+    AUDIO_REACTIVE_LENSES = True # Le lenti reagiscono all'audio
+    AUDIO_BASS_SENSITIVITY = 3.0 # Sensibilità alle frequenze basse aumentata per più movimento
+    AUDIO_MID_SENSITIVITY = 2.5  # Sensibilità alle frequenze medie aumentata per più movimento
+    AUDIO_HIGH_SENSITIVITY = 2.0 # Sensibilità alle frequenze acute aumentata per più movimento
+    AUDIO_SMOOTHING = 0.8        # Smoothing reattività audio (range: 0.3-0.95, 0.5=reattivo, 0.9=fluido)
+    AUDIO_BOOST_FACTOR = 3.0     # Amplificazione reattività (range: 1.0-10.0, 2=normale, 5=estrema)
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
@@ -86,32 +107,32 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 30             # Numero di lenti (range: 5-100, 20=poche, 30=normale, 50=molte)
-    LENS_MIN_STRENGTH = -1.0     # Forza minima (range: -3.0 a 3.0, -1=concavo leggero, 1=convesso leggero)
-    LENS_MAX_STRENGTH = 1.0      # Forza massima (range: -3.0 a 3.0, -1=concavo leggero, 1=convesso leggero)
-    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-80, 10=piccola, 30=media, 60=grande)
-    LENS_MAX_RADIUS = 60         # Raggio massimo area influenza (range: 20-150, 40=media, 80=grande, 120=molto grande)
-    LENS_SPEED_FACTOR = 0.02     # Velocità movimento (range: 0.005-0.2, 0.01=molto lenta, 0.05=normale, 0.1=veloce)
+    NUM_LENSES = 20             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    LENS_MIN_STRENGTH = -1.0     # Forza minima ridotta per deformazione più delicata
+    LENS_MAX_STRENGTH = 1.0      # Forza massima ridotta per deformazione più delicata
+    LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 20         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
-    # --- Parametri Movimento Lenti (molti ora inutilizzati nel nuovo sistema) ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.05    # Velocità percorso (range: 0.01-1.0, 0.05=lenta, 0.2=normale, 0.5=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 0.05    # Moltiplicatore velocità base (range: 0.01-2.0, 0.1=lenta, 0.5=normale, 1.0=veloce)
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Velocità rotazione verme (range: 0.001-0.1, 0.005=lenta, 0.02=normale, 0.05=veloce)
-    LENS_INERTIA = 0.98                  # Fluidità movimento (range: 0.5-0.99, 0.8=reattivo, 0.95=fluido, 0.99=molto fluido)
-    LENS_ROTATION_SPEED_MIN = -0.001     # Velocità rotazione minima (range: -0.02 a 0, -0.001=molto lenta, -0.01=normale)
-    LENS_ROTATION_SPEED_MAX = 0.001      # Velocità rotazione massima (range: 0 a 0.02, 0.001=molto lenta, 0.01=normale)
+    # --- Parametri Movimento Lenti ---
+    LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
+    LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+    LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
+    LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
+    LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
-    LENS_HORIZONTAL_BIAS = 3             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias orizzontale, 5=solo orizzontale)
+    LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
     LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
-    LENS_PULSATION_SPEED = 0.001         # Velocità pulsazione (range: 0.0005-0.02, 0.001=molto lenta, 0.005=lenta, 0.01=normale)
-    LENS_PULSATION_AMPLITUDE = 0.15      # Ampiezza pulsazione dimensioni (range: 0.05-0.8, 0.1=leggera, 0.3=normale, 0.6=forte)
+    LENS_PULSATION_SPEED = 0.0005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
+    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
     LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.1 # Ampiezza pulsazione forza (range: 0.05-0.5, 0.1=leggera, 0.2=normale, 0.4=forte)
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
     
     WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
-    WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
-    WORM_COMPLEXITY = 7        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
+    WORM_LENGTH = 1.8          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
+    WORM_COMPLEXITY = 5        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
     # --- Smussamento Contorni ---
     SMOOTHING_ENABLED = True      # Attiva bordi lisci del logo
@@ -120,10 +141,10 @@ class Config:
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
     TRACER_TRAIL_LENGTH = 25  # Lunghezza scie (ridotta in test mode per velocità)
-    TRACER_MAX_OPACITY = 0.03        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+    TRACER_MAX_OPACITY = 0.05        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
-    TRACER_THRESHOLD2 = 350          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
+    TRACER_THRESHOLD2 = 200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
@@ -138,7 +159,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'bright'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'glow'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
@@ -224,6 +245,213 @@ def get_timestamp_filename():
     magic_char = np.random.choice(magic_chars)
     return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
 
+def add_audio_to_video(video_path, audio_data, duration):
+    """
+    🎵 Aggiunge l'audio selezionato al video usando ffmpeg.
+    
+    Args:
+        video_path: Percorso del video senza audio
+        audio_data: Dati audio che contengono il file selezionato e offset
+        duration: Durata del video in secondi
+    
+    Returns:
+        str: Percorso del video finale con audio
+    """
+    if not audio_data:
+        print("🔇 Nessun audio da aggiungere")
+        return video_path
+    
+    # Genera nome del file finale
+    base_name = video_path.replace('.mp4', '')
+    final_video_path = f"{base_name}_with_audio.mp4"
+    
+    try:
+        # Costruisci comando ffmpeg con parametri corretti
+        cmd = [
+            'ffmpeg', '-y',  # -y per sovrascrivere senza chiedere
+            '-i', video_path,  # Video input
+            '-ss', str(audio_data['start_offset']),  # Offset per l'audio
+            '-i', audio_data['selected_file'],  # Audio input con offset
+            '-t', str(duration),  # Durata del video
+            '-c:v', 'copy',  # Copia video senza ricodifica
+            '-c:a', 'aac',   # Codifica audio in AAC per compatibilità
+            '-map', '0:v:0', # Usa video dal primo input
+            '-map', '1:a:0', # Usa audio dal secondo input
+            '-shortest',     # Interrompi quando il più corto finisce
+            final_video_path
+        ]
+        
+        print(f"🎵 Aggiungendo audio al video...")
+        print(f"📂 Audio: {audio_data['selected_file']}")
+        print(f"⏯️ Offset: {audio_data['start_offset']:.1f}s")
+        print(f"🔧 Comando: {' '.join(cmd)}")  # Debug del comando
+        
+        # Esegui ffmpeg
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(f"✅ Video con audio creato: {final_video_path}")
+            # Verifica che il file sia stato creato correttamente
+            if os.path.exists(final_video_path) and os.path.getsize(final_video_path) > 1000:
+                # Rimuovi il video temporaneo senza audio
+                try:
+                    os.remove(video_path)
+                    print(f"🗑️ Rimosso video temporaneo: {video_path}")
+                except:
+                    pass
+                return final_video_path
+            else:
+                print(f"⚠️ File audio generato ma sembra corrotto (dimensione: {os.path.getsize(final_video_path) if os.path.exists(final_video_path) else 0} bytes)")
+                return video_path
+        else:
+            print(f"⚠️ Errore ffmpeg (codice {result.returncode}):")
+            print(f"📤 stdout: {result.stdout}")
+            print(f"📤 stderr: {result.stderr}")
+            print(f"🔇 Mantengo video senza audio: {video_path}")
+            return video_path
+            
+    except Exception as e:
+        print(f"⚠️ Errore nell'aggiunta audio: {e}")
+        print(f"🔇 Mantengo video senza audio: {video_path}")
+        return video_path
+
+def load_audio_analysis(audio_files, duration, fps=30, random_selection=True, random_start=True):
+    """
+    🎵 Carica e analizza il file audio per l'estrazione delle frequenze.
+    Supporta selezione casuale di file e inizio casuale.
+    
+    Args:
+        audio_files: Lista di percorsi dei file audio o singolo percorso
+        duration: Durata del video in secondi
+        fps: Frame rate del video
+        random_selection: Se True, seleziona casualmente un file dalla lista
+        random_start: Se True, inizia da un punto casuale (max 2/3 del file)
+    
+    Returns:
+        dict: Contiene i dati audio processati per frame
+    """
+    
+    # Gestisci sia lista che singolo file
+    if isinstance(audio_files, str):
+        audio_files = [audio_files]
+    
+    # Filtra solo i file esistenti
+    existing_files = [f for f in audio_files if os.path.exists(f)]
+    
+    if not existing_files:
+        print(f"⚠️ Nessun file audio trovato tra: {audio_files}")
+        return None
+    
+    # Selezione del file audio
+    if random_selection and len(existing_files) > 1:
+        selected_audio = np.random.choice(existing_files)
+        print(f"🎲 Selezionato casualmente: {selected_audio}")
+    else:
+        selected_audio = existing_files[0]
+        print(f"🎵 Usando audio: {selected_audio}")
+    
+    try:
+        # Prima carica per ottenere la durata totale del file audio
+        y_full, sr = librosa.load(selected_audio)
+        full_duration = len(y_full) / sr
+        
+        # Calcola offset casuale se richiesto
+        start_offset = 0
+        if random_start and full_duration > duration:
+            # Non iniziare oltre i 2/3 del file per evitare silenzio finale
+            max_start = min(full_duration - duration, full_duration * 0.67)
+            if max_start > 0:
+                start_offset = np.random.uniform(0, max_start)
+                print(f"🎯 Inizio casuale a {start_offset:.1f}s (file lungo {full_duration:.1f}s)")
+        
+        # Carica la porzione desiderata
+        y, sr = librosa.load(selected_audio, offset=start_offset, duration=duration)
+        
+        # Calcola lo spettrogramma
+        stft = librosa.stft(y, hop_length=int(sr / fps))
+        magnitude = np.abs(stft)
+        
+        # Separazione delle bande di frequenza
+        freqs = librosa.fft_frequencies(sr=sr)
+        
+        # Definizione delle bande (in Hz)
+        bass_mask = freqs <= 250
+        mid_mask = (freqs > 250) & (freqs <= 4000)
+        high_mask = freqs > 4000
+        
+        # Estrazione dell'energia per ogni banda per frame
+        frames = magnitude.shape[1]
+        audio_data = {
+            'bass': np.mean(magnitude[bass_mask], axis=0),
+            'mid': np.mean(magnitude[mid_mask], axis=0),
+            'high': np.mean(magnitude[high_mask], axis=0),
+            'total': np.mean(magnitude, axis=0),
+            'frames': frames,
+            'duration': duration,
+            'selected_file': selected_audio,
+            'start_offset': start_offset
+        }
+        
+        # Normalizzazione dei valori
+        for key in ['bass', 'mid', 'high', 'total']:
+            if len(audio_data[key]) > 0:
+                audio_data[key] = audio_data[key] / np.max(audio_data[key])
+        
+        print(f"🎵 Audio caricato: {frames} frames, {duration:.1f}s")
+        if start_offset > 0:
+            print(f"⏯️ Offset: {start_offset:.1f}s -> {start_offset + duration:.1f}s")
+        
+        return audio_data
+        
+    except Exception as e:
+        print(f"⚠️ Errore nel caricamento audio {selected_audio}: {e}")
+        print("🔇 Rendering senza audio reactivity")
+        return None
+
+def get_audio_reactive_factors(audio_data, frame_idx, config):
+    """
+    🎚️ Calcola i fattori di reattività audio per il frame corrente.
+    
+    Args:
+        audio_data: Dati audio preprocessati
+        frame_idx: Indice del frame corrente
+        config: Configurazione con parametri audio
+    
+    Returns:
+        dict: Fattori per modulare i parametri delle lenti
+    """
+    if not audio_data or not config.AUDIO_ENABLED:
+        return {
+            'speed_factor': 1.0,
+            'strength_factor': 1.0,
+            'pulsation_factor': 1.0
+        }
+    
+    # Assicurati che l'indice del frame sia valido
+    audio_frame_idx = min(frame_idx, len(audio_data['bass']) - 1)
+    
+    if audio_frame_idx < 0:
+        audio_frame_idx = 0
+    
+    # Estrai i valori per il frame corrente
+    bass = audio_data['bass'][audio_frame_idx]
+    mid = audio_data['mid'][audio_frame_idx]
+    high = audio_data['high'][audio_frame_idx]
+    total = audio_data['total'][audio_frame_idx]
+    
+    # Calcola i fattori di modulazione
+    factors = {
+        'speed_factor': 1.0 + (bass * config.AUDIO_BASS_SENSITIVITY),
+        'strength_factor': 1.0 + (mid * config.AUDIO_MID_SENSITIVITY),
+        'pulsation_factor': 1.0 + (high * config.AUDIO_HIGH_SENSITIVITY)
+    }
+    
+    # Applica limiti per evitare valori estremi
+    for key in factors:
+        factors[key] = np.clip(factors[key], 0.1, 3.0)
+    
+    return factors
+
 def apply_blending_preset(config):
     """
     🎨 Applica automaticamente i preset di blending alla configurazione.
@@ -239,7 +467,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'overlay',
             'BLENDING_STRENGTH': 0.8,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 15,
+            'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': False,
@@ -250,7 +478,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'difference',
             'BLENDING_STRENGTH': 0.9,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 21,
+            'EDGE_BLUR_RADIUS': 4,
             'ADAPTIVE_BLENDING': False,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': False,
@@ -261,7 +489,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'soft_light',
             'BLENDING_STRENGTH': 0.6,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 25,
+            'EDGE_BLUR_RADIUS': 2,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': True,
@@ -272,7 +500,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'multiply',
             'BLENDING_STRENGTH': 0.85,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 11,
+            'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': True,
@@ -283,7 +511,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'screen',
             'BLENDING_STRENGTH': 0.7,
             'EDGE_DETECTION_ENABLED': False,
-            'EDGE_BLUR_RADIUS': 19,
+            'EDGE_BLUR_RADIUS': 5,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': False,
@@ -294,7 +522,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'hard_light',
             'BLENDING_STRENGTH': 0.9,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 13,
+            'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': False,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': False,
@@ -305,7 +533,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'exclusion',
             'BLENDING_STRENGTH': 0.95,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 17,
+            'EDGE_BLUR_RADIUS': 2,
             'ADAPTIVE_BLENDING': False,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': False,
@@ -316,7 +544,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'color_dodge',
             'BLENDING_STRENGTH': 0.75,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 23,
+            'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': False,
@@ -327,7 +555,7 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'color_burn',
             'BLENDING_STRENGTH': 0.8,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 15,
+            'EDGE_BLUR_RADIUS': 2,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': True,
@@ -1145,103 +1373,140 @@ def generate_cinematic_path(width, height, path_type, total_frames):
     
     return np.array(points)
 
-def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=None):
+def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=None, audio_factors=None):
     """
-    Sistema di lenti COMPLETAMENTE RIVISTO per movimenti fluidi e armoniosi.
-    Elimina sfarfallii e movimenti erratici, enfatizza movimenti lenti lungo la scritta.
+    Applica una deformazione basata su "lenti" che seguono percorsi cinematografici predefiniti.
+    Sistema completamente rivisto per movimenti ampi, fluidi e cinematografici con reattività audio.
     """
     h, w = mask.shape
     
     # Ottieni moltiplicatori dinamici se disponibili
     lens_strength_mult = dynamic_params.get('lens_strength_multiplier', 1.0) if dynamic_params else 1.0
     
+    # Integra i fattori audio-reattivi se disponibili
+    if audio_factors:
+        lens_strength_mult *= audio_factors['strength_factor']
+    
     map_x_grid, map_y_grid = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
     final_map_x = np.copy(map_x_grid)
     final_map_y = np.copy(map_y_grid)
 
-    # AGGIORNAMENTO POSIZIONI: Sistema semplificato e armonioso
-    for lens in lenses:
-        # NUOVO SISTEMA: Movimento fluido lungo la scritta (orizzontale prioritario)
-        time = frame_index * 0.02  # Velocità base molto ridotta per fluidità
-        
-        # Movimento principale: oscillazione orizzontale lenta lungo la scritta
-        center_x = w * 0.5  # Centro orizzontale
-        center_y = h * 0.5  # Centro verticale
-        
-        # Movimento orizzontale ampio e lento (segue la forma della scritta)
-        horizontal_amplitude = w * 0.3  # Movimento orizzontale ampio
-        horizontal_offset = np.sin(time + lens['phase_offset']) * horizontal_amplitude
-        
-        # Movimento verticale molto contenuto (non vogliamo allontanarci dalla scritta)
-        vertical_amplitude = h * 0.08  # Movimento verticale molto ridotto
-        vertical_offset = np.cos(time * 0.7 + lens['phase_offset'] * 1.3) * vertical_amplitude
-        
-        # NUOVO: Aggiungi variazione lenta secondaria per più complessità
-        secondary_time = time * 0.3  # Ancora più lento
-        secondary_horizontal = np.sin(secondary_time + lens['phase_offset'] * 2) * horizontal_amplitude * 0.4
-        secondary_vertical = np.cos(secondary_time * 1.1 + lens['phase_offset'] * 0.7) * vertical_amplitude * 0.5
-        
-        # Posizione finale: combinazione armoniosa dei movimenti
-        new_x = center_x + horizontal_offset + secondary_horizontal
-        new_y = center_y + vertical_offset + secondary_vertical
-        
-        # Mantieni le lenti entro i limiti con margini morbidi
-        margin = lens['radius']
-        new_x = np.clip(new_x, margin, w - margin)
-        new_y = np.clip(new_y, margin, h - margin)
-        
-        # Aggiorna posizione con transizione ultra-smooth (elimina sfarfallii)
-        smooth_factor = 0.95  # Alto valore = movimento molto fluido
-        lens['pos'][0] = lens['pos'][0] * smooth_factor + new_x * (1 - smooth_factor)
-        lens['pos'][1] = lens['pos'][1] * smooth_factor + new_y * (1 - smooth_factor)
-        
-        # SISTEMA PULSAZIONE SEMPLIFICATO (elimina variazioni caotiche)
-        if config.LENS_PULSATION_ENABLED:
-            # Una sola pulsazione semplice e armoniosa
-            pulse_time = time + lens['phase_offset']
-            pulse_factor = 1.0 + np.sin(pulse_time) * config.LENS_PULSATION_AMPLITUDE * 0.5
-            lens['radius'] = lens['base_radius'] * pulse_factor
-            
-            # Pulsazione forza opzionale (molto ridotta)
-            if config.LENS_FORCE_PULSATION_ENABLED:
-                force_pulse = 1.0 + np.cos(pulse_time * 1.2) * config.LENS_FORCE_PULSATION_AMPLITUDE * 0.3
-                lens['strength'] = lens['base_strength'] * force_pulse
-        
-        # Rotazione molto lenta e costante (elimina movimenti erratici)
-        if config.WORM_SHAPE_ENABLED:
-            lens['angle'] += 0.005  # Rotazione ultra-lenta e costante
-
-    # APPLICAZIONE DEFORMAZIONE: Sistema invariato ma ottimizzato
     for lens in lenses:
         dx = map_x_grid - lens['pos'][0]
         dy = map_y_grid - lens['pos'][1]
 
         if config.WORM_SHAPE_ENABLED:
-            # Forma verme semplificata
+            # Deformazione a "verme": distorciamo lo spazio di calcolo della distanza
             angle = lens['angle']
             dx_rot = dx * np.cos(angle) - dy * np.sin(angle)
             dy_rot = dx * np.sin(angle) + dy * np.cos(angle)
             
-            # Allungamento orizzontale per seguire la scritta
+            # Allunghiamo la forma su un asse per creare il "corpo" del verme
             dx_scaled = dx_rot / config.WORM_LENGTH
-            distance = np.sqrt(dx_scaled**2 + dy_rot**2)
+            
+            # CORREZIONE ANTI-SFARFALLIO: Sostituisco noise casuale con pattern sinusoidale predicibile
+            # Il noise casuale causava lo sfarfallio, ora uso movimento fluido e prevedibile
+            wave_time = frame_index * 0.03 + lens['pulsation_offset']  # Velocità fissa controllata
+            sinusoidal_curve = np.sin(dx_rot * 0.01 + wave_time) * 30  # Ampiezza ridotta da 50 a 30
+            dy_scaled = dy_rot + sinusoidal_curve
+            
+            distance = np.sqrt(dx_scaled**2 + dy_scaled**2)
         else:
             distance = np.sqrt(dx**2 + dy**2)
 
         normalized_distance = distance / (lens['radius'] + 1e-6)
         lens_mask = normalized_distance < 1.0
         
-        # Applica deformazione con forza dinamica
-        if np.any(lens_mask):
-            dynamic_strength = lens['strength'] * lens_strength_mult
-            displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
+        # Applica moltiplicatore dinamico alla forza della lente
+        dynamic_strength = lens['strength'] * lens_strength_mult
+        displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
+        
+        # Applica lo spostamento lungo la linea dal pixel al centro della lente
+        final_map_x[lens_mask] += dx[lens_mask] * displacement
+        final_map_y[lens_mask] += dy[lens_mask] * displacement
+
+    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA ULTRA-POTENZIATA
+    for lens in lenses:
+        # === PULSAZIONE DINAMICA ULTRA-MIGLIORATA ===
+        if config.LENS_PULSATION_ENABLED:
+            # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
+            pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
             
-            # Applica spostamento (CORRETTO: senza moltiplicatore che diminuiva l'effetto)
-            direction_x = dx[lens_mask] / (distance[lens_mask] + 1e-6)  # Evita divisione per zero
-            direction_y = dy[lens_mask] / (distance[lens_mask] + 1e-6)  # Evita divisione per zero
+            # Integra fattore audio nella velocità di pulsazione
+            if audio_factors:
+                pulsation_time *= audio_factors['pulsation_factor']
             
-            final_map_x[lens_mask] += direction_x * displacement
-            final_map_y[lens_mask] += direction_y * displacement
+            # CORREZIONE ANTI-SFARFALLIO: Pulsazione semplificata per ridurre caos
+            # Rimuovo le pulsazioni secondarie e terziarie che creano sfarfallio
+            base_pulsation = np.sin(pulsation_time)
+            # secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # RIMOSSA
+            # tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # RIMOSSA
+            
+            total_pulsation = base_pulsation  # Solo pulsazione base per fluidità
+            
+            # Modula l'ampiezza della pulsazione con l'audio
+            pulsation_amplitude = config.LENS_PULSATION_AMPLITUDE
+            if audio_factors:
+                pulsation_amplitude *= audio_factors['pulsation_factor']
+            
+            pulsation_factor = 1.0 + pulsation_amplitude * total_pulsation * 0.5  # Ridotta ampiezza
+            lens['radius'] = lens['base_radius'] * pulsation_factor
+            
+            # CORREZIONE: Pulsazione forza molto semplificata
+            if config.LENS_FORCE_PULSATION_ENABLED:
+                force_pulsation = np.sin(pulsation_time * 1.2)  # Frequenza ridotta da 1.8
+                force_pulsation_amplitude = config.LENS_FORCE_PULSATION_AMPLITUDE
+                if audio_factors:
+                    force_pulsation_amplitude *= audio_factors['strength_factor']
+                force_factor = 1.0 + force_pulsation_amplitude * force_pulsation * 0.3  # Ampiezza ridotta
+                lens['strength'] = lens['base_strength'] * force_factor
+        
+        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
+        # Velocità configurabile tramite parametri della Config, modulata dall'audio
+        movement_speed_multiplier = config.LENS_PATH_SPEED_MULTIPLIER
+        if audio_factors:
+            movement_speed_multiplier *= audio_factors['speed_factor']
+            
+        path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
+        current_target = lens['path'][int(path_progress)]
+        
+        # Interpolazione ultra-fluida tra i punti del percorso
+        next_index = (int(path_progress) + 1) % len(lens['path'])
+        next_target = lens['path'][next_index]
+        interpolation_factor = path_progress - int(path_progress)
+        
+        # Interpolazione con curva smooth per movimento più naturale
+        smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
+        smooth_target = current_target + (next_target - current_target) * smooth_factor
+        
+        # Movimento ultra-aggressivo e reattivo verso il target
+        direction = smooth_target - lens['pos']
+        distance_to_target = np.linalg.norm(direction)
+        
+        if distance_to_target > 0:
+            # CORREZIONE ANTI-SFARFALLIO: Velocità costante invece di adattiva per movimento fluido
+            # La velocità adattiva causava accelerazioni brusche che generavano sfarfallio
+            base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
+            
+            # Modula la velocità con i fattori audio
+            if audio_factors:
+                base_speed *= audio_factors['speed_factor']
+            
+            # adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))  # RIMOSSA
+            desired_velocity = (direction / distance_to_target) * base_speed  # Velocità costante
+            
+            # Inerzia più alta per movimento ultra-fluido
+            enhanced_inertia = min(0.99, config.LENS_INERTIA + 0.01)  # Aumentata di 1%
+            lens['velocity'] = lens['velocity'] * enhanced_inertia + desired_velocity * (1 - enhanced_inertia)
+        
+        # Aggiorna posizione e angolo con velocità configurabile
+        lens['pos'] += lens['velocity']
+        lens['angle'] += lens['rotation_speed'] * config.LENS_ROTATION_SPEED_MULTIPLIER
+        
+        # Assicurati che rimanga nei limiti con margini morbidi
+        margin = config.LENS_MIN_RADIUS
+        lens['pos'][0] = np.clip(lens['pos'][0], margin, w - margin)
+        lens['pos'][1] = np.clip(lens['pos'][1], margin, h - margin)
 
     deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return deformed_mask
@@ -1366,12 +1631,15 @@ def process_background(bg_frame, config):
     
     return final_bg, logo_edges, bg_edges
 
-def render_frame(contours, hierarchy, width, height, frame_index, total_frames, config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses):
+def render_frame(contours, hierarchy, width, height, frame_index, total_frames, config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses, audio_data=None):
     """
     Rende un singolo frame dell'animazione, applicando la pipeline di effetti completa.
     """
     # --- 0. Ottieni Parametri Dinamici ---
     dynamic_params = get_dynamic_parameters(frame_index, total_frames)
+    
+    # --- 0.5. Calcola Fattori Audio-Reattivi ---
+    audio_factors = get_audio_reactive_factors(audio_data, frame_index, config)
 
     # --- 1. Preparazione Sfondo e Traccianti ---
     bg_result = process_background(bg_frame, config)
@@ -1444,7 +1712,7 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
 
     # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
     if config.LENS_DEFORMATION_ENABLED:
-        logo_mask = apply_lens_deformation(logo_mask, lenses, frame_index, config, dynamic_params)
+        logo_mask = apply_lens_deformation(logo_mask, lenses, frame_index, config, dynamic_params, audio_factors)
 
     # --- 5.5. Estrai Traccianti del Logo (NUOVO per maggiore aderenza) ---
     logo_tracers = extract_logo_tracers(logo_mask, config)
@@ -1669,41 +1937,72 @@ def extract_logo_tracers(logo_mask, config):
     return logo_edges
 
 def initialize_lenses(config):
-    """
-    Inizializza lenti con sistema SEMPLIFICATO per movimenti fluidi e armoniosi.
-    Elimina percorsi complessi, usa solo fasi per movimenti sinusoidali.
-    """
+    """Inizializza una lista di lenti con percorsi cinematografici predefiniti per movimenti ampi e fluidi."""
     lenses = []
     
+    # Tipi di percorsi cinematografici - ULTRA-BIAS ORIZZONTALE per seguire la scritta
+    horizontal_paths = ['horizontal_sweep', 'horizontal_zigzag', 'horizontal_wave_complex', 'wave']  # Percorsi orizzontali privilegiati
+    mixed_paths = ['figure_eight', 'spiral', 'circular', 'cross']  # Percorsi misti
+    
+    # BIAS ORIZZONTALE: 70% delle lenti usa percorsi orizzontali
+    horizontal_lens_count = int(config.NUM_LENSES * 0.7)
+    mixed_lens_count = config.NUM_LENSES - horizontal_lens_count
+    
+    # Lista combinata con bias orizzontale
+    path_assignments = []
+    # Assegna percorsi orizzontali alla maggior parte delle lenti
+    for i in range(horizontal_lens_count):
+        path_assignments.append(horizontal_paths[i % len(horizontal_paths)])
+    # Aggiungi alcuni percorsi misti per varietà
+    for i in range(mixed_lens_count):
+        path_assignments.append(mixed_paths[i % len(mixed_paths)])
+    
+    # Mescola per evitare che tutte le lenti orizzontali siano consecutive
+    np.random.shuffle(path_assignments)
+    
+    # Durata del video in frame (per calcolare i percorsi)
+    total_frames = int(config.DURATION_SECONDS * config.FPS)
+    
     for i in range(config.NUM_LENSES):
-        # Posizione iniziale: distribuzione lungo la scritta (orizzontale)
-        initial_x = config.WIDTH * (0.2 + 0.6 * (i / max(1, config.NUM_LENSES - 1)))  # Distribuzione orizzontale
-        initial_y = config.HEIGHT * (0.4 + 0.2 * np.random.random())  # Piccola variazione verticale
+        # Usa il tipo di percorso assegnato con bias orizzontale
+        path_type = path_assignments[i]
         
-        # Raggio base variabile
+        # Genera il percorso cinematografico completo
+        path = generate_cinematic_path(config.WIDTH, config.HEIGHT, path_type, total_frames)
+        
+        # Posizione iniziale casuala lungo il percorso
+        path_offset = np.random.randint(0, len(path))
+        initial_pos = path[path_offset]
+        
+        # NUOVA: Base radius variabile per pulsazioni più interessanti
         base_radius = np.random.uniform(config.LENS_MIN_RADIUS, config.LENS_MAX_RADIUS)
+        current_radius = base_radius  # Inizia con il raggio base
         
-        # Forza base variabile
+        # NUOVA: Forza base che verrà modulata dalla pulsazione
         base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
         
-        # FASE UNICA per ogni lente: crea automaticamente movimenti diversi
-        phase_offset = (i / config.NUM_LENSES) * 2 * np.pi + np.random.uniform(0, np.pi)
-        
         lens = {
-            'pos': np.array([initial_x, initial_y], dtype=np.float32),
-            'radius': base_radius,
-            'base_radius': base_radius,
+            'pos': np.array(initial_pos, dtype=np.float32),
+            'velocity': np.array([0.0, 0.0]),  # Inizia ferma, si muove verso il percorso
+            'radius': current_radius,
+            'base_radius': base_radius,  # Raggio base per pulsazione
             'strength': base_strength,
-            'base_strength': base_strength,
+            'base_strength': base_strength,  # NUOVO: forza base per pulsazione
             'angle': np.random.uniform(0, 2 * np.pi),
-            'phase_offset': phase_offset,  # NUOVO: fase unica per movimento armonioso
+            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
+            'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
+            'path': path,  # Percorso cinematografico completo
+            'path_offset': path_offset,  # Offset iniziale nel percorso
+            'path_type': path_type  # Tipo di percorso per debug
         }
         lenses.append(lens)
     
-    print(f"🔮 Inizializzate {config.NUM_LENSES} lenti con sistema ARMONIOSO semplificato")
-    print(f"   � Movimenti fluidi basati su oscillazioni sinusoidali")
-    print(f"   📏 Distribuzione orizzontale lungo la scritta")
-    print(f"   ✨ Eliminati sfarfallii e movimenti erratici")
+    print(f"🔮 Inizializzate {config.NUM_LENSES} lenti ULTRA-CINEMATOGRAFICHE:")
+    print(f"   📏 {horizontal_lens_count} lenti con percorsi ORIZZONTALI (bias 70%)")
+    print(f"   🌀 {mixed_lens_count} lenti con percorsi MISTI per varietà")
+    for i, lens in enumerate(lenses):
+        movement_type = "ORIZZONTALE" if lens['path_type'] in horizontal_paths else "MISTO"
+        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type})")
     
     return lenses
 
@@ -1806,15 +2105,10 @@ def main():
     # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
     if Config.TEST_MODE:
         # Riduci di un terzo le dimensioni per test veloce
-        svg_width = int(svg_width / 3)
-        svg_height = int(svg_height / 3)
+        svg_width = int(svg_width / 2)
+        svg_height = int(svg_height / 2)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
 
-    if Config.SMALL:
-        svg_width = int(svg_width / 4)
-        svg_height = int(svg_height / 4)
-        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
-    
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
@@ -1907,6 +2201,26 @@ def main():
         lenses = initialize_lenses(Config)
         print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
 
+    # --- NUOVO: Caricamento e Analisi Audio ---
+    audio_data = None
+    if Config.AUDIO_ENABLED:
+        audio_data = load_audio_analysis(
+            Config.AUDIO_FILES, 
+            Config.DURATION_SECONDS, 
+            Config.FPS,
+            Config.AUDIO_RANDOM_SELECTION,
+            Config.AUDIO_RANDOM_START
+        )
+        if audio_data:
+            print(f"🎵 Audio caricato: reattività lenti attivata con {len(lenses)} elementi sincronizzati")
+            print(f"📂 File selezionato: {audio_data['selected_file']}")
+            if audio_data['start_offset'] > 0:
+                print(f"⏯️ Inizio da: {audio_data['start_offset']:.1f}s")
+        else:
+            print("⚠️ Errore nel caricamento audio: rendering senza sincronizzazione")
+    else:
+        print("🔇 Audio disabilitato nella configurazione")
+
     print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
     start_time = time.time()
     
@@ -1932,7 +2246,7 @@ def main():
                 # Crea uno sfondo nero se non c'è video
                 bg_frame = np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
 
-            frame_result = render_frame(contours, hierarchy, Config.WIDTH, Config.HEIGHT, i, Config.TOTAL_FRAMES, Config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses)
+            frame_result = render_frame(contours, hierarchy, Config.WIDTH, Config.HEIGHT, i, Config.TOTAL_FRAMES, Config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses, audio_data)
             
             if len(frame_result) == 3:
                 frame, current_logo_edges, current_bg_edges = frame_result
@@ -1993,7 +2307,15 @@ def main():
         out.release()
         if bg_video: 
             bg_video.release()
-        print(f"Animazione salvata in: {C_BOLD}{output_filename}{C_END}")
+        
+        # --- AGGIUNTA AUDIO AL VIDEO ---
+        if audio_data:
+            print(f"\n{C_BOLD}{C_CYAN}🎵 Aggiungendo audio al video...{C_END}")
+            final_output_filename = add_audio_to_video(output_filename, audio_data, Config.DURATION_SECONDS)
+        else:
+            final_output_filename = output_filename
+            
+        print(f"Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
 
         # --- GESTIONE VERSIONAMENTO ---
         try:
@@ -2004,9 +2326,10 @@ def main():
             
             if os.path.exists(version_manager_path):
                 result = subprocess.run(
-                    [sys.executable, version_manager_path, output_filename, source_script_path],
+                    [sys.executable, version_manager_path, final_output_filename, source_script_path],
                     capture_output=True,
                     text=True,
+                    timeout=30,  # Timeout di 30 secondi per evitare blocchi
                     check=False # Mettiamo a False per gestire l'errore manualmente
                 )
                 # Stampa sempre stdout e stderr per il debug
@@ -2020,6 +2343,9 @@ def main():
             else:
                 print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
 
+        except subprocess.TimeoutExpired:
+            print(f"{C_YELLOW}⏰ Timeout del gestore versioni (30s) - probabilmente in attesa di credenziali Git.{C_END}")
+            print(f"{C_YELLOW}💡 Suggerimento: Configura Git con token di accesso per evitare richieste interattive.{C_END}")
         except Exception as e:
             print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
 
