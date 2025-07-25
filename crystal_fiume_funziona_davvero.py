@@ -95,17 +95,17 @@ class Config:
     LENS_SPEED_FACTOR = 0.0001    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 0.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.1  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
-    LENS_INERTIA = 0.75                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0.0005     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0.0005      # Velocità rotazione massima (range: 0 a 0.02)
+    LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
+    LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+    LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
+    LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
+    LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
     LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
-    LENS_PULSATION_SPEED = 0.005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
+    LENS_PULSATION_SPEED = 0.0005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
     LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
     LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
