@@ -111,7 +111,7 @@ class Config:
     LENS_MIN_STRENGTH = -1.0     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.0      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 25         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 65         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
