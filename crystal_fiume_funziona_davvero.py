@@ -87,9 +87,9 @@ class Config:
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
     NUM_LENSES = 20 if TEST_MODE else 30             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
-    LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
+    LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 50         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 30         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.01    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
