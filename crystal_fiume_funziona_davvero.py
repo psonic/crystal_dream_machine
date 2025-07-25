@@ -83,7 +83,7 @@ class Config:
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
-    LENS_MAX_RADIUS = 300    # Lenti ancora più grandi per effetti ampi
+    LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
     LENS_SPEED_FACTOR = 0.001  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO LENTI (NUOVI - PRECEDENTEMENTE HARDCODED) ---
@@ -95,7 +95,7 @@ class Config:
     LENS_ROTATION_SPEED_MAX = 0.008   # Velocità di rotazione massima
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 1.5  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
+    LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.005  # RALLENTATO: pulsazione più lenta e calma
     LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
