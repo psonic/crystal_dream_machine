@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     SMALL = False    
 
     # --- Compatibilità WhatsApp ---
@@ -74,7 +74,7 @@ class Config:
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
+    GLOW_KERNEL_SIZE = 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
     GLOW_INTENSITY = 0.4         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
     # --- Deformazione Organica ---
@@ -86,7 +86,7 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 30             # Numero di lenti (ridotto per movimenti più armoniosi)
+    NUM_LENSES = 30             # Numero di lenti (ridotto per movimenti più armoniosi)
     LENS_MIN_STRENGTH = -1.0     # Forza minima ridotta per deformazioni più delicate
     LENS_MAX_STRENGTH = 1.0      # Forza massima ridotta per deformazioni più delicate
     LENS_MIN_RADIUS = 10         # Raggio minimo aumentato per lenti più grandi e fluide
@@ -119,7 +119,7 @@ class Config:
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 15 if TEST_MODE else 25  # Lunghezza scie (ridotta in test mode per velocità)
+    TRACER_TRAIL_LENGTH = 25  # Lunghezza scie (ridotta in test mode per velocità)
     TRACER_MAX_OPACITY = 0.03        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
@@ -127,7 +127,7 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 10 if TEST_MODE else 20  # Lunghezza scie sfondo (ridotta in test mode)
+    BG_TRACER_TRAIL_LENGTH = 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
