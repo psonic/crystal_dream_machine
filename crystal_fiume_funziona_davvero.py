@@ -71,7 +71,7 @@ class Config:
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = False   # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Colore e Stile ---
