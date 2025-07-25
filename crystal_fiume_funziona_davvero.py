@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -61,9 +61,9 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_SLOWDOWN_FACTOR = 1.6     # Fattore rallentamento sfondo (1=normale, 2=metà velocità)
-    BG_DARKEN_FACTOR = 0.2       # Scurimento sfondo (0=nero, 1=normale)
-    BG_CONTRAST_FACTOR = 1.5     # Contrasto sfondo (1=normale, >1=più contrasto)
+    BG_SLOWDOWN_FACTOR = 1.2     # Fattore rallentamento sfondo (1=normale, 2=metà velocità)
+    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (0=nero, 1=normale)
+    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (1=normale, >1=più contrasto)
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
@@ -72,9 +72,9 @@ class Config:
 
     # --- Deformazione Organica ---
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.01   # Velocità del movimento ondulatorio 
-    DEFORMATION_SCALE = 0.08   # Dimensione delle onde (più alto = onde più larghe)
-    DEFORMATION_INTENSITY = 12.0  # Intensità della deformazione (più alto = più movimento)
+    DEFORMATION_SPEED = 0.1   # Velocità del movimento ondulatorio 
+    DEFORMATION_SCALE = 0.002   # Dimensione delle onde (più alto = onde più larghe)
+    DEFORMATION_INTENSITY = 5.0  # Intensità della deformazione (più alto = più movimento)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
