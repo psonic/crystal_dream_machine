@@ -81,7 +81,7 @@ class Config:
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.1   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
     DEFORMATION_SCALE = 0.05   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
-    DEFORMATION_INTENSITY = 15.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+    DEFORMATION_INTENSITY = 3.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
