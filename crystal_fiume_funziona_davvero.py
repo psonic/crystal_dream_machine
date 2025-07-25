@@ -35,7 +35,7 @@ class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     SHORT = True
-    
+
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
@@ -98,8 +98,8 @@ class Config:
     LENS_BASE_SPEED_MULTIPLIER = 0.05    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia) - RALLENTATO
     LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce) - RALLENTATO
     LENS_INERTIA = 0.98                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido) - AUMENTATO per più fluidità
-    LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
+    LENS_ROTATION_SPEED_MIN = -0.01     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0.01     # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
@@ -1195,33 +1195,32 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         final_map_x[lens_mask] += dx[lens_mask] * displacement
         final_map_y[lens_mask] += dy[lens_mask] * displacement
 
-    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA ULTRA-POTENZIATA
+    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA INDIVIDUALE
     for lens in lenses:
-        # === PULSAZIONE DINAMICA ULTRA-MIGLIORATA ===
+        # === PULSAZIONE DINAMICA CON PARAMETRI INDIVIDUALI ===
         if config.LENS_PULSATION_ENABLED:
-            # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
-            pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
+            # Usa parametri individuali di pulsazione per ogni lente
+            pulsation_time = frame_index * lens['individual_pulsation_speed'] + lens['pulsation_offset']
             
-            # Pulsazione del raggio con pattern complesso per più "vita"
+            # Pulsazione del raggio con pattern complesso usando complessità individuale
             base_pulsation = np.sin(pulsation_time)
-            secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # Frequenza diversa
-            tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # Ancora più complessa
+            secondary_pulsation = 0.3 * np.sin(pulsation_time * lens['individual_pulsation_complexity'])
+            tertiary_pulsation = 0.15 * np.cos(pulsation_time * lens['individual_pulsation_complexity'] * 1.5)
             
             total_pulsation = base_pulsation + secondary_pulsation + tertiary_pulsation
-            pulsation_factor = 1.0 + config.LENS_PULSATION_AMPLITUDE * total_pulsation
+            pulsation_factor = 1.0 + lens['individual_pulsation_amplitude'] * total_pulsation
             lens['radius'] = lens['base_radius'] * pulsation_factor
             
-            # NUOVO: Pulsazione anche della forza per effetto drammatico
+            # NUOVO: Pulsazione anche della forza per effetto drammatico (con parametri individuali)
             if config.LENS_FORCE_PULSATION_ENABLED:
                 force_pulsation_time = pulsation_time * 1.8  # Velocità leggermente diversa
                 force_pulsation = np.sin(force_pulsation_time) + 0.5 * np.cos(force_pulsation_time * 1.6)
-                force_factor = 1.0 + config.LENS_FORCE_PULSATION_AMPLITUDE * force_pulsation
+                force_factor = 1.0 + lens['individual_pulsation_amplitude'] * 0.5 * force_pulsation  # Usa metà dell'ampiezza individuale
                 lens['strength'] = lens['base_strength'] * force_factor
         
-        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
-        # Velocità configurabile tramite parametri della Config
-        movement_speed_multiplier = config.LENS_PATH_SPEED_MULTIPLIER
-        path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
+        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI CON VELOCITÀ INDIVIDUALI ===
+        # Usa la velocità individuale della lente invece del parametro globale
+        path_progress = ((frame_index + lens['path_offset']) * lens['individual_path_speed']) % len(lens['path'])
         current_target = lens['path'][int(path_progress)]
         
         # Interpolazione ultra-fluida tra i punti del percorso
@@ -1233,23 +1232,21 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
         smooth_target = current_target + (next_target - current_target) * smooth_factor
         
-        # Movimento ultra-aggressivo e reattivo verso il target
+        # Movimento con parametri individuali per ogni lente
         direction = smooth_target - lens['pos']
         distance_to_target = np.linalg.norm(direction)
         
         if distance_to_target > 0:
-            # Velocità configurabile con adattamento dinamico alla distanza
-            base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
-            adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
+            # Usa velocità individuale della lente
+            adaptive_speed = lens['individual_speed'] * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
             desired_velocity = (direction / distance_to_target) * adaptive_speed
             
-            # Inerzia configurabile per controllo del movimento
-            inertia_strength = config.LENS_INERTIA
-            lens['velocity'] = lens['velocity'] * inertia_strength + desired_velocity * (1 - inertia_strength)
+            # Usa inerzia individuale della lente
+            lens['velocity'] = lens['velocity'] * lens['individual_inertia'] + desired_velocity * (1 - lens['individual_inertia'])
         
-        # Aggiorna posizione e angolo con velocità configurabile
+        # Aggiorna posizione e angolo con parametri individuali
         lens['pos'] += lens['velocity']
-        lens['angle'] += lens['rotation_speed'] * config.LENS_ROTATION_SPEED_MULTIPLIER
+        lens['angle'] += lens['rotation_speed'] * lens['individual_rotation_multiplier']
         
         # Assicurati che rimanga nei limiti con margini morbidi
         margin = config.LENS_MIN_RADIUS
@@ -1681,7 +1678,7 @@ def extract_logo_tracers(logo_mask, config):
     
     return logo_edges
 
-def initialize_lenses(config):
+def initialize_lenses(config, width, height):
     """Inizializza una lista di lenti con percorsi cinematografici predefiniti per movimenti ampi e fluidi."""
     lenses = []
     
@@ -1713,7 +1710,7 @@ def initialize_lenses(config):
         path_type = path_assignments[i]
         
         # Genera il percorso cinematografico completo
-        path = generate_cinematic_path(config.WIDTH, config.HEIGHT, path_type, total_frames)
+        path = generate_cinematic_path(width, height, path_type, total_frames)
         
         # Posizione iniziale casuala lungo il percorso
         path_offset = np.random.randint(0, len(path))
@@ -1726,6 +1723,48 @@ def initialize_lenses(config):
         # NUOVA: Forza base che verrà modulata dalla pulsazione
         base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
         
+        # 🎭 PARAMETRI INDIVIDUALI UNICI PER OGNI LENTE
+        # Creiamo 4 categorie di movimento diverse:
+        
+        movement_style = i % 4  # Cicla tra 4 stili diversi
+        
+        if movement_style == 0:
+            # Stile 1: LENTA E AMPIA - movimenti rilassati e grandi
+            individual_speed = np.random.uniform(0.008, 0.020)  # Molto lenta
+            individual_inertia = np.random.uniform(0.985, 0.995)  # Molto fluida
+            individual_path_speed = np.random.uniform(0.01, 0.025)  # Percorso lento
+            movement_description = "LENTA-AMPIA"
+            
+        elif movement_style == 1:
+            # Stile 2: VELOCE E PICCOLA - movimenti rapidi in spazio ridotto
+            individual_speed = np.random.uniform(0.08, 0.15)  # Veloce
+            individual_inertia = np.random.uniform(0.92, 0.96)  # Meno fluida, più reattiva
+            individual_path_speed = np.random.uniform(0.08, 0.12)  # Percorso veloce
+            movement_description = "VELOCE-PICCOLA"
+            
+        elif movement_style == 2:
+            # Stile 3: OSCILLATORIA - movimenti pendolari e ritmici
+            individual_speed = np.random.uniform(0.035, 0.055)  # Media
+            individual_inertia = np.random.uniform(0.97, 0.99)  # Molto fluida per oscillazioni smooth
+            individual_path_speed = np.random.uniform(0.03, 0.05)  # Percorso medio-lento
+            movement_description = "OSCILLATORIA"
+            
+        else:  # movement_style == 3
+            # Stile 4: ERRATICA - movimenti imprevedibili e variabili
+            individual_speed = np.random.uniform(0.02, 0.12)  # Range ampio, imprevedibile
+            individual_inertia = np.random.uniform(0.88, 0.98)  # Varia molto
+            individual_path_speed = np.random.uniform(0.02, 0.09)  # Anche il percorso varia
+            movement_description = "ERRATICA"
+        
+        # Parametri di rotazione individuali
+        individual_rotation_speed = np.random.uniform(-0.015, 0.015)
+        individual_rotation_multiplier = np.random.uniform(0.003, 0.012)
+        
+        # Parametri di pulsazione individuali per varietà ancora maggiore
+        individual_pulsation_speed = np.random.uniform(0.0003, 0.002)
+        individual_pulsation_amplitude = np.random.uniform(0.1, 0.4)
+        individual_pulsation_complexity = np.random.uniform(1.5, 4.0)  # Per pattern pulsazione diversi
+        
         lens = {
             'pos': np.array(initial_pos, dtype=np.float32),
             'velocity': np.array([0.0, 0.0]),  # Inizia ferma, si muove verso il percorso
@@ -1734,20 +1773,44 @@ def initialize_lenses(config):
             'strength': base_strength,
             'base_strength': base_strength,  # NUOVO: forza base per pulsazione
             'angle': np.random.uniform(0, 2 * np.pi),
-            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
+            'rotation_speed': individual_rotation_speed,  # INDIVIDUALE
             'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
             'path': path,  # Percorso cinematografico completo
             'path_offset': path_offset,  # Offset iniziale nel percorso
-            'path_type': path_type  # Tipo di percorso per debug
+            'path_type': path_type,  # Tipo di percorso per debug
+            
+            # 🎭 PARAMETRI INDIVIDUALI PER MOVIMENTO UNICO
+            'individual_speed': individual_speed,
+            'individual_inertia': individual_inertia,
+            'individual_path_speed': individual_path_speed,
+            'individual_rotation_multiplier': individual_rotation_multiplier,
+            'individual_pulsation_speed': individual_pulsation_speed,
+            'individual_pulsation_amplitude': individual_pulsation_amplitude,
+            'individual_pulsation_complexity': individual_pulsation_complexity,
+            'movement_style': movement_style,
+            'movement_description': movement_description
         }
         lenses.append(lens)
     
     print(f"🔮 Inizializzate {config.NUM_LENSES} lenti ULTRA-CINEMATOGRAFICHE:")
     print(f"   📏 {horizontal_lens_count} lenti con percorsi ORIZZONTALI (bias 70%)")
     print(f"   🌀 {mixed_lens_count} lenti con percorsi MISTI per varietà")
+    
+    # Raggruppa per stile di movimento per il debug
+    style_counts = {0: 0, 1: 0, 2: 0, 3: 0}
+    for lens in lenses:
+        style_counts[lens['movement_style']] += 1
+    
+    print(f"   🎭 STILI DI MOVIMENTO INDIVIDUALI:")
+    print(f"     🐌 {style_counts[0]} lenti LENTA-AMPIA (movimenti rilassati)")
+    print(f"     ⚡ {style_counts[1]} lenti VELOCE-PICCOLA (rapide e concentrate)")
+    print(f"     🌊 {style_counts[2]} lenti OSCILLATORIA (pendolari e ritmiche)")
+    print(f"     🎲 {style_counts[3]} lenti ERRATICA (imprevedibili e variabili)")
+    
     for i, lens in enumerate(lenses):
         movement_type = "ORIZZONTALE" if lens['path_type'] in horizontal_paths else "MISTO"
-        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type})")
+        speed_info = f"vel:{lens['individual_speed']:.3f}"
+        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type}) - {lens['movement_description']} ({speed_info})")
     
     return lenses
 
@@ -1943,7 +2006,7 @@ def main():
     # --- Inizializzazione per Effetto Lenti (NUOVO) ---
     lenses = []
     if Config.LENS_DEFORMATION_ENABLED:
-        lenses = initialize_lenses(Config)
+        lenses = initialize_lenses(Config, Config.WIDTH, Config.HEIGHT)
         print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
 
     print(f"Rendering dell'animazione in corso... ({Config.TOTAL_FRAMES} frame da elaborare)")
