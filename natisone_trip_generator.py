@@ -44,18 +44,13 @@ except ImportError:
 class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
-    
-    # --- Ottimizzazioni Performance ---
-    PERFORMANCE_MODE = True       # True = ottimizzazioni aggressive per velocità
-    REDUCED_QUALITY_MODE = False  # True = riduce qualità per velocità (meno lenti, meno traccianti)
-    SKIP_HEAVY_EFFECTS = False    # True = disabilita effetti pesanti (deformazione organica, blending avanzato)
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = False        # True = usa SVG, False = usa PDF
+    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
@@ -71,12 +66,12 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 5 if TEST_MODE else 25  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
+    FPS = 5 if TEST_MODE else 15  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 3 if TEST_MODE else 7  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Colore e Stile ---
@@ -110,13 +105,13 @@ class Config:
 
     # --- Deformazione Organica ---
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
-    DEFORMATION_ENABLED = not SKIP_HEAVY_EFFECTS  # Disattiva se SKIP_HEAVY_EFFECTS è True
+    DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.01   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
     DEFORMATION_SCALE = 0.002   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
     DEFORMATION_INTENSITY = 10.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
     
     # --- Reattività Audio Deformazione Organica ---
-    DEFORMATION_AUDIO_REACTIVE = not SKIP_HEAVY_EFFECTS  # Disattiva se SKIP_HEAVY_EFFECTS è True
+    DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
     DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (leggermente più ampio)
     DEFORMATION_BASS_SPEED = 0.015     # Quanto i bassi influenzano la velocità (più lento per effetto rimbalzo)
     DEFORMATION_MID_SCALE = 0.0015     # Quanto i medi influenzano la scala/frequenza (leggermente più ampio)
@@ -124,11 +119,11 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 15 if PERFORMANCE_MODE else (10 if REDUCED_QUALITY_MODE else 30)  # Meno lenti = più veloce
+    NUM_LENSES = 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.4      # Forza massima ridotta per deformazione più delicata
-    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 40         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 35         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
@@ -157,26 +152,26 @@ class Config:
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 10 if PERFORMANCE_MODE else (15 if REDUCED_QUALITY_MODE else 25)  # Scie più corte = più veloce
+    TRACER_TRAIL_LENGTH = 25  # Lunghezza scie (ridotta in test mode per velocità)
     TRACER_MAX_OPACITY = 0.05        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
     TRACER_THRESHOLD2 = 200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
     
     # --- Traccianti Sfondo ---
-    BG_TRACER_ENABLED = not PERFORMANCE_MODE  # Disattiva in performance mode
-    BG_TRACER_TRAIL_LENGTH = 8 if PERFORMANCE_MODE else (12 if REDUCED_QUALITY_MODE else 20)  # Scie più corte
+    BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
+    BG_TRACER_TRAIL_LENGTH = 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
     BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
-    ADVANCED_BLENDING = not SKIP_HEAVY_EFFECTS  # Disattiva blending avanzato se SKIP_HEAVY_EFFECTS è True
+    ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'normal' if PERFORMANCE_MODE else 'cinematic'  # Preset più semplice in performance mode
+    BLENDING_PRESET = 'cinematic'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
@@ -1630,17 +1625,13 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
     
     # Creo una griglia ridotta per calcolare il noise più velocemente
     # poi interpolo per ottenere un movimento fluido
-    # Griglia più grossolana in modalità performance per velocità
-    grid_size = 8 if hasattr(params, 'performance_mode') and params.get('performance_mode', False) else 6
+    grid_size = 6  # Griglia più fitta per curve più morbide, ma ancora ottimizzata
     h_grid = h // grid_size + 1
     w_grid = w // grid_size + 1
     
     # Griglie per il noise
     noise_x = np.zeros((h_grid, w_grid), dtype=np.float32)
     noise_y = np.zeros((h_grid, w_grid), dtype=np.float32)
-    
-    # Octaves ridotte per performance
-    octaves = 2 if hasattr(params, 'performance_mode') and params.get('performance_mode', False) else 4
     
     # Calcolo il noise solo sui punti della griglia
     for y in range(h_grid):
@@ -1651,7 +1642,7 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
             noise_x[y, x] = pnoise2(
                 real_x * scale, 
                 real_y * scale + time_component, 
-                octaves=octaves, persistence=0.5, lacunarity=2.0
+                octaves=4, persistence=0.5, lacunarity=2.0
             )
             noise_y[y, x] = pnoise2(
                 real_x * scale + time_component, 
