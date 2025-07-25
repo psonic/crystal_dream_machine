@@ -49,87 +49,88 @@ class Config:
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.5          # Opacità della texture (0=invisibile, 1=opaca)
-    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture su sfondo (quando target=background/both)
+    TEXTURE_ALPHA = 0.5          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
+    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
     TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
-    SVG_PADDING = 100            # Spazio intorno al logo (pixel)
-    FPS = 10 if TEST_MODE else 30  # Frame per secondo
+    SVG_PADDING = 100            # Spazio intorno al logo (range: 50-300, 100=normale, 200=ampio)
+    FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 5 if TEST_MODE else 5  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
-    LOGO_COLOR = (50, 50, 50)    # Colore del logo (BGR)
-    LOGO_ALPHA = 1.0             # Opacità del logo (0=trasparente, 1=opaco)
+    LOGO_COLOR = (50, 50, 50)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
+    LOGO_ALPHA = 1.0             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
     
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_SLOWDOWN_FACTOR = 1.2     # Fattore rallentamento sfondo (1=normale, 2=metà velocità)
-    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (0=nero, 1=normale)
-    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (1=normale, >1=più contrasto)
+    BG_SLOWDOWN_FACTOR = 1.2     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore
-    GLOW_INTENSITY = 0.2         # Intensità bagliore (0=spento, 1=massimo)
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
+    GLOW_INTENSITY = 0.2         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
     # --- Deformazione Organica ---
+    # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.1   # Velocità del movimento ondulatorio 
-    DEFORMATION_SCALE = 0.002   # Dimensione delle onde (più alto = onde più larghe)
-    DEFORMATION_INTENSITY = 5.0  # Intensità della deformazione (più alto = più movimento)
+    DEFORMATION_SPEED = 0.1   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
+    DEFORMATION_SCALE = 0.005   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_INTENSITY = 15.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 40              # Numero di lenti che si muovono sul logo
-    LENS_MIN_STRENGTH = -2.0     # Forza minima delle lenti (negativo = concavo, positivo = convesso)
-    LENS_MAX_STRENGTH = 2.5      # Forza massima delle lenti
-    LENS_MIN_RADIUS = 10         # Raggio minimo area di influenza delle lenti
-    LENS_MAX_RADIUS = 70         # Raggio massimo area di influenza delle lenti  
-    LENS_SPEED_FACTOR = 0.01    # Velocità di movimento delle lenti
+    NUM_LENSES = 40              # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
+    LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
+    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 70         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_SPEED_FACTOR = 0.01    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso delle lenti
-    LENS_BASE_SPEED_MULTIPLIER = 1.4    # Moltiplicatore velocità base
-    LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione lenti "verme"
-    LENS_INERTIA = 0.85                  # Fluidità movimento (0=scattanti, 1=fluide)
-    LENS_ROTATION_SPEED_MIN = -0.008     # Velocità rotazione minima
-    LENS_ROTATION_SPEED_MAX = 0.008      # Velocità rotazione massima
+    LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
+    LENS_BASE_SPEED_MULTIPLIER = 1.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+    LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
+    LENS_INERTIA = 0.85                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
+    LENS_ROTATION_SPEED_MIN = -0.008     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0.008      # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
-    LENS_HORIZONTAL_BIAS = 2             # Preferenza per movimento orizzontale
+    LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
     LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
-    LENS_PULSATION_SPEED = 0.005         # Velocità pulsazione
-    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni
+    LENS_PULSATION_SPEED = 0.005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
+    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
     LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
     
     WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
-    WORM_LENGTH = 2.2          # Lunghezza forma verme
-    WORM_COMPLEXITY = 4        # Complessità movimento del verme
+    WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
+    WORM_COMPLEXITY = 4        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
     # --- Smussamento Contorni ---
     SMOOTHING_ENABLED = True      # Attiva bordi lisci del logo
-    SMOOTHING_FACTOR = 0.0001     # Intensità smussamento (più basso = più liscio)
+    SMOOTHING_FACTOR = 0.0001     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 25         # Lunghezza delle scie
-    TRACER_MAX_OPACITY = 0.03        # Opacità massima delle scie
-    TRACER_BASE_COLOR = (255, 200, 220)  # Colore base delle scie (BGR)
-    TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi
-    TRACER_THRESHOLD2 = 350          # Soglia alta rilevamento bordi
+    TRACER_TRAIL_LENGTH = 25         # Lunghezza scie (range: 5-100, 15=corte, 25=medie, 50=lunghe)
+    TRACER_MAX_OPACITY = 0.03        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+    TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
+    TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
+    TRACER_THRESHOLD2 = 350          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 20      # Lunghezza scie sfondo
-    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo
-    BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR)
-    BG_TRACER_THRESHOLD1 = 30        # Soglia bassa per contorni sfondo
-    BG_TRACER_THRESHOLD2 = 100       # Soglia alta per contorni sfondo
+    BG_TRACER_TRAIL_LENGTH = 20      # Lunghezza scie sfondo (range: 5-80, 15=corte, 30=lunghe)
+    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+    BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
+    BG_TRACER_THRESHOLD1 = 30        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+    BG_TRACER_THRESHOLD2 = 100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
@@ -137,28 +138,28 @@ class Config:
     # Parametri blending configurabili
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
     BLENDING_MODE = 'color_dodge'     # Modalità fusione logo-sfondo
-    BLENDING_STRENGTH = 0.7          # Intensità fusione (0=solo logo, 1=solo effetto)
+    BLENDING_STRENGTH = 0.7          # Intensità fusione (range: 0.0-1.0, 0.3=leggera, 0.7=forte, 1.0=solo effetto)
     EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
-    EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi
+    EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi (range: 5-50, 15=netti, 25=morbidi, 40=molto sfumati)
     ADAPTIVE_BLENDING = False        # Adatta fusione ai colori dello sfondo
     COLOR_HARMONIZATION = False      # Armonizza colori logo-sfondo
     LUMINANCE_MATCHING = False       # Adatta luminosità logo allo sfondo
     
     # Parametri fusione classici
-    LOGO_BLEND_FACTOR = 0.6          # Bilanciamento logo originale/fuso
-    EDGE_SOFTNESS = 80               # Morbidezza bordi del logo
-    BLEND_TRANSPARENCY = 0.3         # Trasparenza globale del logo
-    COLOR_BLENDING_STRENGTH = 0.3    # Intensità mescolamento colori
+    LOGO_BLEND_FACTOR = 0.6          # Bilanciamento logo/fuso (range: 0.0-1.0, 0.3=più logo, 0.8=più effetto)
+    EDGE_SOFTNESS = 80               # Morbidezza bordi (range: 20-150, 50=netti, 100=morbidi)
+    BLEND_TRANSPARENCY = 0.3         # Trasparenza globale (range: 0.0-0.8, 0.2=opaco, 0.5=trasparente)
+    COLOR_BLENDING_STRENGTH = 0.3    # Intensità mescolamento colori (range: 0.0-1.0, 0.2=leggero, 0.6=forte)
     
     # --- Debug e Qualità ---
     DEBUG_MASK = False  # Mostra maschera di debug (per sviluppatori)
     
     # --- Variazione Dinamica ---
     DYNAMIC_VARIATION_ENABLED = True  # Attiva variazioni automatiche nel tempo
-    VARIATION_AMPLITUDE = 0.8         # Ampiezza delle variazioni automatiche
-    VARIATION_SPEED_SLOW = 0.01       # Velocità variazioni lente
-    VARIATION_SPEED_MEDIUM = 0.025    # Velocità variazioni medie
-    VARIATION_SPEED_FAST = 0.005      # Velocità variazioni veloci
+    VARIATION_AMPLITUDE = 0.8         # Ampiezza variazioni (range: 0.2-2.0, 0.5=leggere, 1.0=normali, 1.5=forti)
+    VARIATION_SPEED_SLOW = 0.01       # Velocità variazioni lente (range: 0.005-0.05, 0.01=molto lente, 0.03=moderate)
+    VARIATION_SPEED_MEDIUM = 0.025    # Velocità variazioni medie (range: 0.01-0.1, 0.02=normali, 0.05=veloci)
+    VARIATION_SPEED_FAST = 0.005      # Velocità variazioni veloci (range: 0.002-0.02, 0.005=rapide, 0.015=frenetiche)
 
 # --- FUNZIONI DI SUPPORTO ---
 
