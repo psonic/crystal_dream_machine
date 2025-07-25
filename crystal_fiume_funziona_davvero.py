@@ -87,9 +87,9 @@ class Config:
     AUDIO_RANDOM_SELECTION = True  # Seleziona casualmente un file dalla lista
     AUDIO_RANDOM_START = True    # Inizia da punto casuale (max 2/3 del file)
     AUDIO_REACTIVE_LENSES = True # Le lenti reagiscono all'audio
-    AUDIO_BASS_SENSITIVITY = 3.0 # Sensibilità alle frequenze basse aumentata per più movimento
-    AUDIO_MID_SENSITIVITY = 2.5  # Sensibilità alle frequenze medie aumentata per più movimento
-    AUDIO_HIGH_SENSITIVITY = 2.0 # Sensibilità alle frequenze acute aumentata per più movimento
+    AUDIO_BASS_SENSITIVITY = 0.3 # Sensibilità alle frequenze basse ridotta per movimento delicato
+    AUDIO_MID_SENSITIVITY = 0.2  # Sensibilità alle frequenze medie ridotta per movimento delicato
+    AUDIO_HIGH_SENSITIVITY = 0.15 # Sensibilità alle frequenze acute ridotta per movimento delicato
     AUDIO_SMOOTHING = 0.8        # Smoothing reattività audio (range: 0.3-0.95, 0.5=reattivo, 0.9=fluido)
     AUDIO_BOOST_FACTOR = 3.0     # Amplificazione reattività (range: 1.0-10.0, 2=normale, 5=estrema)
     
@@ -446,9 +446,9 @@ def get_audio_reactive_factors(audio_data, frame_idx, config):
         'pulsation_factor': 1.0 + (high * config.AUDIO_HIGH_SENSITIVITY)
     }
     
-    # Applica limiti per evitare valori estremi
+    # Applica limiti per evitare valori estremi (range ridotto per movimento delicato)
     for key in factors:
-        factors[key] = np.clip(factors[key], 0.1, 3.0)
+        factors[key] = np.clip(factors[key], 0.5, 1.5)
     
     return factors
 
