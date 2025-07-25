@@ -135,7 +135,11 @@ class Config:
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
     
-    # Parametri blending configurabili
+    # 🎨 SISTEMA PRESET AUTOMATICO
+    # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
+    BLENDING_PRESET = 'glow'  # Usa 'manual' per configurazione manuale sotto
+    
+    # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
     BLENDING_MODE = 'lighten'     # Modalità fusione logo-sfondo
     BLENDING_STRENGTH = 0.7          # Intensità fusione (range: 0.0-1.0, 0.3=leggera, 0.7=forte, 1.0=solo effetto)
@@ -218,6 +222,152 @@ def get_timestamp_filename():
     magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
     magic_char = np.random.choice(magic_chars)
     return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
+
+def apply_blending_preset(config):
+    """
+    🎨 Applica automaticamente i preset di blending alla configurazione.
+    Se BLENDING_PRESET != 'manual', sovrascrive i parametri di blending.
+    """
+    if config.BLENDING_PRESET == 'manual':
+        print("🔧 Usando configurazione blending manuale")
+        return
+    
+    # Definizione dei preset (importati dal file blending_presets.py)
+    presets = {
+        'cinematic': {
+            'BLENDING_MODE': 'overlay',
+            'BLENDING_STRENGTH': 0.8,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 15,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': True,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.2,
+            'COLOR_BLENDING_STRENGTH': 0.4
+        },
+        'artistic': {
+            'BLENDING_MODE': 'difference',
+            'BLENDING_STRENGTH': 0.9,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 21,
+            'ADAPTIVE_BLENDING': False,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.1,
+            'COLOR_BLENDING_STRENGTH': 0.2
+        },
+        'soft': {
+            'BLENDING_MODE': 'soft_light',
+            'BLENDING_STRENGTH': 0.6,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 25,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': True,
+            'LUMINANCE_MATCHING': True,
+            'BLEND_TRANSPARENCY': 0.4,
+            'COLOR_BLENDING_STRENGTH': 0.5
+        },
+        'dramatic': {
+            'BLENDING_MODE': 'multiply',
+            'BLENDING_STRENGTH': 0.85,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 11,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': True,
+            'BLEND_TRANSPARENCY': 0.15,
+            'COLOR_BLENDING_STRENGTH': 0.3
+        },
+        'bright': {
+            'BLENDING_MODE': 'screen',
+            'BLENDING_STRENGTH': 0.7,
+            'EDGE_DETECTION_ENABLED': False,
+            'EDGE_BLUR_RADIUS': 19,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': True,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.3,
+            'COLOR_BLENDING_STRENGTH': 0.4
+        },
+        'intense': {
+            'BLENDING_MODE': 'hard_light',
+            'BLENDING_STRENGTH': 0.9,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 13,
+            'ADAPTIVE_BLENDING': False,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.1,
+            'COLOR_BLENDING_STRENGTH': 0.25
+        },
+        'psychedelic': {
+            'BLENDING_MODE': 'exclusion',
+            'BLENDING_STRENGTH': 0.95,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 17,
+            'ADAPTIVE_BLENDING': False,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.05,
+            'COLOR_BLENDING_STRENGTH': 0.1
+        },
+        'glow': {
+            'BLENDING_MODE': 'color_dodge',
+            'BLENDING_STRENGTH': 0.75,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 23,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': True,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.2,
+            'COLOR_BLENDING_STRENGTH': 0.35
+        },
+        'dark': {
+            'BLENDING_MODE': 'color_burn',
+            'BLENDING_STRENGTH': 0.8,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 15,
+            'ADAPTIVE_BLENDING': True,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': True,
+            'BLEND_TRANSPARENCY': 0.25,
+            'COLOR_BLENDING_STRENGTH': 0.4
+        },
+        'geometric': {
+            'BLENDING_MODE': 'normal',
+            'BLENDING_STRENGTH': 1.0,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 7,
+            'ADAPTIVE_BLENDING': False,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': False,
+            'BLEND_TRANSPARENCY': 0.0,
+            'COLOR_BLENDING_STRENGTH': 0.0
+        }
+    }
+    
+    preset_name = config.BLENDING_PRESET.lower()
+    if preset_name in presets:
+        preset = presets[preset_name]
+        print(f"🎨 Applicando preset blending: {preset_name.upper()}")
+        
+        # Applica tutti i parametri del preset alla configurazione
+        for param_name, param_value in preset.items():
+            setattr(config, param_name, param_value)
+            
+        # Mostra i parametri applicati
+        print(f"   ✓ Modalità: {preset['BLENDING_MODE']}")
+        print(f"   ✓ Intensità: {preset['BLENDING_STRENGTH']}")
+        print(f"   ✓ Bordi sfumati: {preset['EDGE_BLUR_RADIUS']}px")
+        if preset['ADAPTIVE_BLENDING']:
+            print(f"   ✓ Blending adattivo attivo")
+        if preset['COLOR_HARMONIZATION']:
+            print(f"   ✓ Armonizzazione colori attiva")
+    else:
+        print(f"⚠️ Preset '{preset_name}' non trovato! Preset disponibili:")
+        print("   🎬 cinematic, 🌟 artistic, 🌙 soft, ⚡ dramatic, ✨ bright")
+        print("   🔥 intense, 🌈 psychedelic, 💡 glow, 🖤 dark, 📐 geometric")
+        print("   🔧 Usando configurazione manuale...")
 
 def load_texture(texture_path, width, height):
     """Carica e ridimensiona immagine di texture."""
@@ -1675,6 +1825,9 @@ def main():
     
     # Mostra le opzioni di blending disponibili
     print_blending_options()
+    
+    # 🎨 APPLICA PRESET BLENDING AUTOMATICO
+    apply_blending_preset(Config)
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
