@@ -107,8 +107,14 @@ class Config:
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.01   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.025   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_SCALE = 0.02   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
     DEFORMATION_INTENSITY = 11.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+    
+    # --- Reattività Audio Deformazione Organica ---
+    DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
+    DEFORMATION_BASS_INTENSITY = 0.15  # Quanto i bassi influenzano l'intensità (range: 0.05-0.5, delicato)
+    DEFORMATION_BASS_SPEED = 0.02      # Quanto i bassi influenzano la velocità (range: 0.01-0.1, delicato)
+    DEFORMATION_MID_SCALE = 0.001      # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.005, sottile)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
@@ -456,6 +462,52 @@ def get_audio_reactive_factors(audio_data, frame_idx, config):
         factors[key] = np.clip(factors[key], 0.5, 1.5)
     
     return factors
+
+def get_organic_deformation_factors(audio_data, frame_idx, config):
+    """
+    🎵 Calcola i parametri dinamici per la deformazione organica basati sull'audio.
+    
+    Args:
+        audio_data: Dati audio preprocessati
+        frame_idx: Indice del frame corrente
+        config: Configurazione con parametri audio
+    
+    Returns:
+        dict: Parametri dinamici per la deformazione organica (o None se audio disabilitato)
+    """
+    if not audio_data or not config.AUDIO_ENABLED or not config.DEFORMATION_AUDIO_REACTIVE:
+        return None
+    
+    # Assicurati che l'indice del frame sia valido
+    audio_frame_idx = min(frame_idx, len(audio_data['bass']) - 1)
+    
+    if audio_frame_idx < 0:
+        audio_frame_idx = 0
+    
+    # Estrai i valori per il frame corrente
+    bass = audio_data['bass'][audio_frame_idx]
+    mid = audio_data['mid'][audio_frame_idx]
+    high = audio_data['high'][audio_frame_idx]
+    
+    # Calcola i parametri dinamici (in modo delicato)
+    dynamic_params = {
+        'deformation_intensity': config.DEFORMATION_INTENSITY + (bass * config.DEFORMATION_BASS_INTENSITY),
+        'deformation_speed': config.DEFORMATION_SPEED + (bass * config.DEFORMATION_BASS_SPEED),
+        'deformation_scale': config.DEFORMATION_SCALE + (mid * config.DEFORMATION_MID_SCALE)
+    }
+    
+    # Applica limiti per mantenere valori ragionevoli
+    dynamic_params['deformation_intensity'] = np.clip(dynamic_params['deformation_intensity'], 
+                                                    config.DEFORMATION_INTENSITY * 0.7, 
+                                                    config.DEFORMATION_INTENSITY * 1.3)
+    dynamic_params['deformation_speed'] = np.clip(dynamic_params['deformation_speed'], 
+                                                config.DEFORMATION_SPEED * 0.8, 
+                                                config.DEFORMATION_SPEED * 1.4)
+    dynamic_params['deformation_scale'] = np.clip(dynamic_params['deformation_scale'], 
+                                                config.DEFORMATION_SCALE * 0.9, 
+                                                config.DEFORMATION_SCALE * 1.2)
+    
+    return dynamic_params
 
 def apply_blending_preset(config):
     """
@@ -1705,15 +1757,19 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     # --- 3. Creazione Maschera del Logo ---
     logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
 
-    # --- 4. Applica Deformazione Organica (per movimento di base) ---
+    # --- 4. Applica Deformazione Organica (per movimento di base CON AUDIO REATTIVO) ---
     if config.DEFORMATION_ENABLED:
-        # Usiamo parametri fissi per un "respiro" costante
+        # Parametri base per il "respiro" costante
         deformation_params = {
             'speed': config.DEFORMATION_SPEED,
             'scale': config.DEFORMATION_SCALE,
             'intensity': config.DEFORMATION_INTENSITY
         }
-        logo_mask = apply_organic_deformation(logo_mask, frame_index, deformation_params)
+        
+        # Calcola parametri dinamici basati sull'audio per movimento delicato
+        dynamic_deformation_params = get_organic_deformation_factors(audio_data, frame_index, config)
+        
+        logo_mask = apply_organic_deformation(logo_mask, frame_index, deformation_params, dynamic_deformation_params)
 
     # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
     if config.LENS_DEFORMATION_ENABLED:
