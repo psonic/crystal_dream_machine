@@ -33,9 +33,9 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     SMALL = False
-    LONG = True
+    LONG = False
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
