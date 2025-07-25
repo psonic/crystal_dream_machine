@@ -55,7 +55,7 @@ class Config:
     TEXTURE_BLENDING_MODE = 'screen'  # Modalità blending texture
 
     # --- Parametri Video ---
-    SVG_PADDING = 50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+    SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 3  if TEST_MODE else 3  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
@@ -84,7 +84,7 @@ class Config:
     DEFORMATION_INTENSITY = 10.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
-    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
+    LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
     NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.3      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
