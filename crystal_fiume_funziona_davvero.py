@@ -71,7 +71,7 @@ class Config:
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = False   # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Colore e Stile ---
@@ -2151,21 +2151,21 @@ def main():
     # Carica contorni da SVG o PDF
     if Config.USE_SVG_SOURCE:
         if Config.INSTAGRAM_STORIES_MODE:
-            # Per Instagram Stories, centra il logo nel formato verticale con margine extra
+            # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
             horizontal_margin = (Config.WIDTH - svg_width) // 2
-            # Aggiungi un piccolo margine extra (10-20px) per evitare il taglio a destra
-            extra_margin = 15 if Config.TEST_MODE else 30
-            effective_padding = max(Config.SVG_PADDING, horizontal_margin - extra_margin)
+            # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
+            right_shift = 10 if Config.TEST_MODE else 20
+            effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
         else:
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
     else:
         if Config.INSTAGRAM_STORIES_MODE:
-            # Per Instagram Stories, centra il logo nel formato verticale con margine extra
+            # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
             horizontal_margin = (Config.WIDTH - svg_width) // 2
-            # Aggiungi un piccolo margine extra (10-20px) per evitare il taglio a destra
-            extra_margin = 15 if Config.TEST_MODE else 30
-            effective_padding = max(Config.SVG_PADDING, horizontal_margin - extra_margin)
+            # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
+            right_shift = 10 if Config.TEST_MODE else 20
+            effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
         else:
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
