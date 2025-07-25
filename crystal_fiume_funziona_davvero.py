@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -67,7 +67,7 @@ class Config:
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3 if TEST_MODE else 5  # Durata video in secondi
+    DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
@@ -123,9 +123,9 @@ class Config:
     LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
     LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
     LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
-    
+    LENS_ROTATION_SPEED_MIN = -0.02     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0.02     # Velocità rotazione massima (range: 0 a 0.02)
+
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
     LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
@@ -2109,8 +2109,8 @@ def main():
     # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
     if Config.TEST_MODE:
         # Riduci di un terzo le dimensioni per test veloce
-        svg_width = int(svg_width / 2)
-        svg_height = int(svg_height / 2)
+        svg_width = int(svg_width / 3)
+        svg_height = int(svg_height / 3)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
 
     # 📱 FORMATO INSTAGRAM STORIES (9:16)
