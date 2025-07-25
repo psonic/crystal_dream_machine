@@ -33,146 +33,141 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
-    WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
-    CREATE_WHATSAPP_VERSION = True  # True = crea versione aggiuntiva con ffmpeg
+    WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
+    CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True  # True = SVG, False = PDF
-    SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
-    PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
-    TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
-    TEXTURE_FALLBACK_PATH = 'input/26.png'  # Fallback se non trova texture.*
-    TEXTURE_ENABLED = False
-    TEXTURE_ALPHA = 0.5 # Leggermente più presente in alta risoluzione
+    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
+    SVG_PATH = 'input/logo.svg'  # Percorso file SVG
+    PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
+    TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
+    TEXTURE_FALLBACK_PATH = 'input/26.png'  # Texture di fallback
+    TEXTURE_ENABLED = True       # Attiva texture sul logo
+    TEXTURE_ALPHA = 0.5          # Opacità della texture (0=invisibile, 1=opaca)
 
-    # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
-    # Le dimensioni del video saranno calcolate dall'SVG + padding
-    SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
-    FPS = 10 if TEST_MODE else 30
-    DURATION_SECONDS = 5 if TEST_MODE else 5 # Durata normale per il rendering finale
-    TOTAL_FRAMES = DURATION_SECONDS * FPS
+    # --- Parametri Video ---
+    SVG_PADDING = 100            # Spazio intorno al logo (pixel)
+    FPS = 10 if TEST_MODE else 30  # Frame per secondo
+    DURATION_SECONDS = 5 if TEST_MODE else 5  # Durata video in secondi
+    TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
-    LOGO_COLOR = (50, 50, 50)   # BGR - Colore scuro per contrasto su sfondo chiaro
-    LOGO_ALPHA = 1.0 # Aumentata a 1.0 per un logo solido e visibile
+    LOGO_COLOR = (50, 50, 50)    # Colore del logo (BGR)
+    LOGO_ALPHA = 1.0             # Opacità del logo (0=trasparente, 1=opaco)
     
-    # --- Video di Sfondo - SENZA CROP, COME BACKGROUND ORIGINALE ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
-    BG_USE_ORIGINAL_SIZE = True  # NUOVO: usa dimensioni originali senza crop
-    BG_SLOWDOWN_FACTOR = 1.2     # NUOVO: rallentamento ridotto (era 2.0 = metà velocità)
-    BG_DARKEN_FACTOR = 0.4       # CORRETTO: sfondo visibile ma non invadente (era 0.06)
-    BG_CONTRAST_FACTOR = 1.2     # Leggermente aumentato per definizione
+    # --- Video di Sfondo ---
+    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
+    BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
+    BG_SLOWDOWN_FACTOR = 1.2     # Fattore rallentamento sfondo (1=normale, 2=metà velocità)
+    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (0=nero, 1=normale)
+    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (1=normale, >1=più contrasto)
     
-    # --- Effetto Glow (Bagliore) ---
-    GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50 # Aumentato per un glow più diffuso in HD
-    GLOW_INTENSITY = 0.2
+    # --- Effetto Glow ---
+    GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore
+    GLOW_INTENSITY = 0.2         # Intensità bagliore (0=spento, 1=massimo)
 
-    # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
-    DEFORMATION_ENABLED = True # RIABILITATA per ridare movimento al logo
-    DEFORMATION_SPEED = 0.001 # RALLENTATO: da 0.07 a 0.05 per movimento più lento e ampio
-    DEFORMATION_SCALE = 0.008 # RIDOTTO: da 0.015 a 0.008 per onde più larghe e spaziose
-    DEFORMATION_INTENSITY = 12.0 # RADDOPPIATO: da 5.0 a 12.0 per deformazioni molto più ampie
+    # --- Deformazione Organica ---
+    DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
+    DEFORMATION_SPEED = 0.001   # Velocità del movimento ondulatorio 
+    DEFORMATION_SCALE = 0.008   # Dimensione delle onde (più alto = onde più larghe)
+    DEFORMATION_INTENSITY = 12.0  # Intensità della deformazione (più alto = più movimento)
 
-    # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
-    LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 30 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
-    LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
-    LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
-    LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
-    LENS_MAX_RADIUS = 50    # Lenti ancora più grandi per effetti ampi
-    LENS_SPEED_FACTOR = 0.001  # VELOCITÀ AUMENTATA per movimento ultra-evidente
+    # --- Deformazione a Lenti ---
+    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
+    NUM_LENSES = 30              # Numero di lenti che si muovono sul logo
+    LENS_MIN_STRENGTH = -2.0     # Forza minima delle lenti (negativo = concavo, positivo = convesso)
+    LENS_MAX_STRENGTH = 2.5      # Forza massima delle lenti
+    LENS_MIN_RADIUS = 10         # Raggio minimo area di influenza delle lenti
+    LENS_MAX_RADIUS = 50         # Raggio massimo area di influenza delle lenti  
+    LENS_SPEED_FACTOR = 0.001    # Velocità di movimento delle lenti
     
-    # --- PARAMETRI MOVIMENTO LENTI (NUOVI - PRECEDENTEMENTE HARDCODED) ---
-    LENS_PATH_SPEED_MULTIPLIER = 8.5  # Velocità con cui le lenti seguono il loro percorso
-    LENS_BASE_SPEED_MULTIPLIER = 1.4  # Moltiplicatore per la velocità di base delle lenti
-    LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità di rotazione delle lenti a "verme"
-    LENS_INERTIA = 0.85  # Inerzia delle lenti (0.0=scattanti, 1.0=molto fluide)
-    LENS_ROTATION_SPEED_MIN = -0.008  # Velocità di rotazione minima
-    LENS_ROTATION_SPEED_MAX = 0.008   # Velocità di rotazione massima
+    # --- Parametri Movimento Lenti ---
+    LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso delle lenti
+    LENS_BASE_SPEED_MULTIPLIER = 1.4    # Moltiplicatore velocità base
+    LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione lenti "verme"
+    LENS_INERTIA = 0.85                  # Fluidità movimento (0=scattanti, 1=fluide)
+    LENS_ROTATION_SPEED_MIN = -0.008     # Velocità rotazione minima
+    LENS_ROTATION_SPEED_MAX = 0.008      # Velocità rotazione massima
     
-    # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
-    LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
-    LENS_PULSATION_SPEED = 0.005  # RALLENTATO: pulsazione più lenta e calma
-    LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
-    LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
+    # --- Movimento e Pulsazione Lenti ---
+    LENS_HORIZONTAL_BIAS = 2             # Preferenza per movimento orizzontale
+    LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
+    LENS_PULSATION_SPEED = 0.005         # Velocità pulsazione
+    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni
+    LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza
     
-    WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
-    WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
+    WORM_LENGTH = 2.2          # Lunghezza forma verme
+    WORM_COMPLEXITY = 4        # Complessità movimento del verme
 
-    # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
-    SMOOTHING_ENABLED = True
-    SMOOTHING_FACTOR = 0.0001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
+    # --- Smussamento Contorni ---
+    SMOOTHING_ENABLED = True      # Attiva bordi lisci del logo
+    SMOOTHING_FACTOR = 0.0001     # Intensità smussamento (più basso = più liscio)
 
-    # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
-    TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.03 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
-    TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
-    TRACER_THRESHOLD1 = 50  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
-    TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
+    # --- Traccianti Logo ---
+    TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
+    TRACER_TRAIL_LENGTH = 25         # Lunghezza delle scie
+    TRACER_MAX_OPACITY = 0.03        # Opacità massima delle scie
+    TRACER_BASE_COLOR = (255, 200, 220)  # Colore base delle scie (BGR)
+    TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi
+    TRACER_THRESHOLD2 = 350          # Soglia alta rilevamento bordi
     
-    # --- Traccianti Sfondo (MIGLIORATI) ---
-    BG_TRACER_ENABLED = True
-    BG_TRACER_TRAIL_LENGTH = 20 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.03 # AUMENTATO: da 0.25 a 0.3 per più presenza
-    BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
-    BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
-    BG_TRACER_THRESHOLD2 = 100
+    # --- Traccianti Sfondo ---
+    BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
+    BG_TRACER_TRAIL_LENGTH = 20      # Lunghezza scie sfondo
+    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo
+    BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR)
+    BG_TRACER_THRESHOLD1 = 30        # Soglia bassa per contorni sfondo
+    BG_TRACER_THRESHOLD2 = 100       # Soglia alta per contorni sfondo
     
-    # --- Blending Avanzato (SISTEMA ULTRA-POTENZIATO) ---
-    ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
+    # --- Blending Avanzato ---
+    ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
     
-    # NUOVI PARAMETRI BLENDING CONFIGURABILI
-    BLENDING_MODE = 'difference'  # Opzioni: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'difference', 'exclusion'
-    BLENDING_STRENGTH = 0.9    # Forza del blending (0.0=solo logo, 1.0=solo blending)
-    EDGE_DETECTION_ENABLED = True  # Abilita rilevamento bordi per blending selettivo
-    EDGE_BLUR_RADIUS = 21      # Raggio blur per i bordi (più alto = transizione più morbida)
-    ADAPTIVE_BLENDING = False   # Abilita blending che si adatta al contenuto dello sfondo
-    COLOR_HARMONIZATION = False # Armonizza i colori tra logo e sfondo
-    LUMINANCE_MATCHING = False  # Adatta la luminosità del logo allo sfondo locale (disabilito per difference)
+    # Parametri blending configurabili
+    BLENDING_MODE = 'difference'     # Modalità fusione (vedi lista completa sopra)
+    BLENDING_STRENGTH = 0.9          # Intensità fusione (0=solo logo, 1=solo effetto)
+    EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
+    EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi
+    ADAPTIVE_BLENDING = False        # Adatta fusione ai colori dello sfondo
+    COLOR_HARMONIZATION = False      # Armonizza colori logo-sfondo
+    LUMINANCE_MATCHING = False       # Adatta luminosità logo allo sfondo
     
-    # Parametri esistenti (ora più configurabili)
-    LOGO_BLEND_FACTOR = 0.6 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
-    EDGE_SOFTNESS = 80 # AUMENTATO: da 50 a 65 per transizioni ancora più graduali
-    BLEND_TRANSPARENCY = 0.3 # DIMINUITO: da 0.7 a 0.4 per logo più visibile ma integrato
-    COLOR_BLENDING_STRENGTH = 0.3 # DIMINUITO: da 0.9 a 0.65 per fusione colori più naturale
+    # Parametri fusione classici
+    LOGO_BLEND_FACTOR = 0.6          # Bilanciamento logo originale/fuso
+    EDGE_SOFTNESS = 80               # Morbidezza bordi del logo
+    BLEND_TRANSPARENCY = 0.3         # Trasparenza globale del logo
+    COLOR_BLENDING_STRENGTH = 0.3    # Intensità mescolamento colori
     
     # --- Debug e Qualità ---
-    DEBUG_MASK = False  # Disabilitato per performance migliori
+    DEBUG_MASK = False  # Mostra maschera di debug (per sviluppatori)
     
-    # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
-    DYNAMIC_VARIATION_ENABLED = True
-    VARIATION_AMPLITUDE = 0.8 # ±10% di variazione massima
-    VARIATION_SPEED_SLOW = 0.01  # RALLENTATO: Velocità variazione lenta
-    VARIATION_SPEED_MEDIUM = 0.025 # RALLENTATO: Velocità variazione media
-    VARIATION_SPEED_FAST = 0.005  # RALLENTATO: Velocità variazione veloce
+    # --- Variazione Dinamica ---
+    DYNAMIC_VARIATION_ENABLED = True  # Attiva variazioni automatiche nel tempo
+    VARIATION_AMPLITUDE = 0.8         # Ampiezza delle variazioni automatiche
+    VARIATION_SPEED_SLOW = 0.01       # Velocità variazioni lente
+    VARIATION_SPEED_MEDIUM = 0.025    # Velocità variazioni medie
+    VARIATION_SPEED_FAST = 0.005      # Velocità variazioni veloci
 
 # --- FUNZIONI DI SUPPORTO ---
 
 def get_dynamic_parameters(frame_index, total_frames):
     """
-    Calcola i parametri degli effetti in modo dinamico per il frame corrente.
-    Questo crea un'evoluzione armonica degli effetti nel tempo con variazioni casuali.
+    Calcola parametri che cambiano automaticamente nel tempo per creare variazioni.
     """
-    # t è il progresso normalizzato dell'animazione (da 0.0 a 1.0)
-    t = frame_index / total_frames
-    
+    t = frame_index / total_frames  # Progresso animazione (0.0 a 1.0)
     params = {}
 
-    # 1. Dinamica del Glow: pulsazione più lenta e armonica
-    glow_pulse = np.sin(t * np.pi) # Un solo ciclo completo, molto più lento
-    params['glow_intensity'] = Config.GLOW_INTENSITY + (glow_pulse * 0.2) # Variazione più sottile
+    # Pulsazione del glow
+    glow_pulse = np.sin(t * np.pi)
+    params['glow_intensity'] = Config.GLOW_INTENSITY + (glow_pulse * 0.2)
 
-    # 2. NUOVO: Variazioni dinamiche dei parametri principali (±10%)
+    # Variazioni automatiche dei parametri principali
     if Config.DYNAMIC_VARIATION_ENABLED:
-        # Seed basato sul frame per variazioni coerenti ma pseudo-casuali
         base_seed = frame_index * 0.001
         
         # Variazioni lente per deformazioni organiche
@@ -198,7 +193,7 @@ def get_dynamic_parameters(frame_index, total_frames):
         params['tracer_opacity_multiplier'] = 1.0 + tracer_var_x
         params['bg_tracer_opacity_multiplier'] = 1.0 + tracer_var_y
     else:
-        # Valori statici se la variazione è disabilitata
+        # Usa valori fissi se le variazioni sono disabilitate
         params['deformation_speed'] = Config.DEFORMATION_SPEED
         params['deformation_scale'] = Config.DEFORMATION_SCALE
         params['deformation_intensity'] = Config.DEFORMATION_INTENSITY
@@ -210,20 +205,18 @@ def get_dynamic_parameters(frame_index, total_frames):
     return params
 
 def get_timestamp_filename():
-    """Genera un nome file con un timestamp magico."""
+    """Genera nome file con timestamp e carattere decorativo."""
     now = datetime.datetime.now()
-    # Aggiunti caratteri "magici" come richiesto
     magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
     magic_char = np.random.choice(magic_chars)
     return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
 
 def load_texture(texture_path, width, height):
-    """Carica e ridimensiona l'immagine di texture."""
+    """Carica e ridimensiona immagine di texture."""
     if not os.path.exists(texture_path):
         print(f"ATTENZIONE: File texture non trovato in '{texture_path}'. Il logo non verrà texturizzato.")
         return None
     try:
-        # --- LOG PERSONALIZZATO MAGICO ---
         print("Analisi texture scienziato TV Int dalle acque del Natisone... completata.")
         texture = cv2.imread(texture_path, cv2.IMREAD_COLOR)
         if texture is None:
@@ -235,9 +228,7 @@ def load_texture(texture_path, width, height):
         return None
 
 def get_svg_dimensions(svg_path):
-    """
-    Estrae le dimensioni dall'SVG per calcolare le dimensioni del video.
-    """
+    """Estrae dimensioni da file SVG."""
     try:
         import xml.etree.ElementTree as ET
         
