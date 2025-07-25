@@ -72,18 +72,18 @@ class Config:
 
     # --- Deformazione Organica ---
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.001   # Velocità del movimento ondulatorio 
-    DEFORMATION_SCALE = 0.008   # Dimensione delle onde (più alto = onde più larghe)
+    DEFORMATION_SPEED = 0.01   # Velocità del movimento ondulatorio 
+    DEFORMATION_SCALE = 0.08   # Dimensione delle onde (più alto = onde più larghe)
     DEFORMATION_INTENSITY = 12.0  # Intensità della deformazione (più alto = più movimento)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 30              # Numero di lenti che si muovono sul logo
+    NUM_LENSES = 40              # Numero di lenti che si muovono sul logo
     LENS_MIN_STRENGTH = -2.0     # Forza minima delle lenti (negativo = concavo, positivo = convesso)
     LENS_MAX_STRENGTH = 2.5      # Forza massima delle lenti
     LENS_MIN_RADIUS = 10         # Raggio minimo area di influenza delle lenti
-    LENS_MAX_RADIUS = 50         # Raggio massimo area di influenza delle lenti  
-    LENS_SPEED_FACTOR = 0.001    # Velocità di movimento delle lenti
+    LENS_MAX_RADIUS = 70         # Raggio massimo area di influenza delle lenti  
+    LENS_SPEED_FACTOR = 0.01    # Velocità di movimento delle lenti
     
     # --- Parametri Movimento Lenti ---
     LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso delle lenti
