@@ -33,9 +33,8 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
-    SMALL = False
-    LONG = False
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    SMALL = True
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -58,8 +57,8 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 10  if LONG else 2  # Durata video in secondi
+    FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 2  if TEST_MODE else 6  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
@@ -75,7 +74,7 @@ class Config:
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
+    GLOW_KERNEL_SIZE = 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
     GLOW_INTENSITY = 0.4         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
     # --- Deformazione Organica ---
@@ -87,7 +86,7 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
@@ -120,7 +119,7 @@ class Config:
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 15 if TEST_MODE else 25  # Lunghezza scie (ridotta in test mode per velocità)
+    TRACER_TRAIL_LENGTH = 25  # Lunghezza scie (ridotta in test mode per velocità)
     TRACER_MAX_OPACITY = 0.03        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
@@ -128,7 +127,7 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 10 if TEST_MODE else 20  # Lunghezza scie sfondo (ridotta in test mode)
+    BG_TRACER_TRAIL_LENGTH = 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
