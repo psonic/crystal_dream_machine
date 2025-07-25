@@ -34,7 +34,9 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
-    
+    SMALL = True
+    LONG = False
+
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
@@ -57,7 +59,7 @@ class Config:
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3  if TEST_MODE else 3  # Durata video in secondi
+    DURATION_SECONDS = 10  if LONG else 3  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
@@ -87,10 +89,10 @@ class Config:
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
     NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
-    LENS_MAX_STRENGTH = 2.3      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
-    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 80         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.005    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
+    LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 40         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_SPEED_FACTOR = 0.0001    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
     LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
@@ -1851,6 +1853,11 @@ def main():
         # Riduci di un terzo le dimensioni per test veloce
         svg_width = int(svg_width / 3)
         svg_height = int(svg_height / 3)
+        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
+
+    if Config.SMALL:
+        svg_width = int(svg_width / 4)
+        svg_height = int(svg_height / 4)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
     
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
