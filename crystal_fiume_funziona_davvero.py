@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -52,7 +52,7 @@ class Config:
     TEXTURE_ALPHA = 0.7          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
     TEXTURE_BACKGROUND_ALPHA = 0.4  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
-    TEXTURE_BLENDING_MODE = 'overlay'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'screen'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -85,12 +85,12 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 30             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
-    LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
+    LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 30         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.01    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    LENS_MAX_RADIUS = 100         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_SPEED_FACTOR = 0.005    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
     LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
