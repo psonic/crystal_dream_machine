@@ -101,8 +101,8 @@ class Config:
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
     TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 15 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.01 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
+    TRACER_TRAIL_LENGTH = 25 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
+    TRACER_MAX_OPACITY = 0.03 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
     TRACER_THRESHOLD1 = 50  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
@@ -110,7 +110,7 @@ class Config:
     # --- Traccianti Sfondo (MIGLIORATI) ---
     BG_TRACER_ENABLED = True
     BG_TRACER_TRAIL_LENGTH = 20 # Scie più lunghe per lo sfondo
-    BG_TRACER_MAX_OPACITY = 0.01 # AUMENTATO: da 0.25 a 0.3 per più presenza
+    BG_TRACER_MAX_OPACITY = 0.03 # AUMENTATO: da 0.25 a 0.3 per più presenza
     BG_TRACER_BASE_COLOR = (100, 70, 100) # Colore complementare viola-blu
     BG_TRACER_THRESHOLD1 = 30   # Soglie più basse per catturare più contorni dello sfondo
     BG_TRACER_THRESHOLD2 = 100
