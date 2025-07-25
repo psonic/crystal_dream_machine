@@ -49,13 +49,13 @@ class Config:
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.5          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
+    TEXTURE_ALPHA = 0.7          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
+    TEXTURE_BACKGROUND_ALPHA = 0.4  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
     TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
-    SVG_PADDING = 100            # Spazio intorno al logo (range: 50-300, 100=normale, 200=ampio)
+    SVG_PADDING = 50 if TEST_MODE else 100  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 5 if TEST_MODE else 5  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
@@ -74,7 +74,7 @@ class Config:
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
     GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
-    GLOW_INTENSITY = 0.7         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
+    GLOW_INTENSITY = 0.4         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
     # --- Deformazione Organica ---
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
@@ -84,8 +84,8 @@ class Config:
     DEFORMATION_INTENSITY = 10.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
-    LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 40              # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
+    NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
@@ -137,7 +137,7 @@ class Config:
     
     # Parametri blending configurabili
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    BLENDING_MODE = 'color_dodge'     # Modalità fusione logo-sfondo
+    BLENDING_MODE = 'lighten'     # Modalità fusione logo-sfondo
     BLENDING_STRENGTH = 0.7          # Intensità fusione (range: 0.0-1.0, 0.3=leggera, 0.7=forte, 1.0=solo effetto)
     EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
     EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi (range: 5-50, 15=netti, 25=morbidi, 40=molto sfumati)
@@ -1678,16 +1678,27 @@ def main():
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
+    
+    # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
+    if Config.TEST_MODE:
+        # Riduci di un terzo le dimensioni per test veloce
+        svg_width = int(svg_width / 3)
+        svg_height = int(svg_height / 3)
+        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
+    
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
     
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
     print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
-    print(f"� TEST MODE: 30fps, {Config.DURATION_SECONDS}s")
+    if Config.TEST_MODE:
+        print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
+    else:
+        print(f"🎬 PRODUZIONE: 30fps, {Config.DURATION_SECONDS}s, risoluzione completa")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
-    print(f"� Sorgente: {source_type} con smoothing ottimizzato")
-    print(f"� Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
+    print(f"📄 Sorgente: {source_type} con smoothing ottimizzato")
+    print(f"🎥 Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
     print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
     print(f"� Variazione dinamica + codec video testati")
     print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
