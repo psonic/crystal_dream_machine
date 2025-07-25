@@ -71,7 +71,7 @@ class Config:
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = False   # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Colore e Stile ---
@@ -106,7 +106,7 @@ class Config:
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.1   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.03   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_SCALE = 0.015   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
     DEFORMATION_INTENSITY = 12.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
@@ -2151,15 +2151,21 @@ def main():
     # Carica contorni da SVG o PDF
     if Config.USE_SVG_SOURCE:
         if Config.INSTAGRAM_STORIES_MODE:
-            # Per Instagram Stories, centra il logo nel formato verticale
-            effective_padding = max(Config.SVG_PADDING, (Config.WIDTH - svg_width) // 2)
+            # Per Instagram Stories, centra il logo nel formato verticale con margine extra
+            horizontal_margin = (Config.WIDTH - svg_width) // 2
+            # Aggiungi un piccolo margine extra (10-20px) per evitare il taglio a destra
+            extra_margin = 15 if Config.TEST_MODE else 30
+            effective_padding = max(Config.SVG_PADDING, horizontal_margin - extra_margin)
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
         else:
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
     else:
         if Config.INSTAGRAM_STORIES_MODE:
-            # Per Instagram Stories, centra il logo nel formato verticale
-            effective_padding = max(Config.SVG_PADDING, (Config.WIDTH - svg_width) // 2)
+            # Per Instagram Stories, centra il logo nel formato verticale con margine extra
+            horizontal_margin = (Config.WIDTH - svg_width) // 2
+            # Aggiungi un piccolo margine extra (10-20px) per evitare il taglio a destra
+            extra_margin = 15 if Config.TEST_MODE else 30
+            effective_padding = max(Config.SVG_PADDING, horizontal_margin - extra_margin)
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
         else:
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
