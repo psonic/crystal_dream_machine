@@ -33,8 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
-    SMALL = False
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -91,13 +90,13 @@ class Config:
     LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
     LENS_MAX_RADIUS = 50         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    LENS_SPEED_FACTOR = 0.05    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce) - RALLENTATO per meno sfarfallii
     
     # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
-    LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
+    LENS_PATH_SPEED_MULTIPLIER = 0.05    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce) - RALLENTATO
+    LENS_BASE_SPEED_MULTIPLIER = 0.05    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia) - RALLENTATO
+    LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce) - RALLENTATO
+    LENS_INERTIA = 0.98                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido) - AUMENTATO per più fluidità
     LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
     LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
     
@@ -1852,11 +1851,6 @@ def main():
         # Riduci di un terzo le dimensioni per test veloce
         svg_width = int(svg_width / 3)
         svg_height = int(svg_height / 3)
-        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
-
-    if Config.SMALL:
-        svg_width = int(svg_width / 4)
-        svg_height = int(svg_height / 4)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
     
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
