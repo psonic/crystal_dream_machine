@@ -127,6 +127,17 @@ class VersionManager:
         if not self.is_git_repo:
             return False, "Non in un repository Git"
         
+        # Prima controlla se siamo in detached HEAD
+        current_branch = self.get_current_branch()
+        if not current_branch:
+            # In detached HEAD, prima spostiamoci sul branch principale
+            stdout, stderr = self._run_git_command(["git", "switch", "-c", "main", "HEAD"])
+            if stdout is None:
+                # Se main esiste già, prova a switchare
+                stdout, stderr = self._run_git_command(["git", "switch", "main"])
+                if stdout is None:
+                    return False, f"Impossibile uscire da detached HEAD: {stderr}"
+        
         stdout, stderr = self._run_git_command(["git", "push", "origin", tag_name])
         if stdout is None:
             return False, f"Errore push tag: {stderr}"
