@@ -35,7 +35,7 @@ class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     SMALL = False
-    LONG = False
+    LONG = True
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -95,10 +95,10 @@ class Config:
     LENS_SPEED_FACTOR = 0.0001    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 8.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 1.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+    LENS_PATH_SPEED_MULTIPLIER = 2.5    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
+    LENS_BASE_SPEED_MULTIPLIER = 0.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
     LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
-    LENS_INERTIA = 0.85                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
+    LENS_INERTIA = 0.75                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
     LENS_ROTATION_SPEED_MIN = -0.03     # Velocità rotazione minima (range: -0.02 a 0)
     LENS_ROTATION_SPEED_MAX = 0.03      # Velocità rotazione massima (range: 0 a 0.02)
     
