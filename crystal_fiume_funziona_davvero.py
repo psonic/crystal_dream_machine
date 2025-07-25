@@ -52,7 +52,7 @@ class Config:
     # Le dimensioni del video saranno calcolate dall'SVG + padding
     SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
     FPS = 10 if TEST_MODE else 30
-    DURATION_SECONDS = 5 if TEST_MODE else 60 # Durata normale per il rendering finale
+    DURATION_SECONDS = 5 if TEST_MODE else 5 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -68,7 +68,7 @@ class Config:
     
     # --- Effetto Glow (Bagliore) ---
     GLOW_ENABLED = True
-    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 100 # Aumentato per un glow più diffuso in HD
+    GLOW_KERNEL_SIZE = 35 if TEST_MODE else 50 # Aumentato per un glow più diffuso in HD
     GLOW_INTENSITY = 0.2
 
     # --- Deformazione Organica POTENZIATA (MOVIMENTO VISIBILE) ---
