@@ -1,22 +1,21 @@
-# 🔮 Crystal Therapy Video Generator
+# 🌊 Natisone Trip Generator
 
-*Where technology meets mysticism to create mesmerizing visual experiences from the crystal waters of Natisone*
+*Where technology meets mysticism to create mesmerizing visual journeys from the crystal waters of Natisone*
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.0+-green.svg)](https://opencv.org)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 [![Magic](https://img.shields.io/badge/Magic-✨-gold.svg)](https://github.com/psonic/CrystalPython2)
 
-## ✨ What is Crystal Therapy?
+## ✨ What is Natisone Trip?
 
-Crystal Therapy is an **AI-powered mystical video generator** that transforms static logos and graphics into **hypnotic, flowing visual experiences**. Born from the sacred waters of the Natisone River, this tool channels the **ancient energy of crystals** through cutting-edge computer vision algorithms.
+Natisone Trip is an **AI-powered mystical video generator** that transforms static logos and graphics into **hypnotic, flowing visual journeys**. Born from the sacred waters of the Natisone River, this tool channels the **ancient energy of flowing water** through cutting-edge computer vision algorithms.
 
 ### 🌊 Features That Flow Like Water
 
 - **🎵 Audio-Reactive Magic**: Your visuals dance to the rhythm of sound, with bass frequencies creating organic deformations
 - **🔍 Lens Deformation Effects**: 30+ mystical lens effects that bend reality around your logo
 - **🌈 Organic Breathing Motion**: Perlin noise-based fluid deformations that make your graphics come alive  
-- **📱 Instagram Stories Ready**: Perfect 9:16 vertical format support for social media magic
 - **🎨 Advanced Blending Modes**: 10+ cinematic blending presets (Glow, Cinematic, Mystical, etc.)
 - **🌟 Dynamic Texture System**: Apply mystical textures that react to your content
 - **👻 Ghost Tracers**: Leave ethereal trails that follow your logo's movement through time
@@ -37,8 +36,8 @@ pip install opencv-python numpy scipy librosa Pillow noise svgpathtools PyMuPDF
 ### Basic Invocation
 ```bash
 # Clone the mystical repository
-git clone https://github.com/psonic/CrystalPython2.git
-cd CrystalPython2
+git clone https://github.com/psonic/crystal_dream_machine.git
+cd crystal_dream_machine
 
 # Place your logo (SVG/PDF) in the input/ folder
 cp your_logo.svg input/
@@ -48,7 +47,7 @@ cp background.mov input/sfondo.MOV
 cp audio.aif input/
 
 # Cast the spell
-python crystal_fiume_funziona_davvero.py
+python natisone_trip_generator.py
 ```
 
 ## 🎛️ Configuration Magic
@@ -144,7 +143,7 @@ BG_RANDOM_START = True          # Random starting point
 
 ```
 CrystalPython2/
-├── 🔮 crystal_fiume_funziona_davvero.py  # Main mystical engine
+├── 🌊 natisone_trip_generator.py         # Main mystical engine
 ├── 🎨 blending_presets.py                # Visual magic presets  
 ├── 📝 version_manager.py                 # Git integration
 ├── input/                                # Your source materials
@@ -180,9 +179,9 @@ CrystalPython2/
 
 ## 🌙 The Philosophy
 
-*"In the convergence of technology and mysticism, we find new forms of expression. Each frame is a meditation, each movement a prayer to the digital spirits that inhabit our modern world."*
+*"In the convergence of technology and mysticism, we find new forms of expression. Each frame is a meditation, each movement a journey through the digital dimensions that mirror the flowing essence of the Natisone."*
 
-Crystal Therapy isn't just a video generator—it's a **digital ritual** that transforms static images into **living, breathing entities**. The organic deformations mirror the natural flow of water, while the audio reactivity connects your visuals to the universal rhythm of sound.
+Natisone Trip isn't just a video generator—it's a **digital journey** that transforms static images into **living, breathing entities**. The organic deformations mirror the natural flow of the sacred river, while the audio reactivity connects your visuals to the universal rhythm that flows through all things.
 
 ## 🤝 Contributing to the Magic
 
@@ -198,21 +197,49 @@ We welcome fellow digital mystics! To contribute:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🎨 Creative Collaborators
+
+This mystical journey wouldn't be possible without our amazing creative collective:
+
+### 🖌️ **Alex Ortiga** - *Logo Visionary*
+- Master of visual identity and sacred geometry
+- Creator of the mystical logos that flow through the Natisone dimensions
+- Bringing ancient symbols into the digital realm
+
+### 🌟 **TV Int** - *Texture Alchemist*  
+- Provider of mystical textures that enhance every visual journey
+- Digital artist specializing in ethereal visual elements
+- Transforming raw materials into flowing digital essence
+
+### 🧊 **Iaia & Friend** - *Ice Video Creators*
+- Creators of the mesmerizing ice video backgrounds
+- Visual storytellers capturing the frozen essence of nature  
+- Bringing the crystal-clear energy of winter into our digital flows
+
+### 🌊 **The Natisone Collective**
+- United by the flowing waters of creativity
+- Each contribution a droplet in the infinite river of inspiration
+- Where individual talents merge into collective magic
+
+---
+
 ## 🙏 Acknowledgments
 
-- **The Natisone River** - Source of mystical inspiration
-- **Alex Ortiga & TV Int** - Visionary collaborators
-- **The Digital Spirits** - For guiding our algorithms
+- **The Natisone River** - Source of mystical inspiration and flowing energy
+- **Alex Ortiga** - Visionary logo designer and creative collaborator
+- **TV Int** - Mystical texture provider and digital artist
+- **Iaia & Friend** - Ice video creators and visual storytellers
+- **The Digital Spirits** - For guiding our algorithms through the mystical waters
 - **OpenCV Community** - For the foundational magic
-- **All Crystal Therapy Users** - For believing in digital mysticism
+- **All Natisone Trip Users** - For believing in digital mysticism and flowing experiences
 
 ---
 
 <div align="center">
 
-*"Technology is the new magic, and magic is the oldest technology"*
+*"Technology is the new magic, and magic flows like the eternal Natisone"*
 
-**Made with 💜 and ✨ by the Crystal Therapy Collective**
+**Made with 💜 and 🌊 by the Natisone Trip Collective**
 
 [🌟 Star this repo](https://github.com/psonic/CrystalPython2) • [🐛 Report bugs](https://github.com/psonic/CrystalPython2/issues) • [💡 Request features](https://github.com/psonic/CrystalPython2/discussions)
 

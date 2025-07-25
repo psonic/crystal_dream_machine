@@ -112,9 +112,10 @@ class Config:
     
     # --- Reattività Audio Deformazione Organica ---
     DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
-    DEFORMATION_BASS_INTENSITY = 0.15  # Quanto i bassi influenzano l'intensità (range: 0.05-0.5, delicato)
-    DEFORMATION_BASS_SPEED = 0.02      # Quanto i bassi influenzano la velocità (range: 0.01-0.1, delicato)
-    DEFORMATION_MID_SCALE = 0.001      # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.005, sottile)
+    DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (leggermente più ampio)
+    DEFORMATION_BASS_SPEED = 0.015     # Quanto i bassi influenzano la velocità (più lento per effetto rimbalzo)
+    DEFORMATION_MID_SCALE = 0.0015     # Quanto i medi influenzano la scala/frequenza (leggermente più ampio)
+    DEFORMATION_SMOOTHING = 0.85       # Smoothing per effetto rimbalzo (0.7=veloce, 0.9=lento)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
@@ -255,6 +256,17 @@ def get_timestamp_filename():
     magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
     magic_char = np.random.choice(magic_chars)
     return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
+
+# --- Sistema di Smoothing per Effetto Rimbalzo Audio ---
+class AudioSmoothingState:
+    """Memorizza lo stato per il smoothing dell'audio reattivo con effetto rimbalzo."""
+    def __init__(self):
+        self.prev_intensity = None
+        self.prev_speed = None
+        self.prev_scale = None
+
+# Istanza globale per il smoothing
+_audio_smoothing_state = AudioSmoothingState()
 
 def add_audio_to_video(video_path, audio_data, duration):
     """
@@ -465,7 +477,7 @@ def get_audio_reactive_factors(audio_data, frame_idx, config):
 
 def get_organic_deformation_factors(audio_data, frame_idx, config):
     """
-    🎵 Calcola i parametri dinamici per la deformazione organica basati sull'audio.
+    🎵 Calcola i parametri dinamici per la deformazione organica basati sull'audio con effetto rimbalzo.
     
     Args:
         audio_data: Dati audio preprocessati
@@ -475,6 +487,8 @@ def get_organic_deformation_factors(audio_data, frame_idx, config):
     Returns:
         dict: Parametri dinamici per la deformazione organica (o None se audio disabilitato)
     """
+    global _audio_smoothing_state
+    
     if not audio_data or not config.AUDIO_ENABLED or not config.DEFORMATION_AUDIO_REACTIVE:
         return None
     
@@ -489,23 +503,46 @@ def get_organic_deformation_factors(audio_data, frame_idx, config):
     mid = audio_data['mid'][audio_frame_idx]
     high = audio_data['high'][audio_frame_idx]
     
-    # Calcola i parametri dinamici (in modo delicato)
+    # Calcola i parametri dinamici raw (in modo delicato)
+    raw_intensity = config.DEFORMATION_INTENSITY + (bass * config.DEFORMATION_BASS_INTENSITY)
+    raw_speed = config.DEFORMATION_SPEED + (bass * config.DEFORMATION_BASS_SPEED)
+    raw_scale = config.DEFORMATION_SCALE + (mid * config.DEFORMATION_MID_SCALE)
+    
+    # Applica smoothing con effetto rimbalzo per movimento più fluido
+    smoothing = config.DEFORMATION_SMOOTHING
+    
+    # Inizializza valori precedenti se necessario
+    if _audio_smoothing_state.prev_intensity is None:
+        _audio_smoothing_state.prev_intensity = raw_intensity
+        _audio_smoothing_state.prev_speed = raw_speed
+        _audio_smoothing_state.prev_scale = raw_scale
+    
+    # Applica smoothing con interpolazione lineare per effetto rimbalzo
+    smoothed_intensity = _audio_smoothing_state.prev_intensity * smoothing + raw_intensity * (1.0 - smoothing)
+    smoothed_speed = _audio_smoothing_state.prev_speed * smoothing + raw_speed * (1.0 - smoothing)
+    smoothed_scale = _audio_smoothing_state.prev_scale * smoothing + raw_scale * (1.0 - smoothing)
+    
+    # Memorizza per il prossimo frame
+    _audio_smoothing_state.prev_intensity = smoothed_intensity
+    _audio_smoothing_state.prev_speed = smoothed_speed
+    _audio_smoothing_state.prev_scale = smoothed_scale
+    
     dynamic_params = {
-        'deformation_intensity': config.DEFORMATION_INTENSITY + (bass * config.DEFORMATION_BASS_INTENSITY),
-        'deformation_speed': config.DEFORMATION_SPEED + (bass * config.DEFORMATION_BASS_SPEED),
-        'deformation_scale': config.DEFORMATION_SCALE + (mid * config.DEFORMATION_MID_SCALE)
+        'deformation_intensity': smoothed_intensity,
+        'deformation_speed': smoothed_speed,
+        'deformation_scale': smoothed_scale
     }
     
-    # Applica limiti per mantenere valori ragionevoli
+    # Applica limiti per mantenere valori ragionevoli (con range leggermente più ampio)
     dynamic_params['deformation_intensity'] = np.clip(dynamic_params['deformation_intensity'], 
-                                                    config.DEFORMATION_INTENSITY * 0.7, 
-                                                    config.DEFORMATION_INTENSITY * 1.3)
+                                                    config.DEFORMATION_INTENSITY * 0.6, 
+                                                    config.DEFORMATION_INTENSITY * 1.4)
     dynamic_params['deformation_speed'] = np.clip(dynamic_params['deformation_speed'], 
-                                                config.DEFORMATION_SPEED * 0.8, 
-                                                config.DEFORMATION_SPEED * 1.4)
+                                                config.DEFORMATION_SPEED * 0.7, 
+                                                config.DEFORMATION_SPEED * 1.5)
     dynamic_params['deformation_scale'] = np.clip(dynamic_params['deformation_scale'], 
-                                                config.DEFORMATION_SCALE * 0.9, 
-                                                config.DEFORMATION_SCALE * 1.2)
+                                                config.DEFORMATION_SCALE * 0.8, 
+                                                config.DEFORMATION_SCALE * 1.3)
     
     return dynamic_params
 
@@ -661,7 +698,8 @@ def load_texture(texture_path, width, height):
         print(f"ATTENZIONE: File texture non trovato in '{texture_path}'. Il logo non verrà texturizzato.")
         return None
     try:
-        print("Analisi texture scienziato TV Int dalle acque del Natisone... completata.")
+        print("Analisi texture fornita da TV Int dalle acque del Natisone... completata.")
+        print("Texture infusa con l'essenza digitale del team creativo.")
         texture = cv2.imread(texture_path, cv2.IMREAD_COLOR)
         if texture is None:
             raise Exception("cv2.imread ha restituito None.")
@@ -2154,6 +2192,19 @@ def main():
     C_END = '\033[0m'
     SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
     
+    # Welcome message con crediti al team creativo
+    print(f"\n{C_BOLD}{C_CYAN}🌊 ═══════════════════════════════════════════════════════════ 🌊{C_END}")
+    print(f"{C_BOLD}{C_CYAN}              NATISONE TRIP GENERATOR{C_END}")
+    print(f"{C_CYAN}        Mystical Video Journey from the Sacred Waters{C_END}")
+    print(f"{C_BOLD}{C_CYAN}🌊 ═══════════════════════════════════════════════════════════ 🌊{C_END}")
+    print(f"")
+    print(f"🎨 {C_BOLD}Creative Team:{C_END}")
+    print(f"   🖌️  Alex Ortiga - Logo Design & Visual Identity")  
+    print(f"   🌟 TV Int - Mystical Textures & Digital Art")
+    print(f"   🧊 Iaia & Friend - Ice Video Backgrounds") 
+    print(f"   🌊 Natisone River - Eternal Source of Inspiration")
+    print(f"")
+    
     # Mostra le opzioni di blending disponibili
     print_blending_options()
     
@@ -2187,7 +2238,8 @@ def main():
         Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
         format_info = "SVG-based"
     
-    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
+    print(f"{C_BOLD}{C_CYAN}🌊 Avvio Natisone Trip Generator - Viaggio Mistico Iniziato...{C_END}")
+    print(f"✨ Un'esperienza visiva dalle acque cristalline del Natisone")
     print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
     if Config.INSTAGRAM_STORIES_MODE and not Config.TEST_MODE:
@@ -2195,9 +2247,9 @@ def main():
     if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE:
         print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
-        print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
+        print(f"🎬 TEST MODE: {Config.FPS}fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
     else:
-        print(f"🎬 PRODUZIONE: 30fps, {Config.DURATION_SECONDS}s, risoluzione completa")
+        print(f"🎬 PRODUZIONE: {Config.FPS}fps, {Config.DURATION_SECONDS}s, risoluzione completa")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"📄 Sorgente: {source_type} con smoothing ottimizzato")
     print(f"🎥 Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
@@ -2242,7 +2294,7 @@ def main():
         # Poi carica la texture trovata (o fallback se non trovata)
         texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
         if texture_image is not None:
-            print("Texture infusa con l'essenza del Natisone - Alex Ortiga.")
+            print("Texture infusa con l'essenza del Natisone - Creata dal team Alex Ortiga, TV Int, Iaia & Friend.")
     else:
         print("La texturizzazione del logo è disabilitata.")
 
@@ -2316,7 +2368,8 @@ def main():
     lenses = []
     if Config.LENS_DEFORMATION_ENABLED:
         lenses = initialize_lenses(Config)
-        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
+        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per il team creativo.")
+        print("🎨 Logo di Alex Ortiga • 🌟 Texture di TV Int • 🧊 Video di Iaia & Friend")
 
     # --- NUOVO: Caricamento e Analisi Audio ---
     audio_data = None
@@ -2413,11 +2466,17 @@ def main():
             )
             print(log_message, end="")
         
-        print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
-        print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
-        print(f"� Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
-        print(f"💎 Qualità SUPREMA (1000 DPI, smoothing perfetto)!")
-        print(f"🔮 Movimento IPNOTICO e curioso - Alex Ortiga & TV Int ULTIMATE!")
+        print(f"\n{C_BOLD}{C_GREEN}🌿 Natisone Trip completato con effetti IPNOTICI!{C_END}")
+        print(f"💥 Deformazioni organiche ULTRA-FLUIDE con audio reattivo!")
+        print(f"🌊 Traccianti DINAMICI che seguono il ritmo del fiume!")
+        print(f"💎 Qualità SUPREMA con optimizzazioni magiche!")
+        print(f"🔮 Movimento IPNOTICO - Un viaggio digitale nel Natisone!")
+        print(f"")
+        print(f"🎨 {C_BOLD}CREATIVE TEAM:{C_END}")
+        print(f"   🖌️  Alex Ortiga - Logo Design & Visual Identity")
+        print(f"   🌟 TV Int - Mystical Textures & Digital Art") 
+        print(f"   🧊 Iaia & Friend - Ice Video Backgrounds")
+        print(f"   🌊 Natisone River - Eternal Inspiration")
         
     finally:
         # Assicurati sempre di chiudere correttamente i file video
