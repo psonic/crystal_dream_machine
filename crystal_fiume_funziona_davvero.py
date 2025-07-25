@@ -105,18 +105,18 @@ class Config:
     # --- Deformazione Organica ---
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.1   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
+    DEFORMATION_SPEED = 0.03   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
     DEFORMATION_SCALE = 0.015   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
     DEFORMATION_INTENSITY = 12.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
-    LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 45             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
+    NUM_LENSES = 5             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
-    LENS_MAX_STRENGTH = 1.3      # Forza massima ridotta per deformazione più delicata
+    LENS_MAX_STRENGTH = 1.8      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 95         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    LENS_MAX_RADIUS = 200         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_SPEED_FACTOR = 0.3    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
     LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
