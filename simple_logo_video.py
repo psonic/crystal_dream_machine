@@ -20,7 +20,7 @@ class Config:
 
 def rasterize_pdf_to_image(pdf_path, scale=2):
     """Rasterizza la prima pagina di un PDF in un'immagine."""
-    print(f"📄 Rasterizzazione PDF: {pdf_path}")
+    print(f"Rasterizzazione PDF: {pdf_path}")
     try:
         doc = fitz.open(pdf_path)
         page = doc[0]
@@ -28,7 +28,7 @@ def rasterize_pdf_to_image(pdf_path, scale=2):
         img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
         return img
     except Exception as e:
-        print(f"❌ Errore durante la lettura del PDF: {e}")
+        print(f"Errore durante la lettura del PDF: {e}")
         sys.exit(1)
 
 def extract_contours_from_image(img):
@@ -36,7 +36,7 @@ def extract_contours_from_image(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, binary_img = cv2.threshold(gray_img, 50, 255, cv2.THRESH_BINARY_INV)
     contours, hierarchy = cv2.findContours(binary_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    print(f"✅ Estratti {len(contours)} contorni.")
+    print(f"Estratti {len(contours)} contorni.")
     return contours, hierarchy
 
 def center_and_scale_contours(contours, target_width, target_height, padding_fraction=0.2):
@@ -63,7 +63,7 @@ def center_and_scale_contours(contours, target_width, target_height, padding_fra
         c_float[:, :, 1] = (c_float[:, :, 1] - contour_center_y) * scale + canvas_center_y
         transformed_contours.append(c_float.astype(np.int32))
         
-    print(f"📐 Logo centrato e ridimensionato.")
+    print(f"Logo centrato e ridimensionato.")
     return transformed_contours
 
 def render_contours_on_canvas(contours, hierarchy, width, height, color):
@@ -91,10 +91,10 @@ def save_static_video(frame, duration_seconds, fps, width, height):
     out = cv2.VideoWriter(output_filename, fourcc, fps, (width, height))
 
     if not out.isOpened():
-        print("❌ Errore: Impossibile creare il file video.")
+        print("Errore: Impossibile creare il file video.")
         return
 
-    print(f"\n💾 Salvataggio video: {output_filename}")
+    print(f"\nSalvataggio video: {output_filename}")
     num_frames = duration_seconds * fps
     for i in range(num_frames):
         out.write(frame)
@@ -104,12 +104,12 @@ def save_static_video(frame, duration_seconds, fps, width, height):
         sys.stdout.flush()
 
     out.release()
-    print(f"\n✅ Video salvato con successo!")
+    print(f"\nVideo salvato con successo!")
 
 # --- ESECUZIONE PRINCIPALE ---
 
 def main():
-    print("🎬 Avvio script per video statico del logo...")
+    print("Avvio script per video statico del logo...")
 
     # 1. Carica e processa il logo
     img = rasterize_pdf_to_image(Config.PDF_PATH)
