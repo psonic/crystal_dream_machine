@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -77,7 +77,7 @@ class Config:
     DEFORMATION_INTENSITY = 5.0  # Intensità della deformazione (più alto = più movimento)
 
     # --- Deformazione a Lenti ---
-    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
+    LENS_DEFORMATION_ENABLED = False  # Attiva effetto lenti che distorcono il logo
     NUM_LENSES = 40              # Numero di lenti che si muovono sul logo
     LENS_MIN_STRENGTH = -2.0     # Forza minima delle lenti (negativo = concavo, positivo = convesso)
     LENS_MAX_STRENGTH = 2.5      # Forza massima delle lenti
