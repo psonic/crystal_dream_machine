@@ -30,7 +30,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
@@ -101,8 +101,8 @@ class Config:
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
     TRACER_ENABLED = True
-    TRACER_TRAIL_LENGTH = 35 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
-    TRACER_MAX_OPACITY = 0.05 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
+    TRACER_TRAIL_LENGTH = 15 # ULTRA-RIDOTTO: da 20 a 15 per scie minime sulla scritta
+    TRACER_MAX_OPACITY = 0.0001 # ULTRA-RIDOTTO: da 0.25 a 0.15 per traccianti quasi trasparenti
     TRACER_BASE_COLOR = (255, 200, 220) # Colore base (rosa/lavanda)
     TRACER_THRESHOLD1 = 50  # ULTRA-AUMENTATO: da 140 a 160 per catturare meno dettagli
     TRACER_THRESHOLD2 = 350  # ULTRA-AUMENTATO: da 300 a 350 per traccianti ultra-selettivi
