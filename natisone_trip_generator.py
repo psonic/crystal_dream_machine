@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -66,8 +66,8 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 5 if TEST_MODE else 15  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 5 if TEST_MODE else 5  # Durata video in secondi
+    FPS = 5 if TEST_MODE else 25  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
     
     # --- Formato Video ---
@@ -171,11 +171,11 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'dramatic'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'psychedelic'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    BLENDING_MODE = 'lighten'     # Modalità fusione logo-sfondo
+    BLENDING_MODE = 'hard_light'     # Modalità fusione logo-sfondo
     BLENDING_STRENGTH = 0.7          # Intensità fusione (range: 0.0-1.0, 0.3=leggera, 0.7=forte, 1.0=solo effetto)
     EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
     EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi (range: 5-50, 15=netti, 25=morbidi, 40=molto sfumati)
@@ -2200,13 +2200,6 @@ def main():
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
-    
-    # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
-    if Config.TEST_MODE:
-        # Riduci di un terzo le dimensioni per test veloce
-        svg_width = int(svg_width / 2)
-        svg_height = int(svg_height / 2)
-        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
 
     # 📱 FORMATO INSTAGRAM STORIES (9:16)
     if Config.INSTAGRAM_STORIES_MODE:
