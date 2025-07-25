@@ -69,6 +69,10 @@ class Config:
     FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
+    
+    # --- Formato Video ---
+    INSTAGRAM_STORIES_MODE = False   # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+                                    # False = formato originale basato su dimensioni SVG
 
     # --- Colore e Stile ---
     LOGO_COLOR = (50, 50, 50)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
@@ -2109,12 +2113,30 @@ def main():
         svg_height = int(svg_height / 2)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
 
-    Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
-    Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
+    # 📱 FORMATO INSTAGRAM STORIES (9:16)
+    if Config.INSTAGRAM_STORIES_MODE:
+        if Config.TEST_MODE:
+            # Versione ridotta per test: 540x960 (metà di 1080x1920)
+            Config.WIDTH = 540
+            Config.HEIGHT = 960
+        else:
+            # Formato Instagram Stories standard: 1080x1920
+            Config.WIDTH = 1080
+            Config.HEIGHT = 1920
+        format_info = "Instagram Stories (9:16)"
+    else:
+        # Formato tradizionale basato su dimensioni SVG
+        Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
+        Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
+        format_info = "SVG-based"
     
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
     print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
-    print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (padding: {Config.SVG_PADDING}px)")
+    print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
+    if Config.INSTAGRAM_STORIES_MODE and not Config.TEST_MODE:
+        print(f"📱 INSTAGRAM STORIES: Formato verticale ottimizzato per mobile")
+    if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE:
+        print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
         print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
     else:
@@ -2128,9 +2150,19 @@ def main():
     
     # Carica contorni da SVG o PDF
     if Config.USE_SVG_SOURCE:
-        contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
+        if Config.INSTAGRAM_STORIES_MODE:
+            # Per Instagram Stories, centra il logo nel formato verticale
+            effective_padding = max(Config.SVG_PADDING, (Config.WIDTH - svg_width) // 2)
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
+        else:
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
     else:
-        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
+        if Config.INSTAGRAM_STORIES_MODE:
+            # Per Instagram Stories, centra il logo nel formato verticale
+            effective_padding = max(Config.SVG_PADDING, (Config.WIDTH - svg_width) // 2)
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
+        else:
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
 
     if not contours:
         source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
