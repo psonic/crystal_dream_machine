@@ -143,7 +143,7 @@ BG_RANDOM_START = True          # Random starting point
 ## 📁 Project Structure
 
 ```
-CrystalPython2/
+CrystalDreamMachine/
 ├── 🌊 natisone_trip_generator.py         # Main mystical engine
 ├── 🎨 blending_presets.py                # Visual magic presets  
 ├── 📝 version_manager.py                 # Git integration
@@ -155,34 +155,6 @@ CrystalPython2/
 └── output/                              # Generated magic
     └── crystalpy_YYYYMMDD_HHMMSS.mp4   # Your creation
 ```
-
-## 🎬 Output Formats
-
-- **MP4 H.264** - Universal compatibility
-- **WhatsApp Optimized** - Perfect for social sharing
-- **Instagram Stories** - 9:16 vertical format
-- **Custom Resolutions** - Adapt to your needs
-
-## 🔧 Technical Sorcery
-
-### Core Technologies
-- **OpenCV** - Computer vision magic
-- **NumPy** - Mathematical spells
-- **Librosa** - Audio analysis rituals
-- **Perlin Noise** - Organic movement generation
-- **SVG/PDF Processing** - Vector magic handling
-
-### Performance Optimization
-- **Multiprocessing** - Parallel crystal energy
-- **Memory Management** - Efficient mystical calculations
-- **H.264 Encoding** - Optimized output compression
-- **Grid-based Noise** - Smooth organic deformations
-
-## 🌙 The Philosophy
-
-*"In the convergence of technology and mysticism, we find new forms of expression. Each frame is a meditation, each movement a journey through the digital dimensions that mirror the flowing essence of the Natisone."*
-
-Natisone Trip isn't just a video generator—it's a **digital journey** that transforms static images into **living, breathing entities**. The organic deformations mirror the natural flow of the sacred river, while the audio reactivity connects your visuals to the universal rhythm that flows through all things.
 
 *Born from the creative collaboration of Alex Ortiga (logo design), TV Int (mystical textures), and Iaia & Friend (ice video backgrounds) - united by the flowing waters of the Natisone.*
 
