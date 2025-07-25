@@ -118,7 +118,7 @@ class Config:
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 25         # Lunghezza scie (range: 5-100, 15=corte, 25=medie, 50=lunghe)
+    TRACER_TRAIL_LENGTH = 15 if TEST_MODE else 25  # Lunghezza scie (ridotta in test mode per velocità)
     TRACER_MAX_OPACITY = 0.03        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
@@ -126,7 +126,7 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 20      # Lunghezza scie sfondo (range: 5-80, 15=corte, 30=lunghe)
+    BG_TRACER_TRAIL_LENGTH = 10 if TEST_MODE else 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 30        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
