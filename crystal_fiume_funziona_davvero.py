@@ -69,9 +69,9 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_SLOWDOWN_FACTOR = 1.2     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_SLOWDOWN_FACTOR = 1.3     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.5       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.3     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
@@ -87,11 +87,11 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 20             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 20 if TEST_MODE else 40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 40         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 100         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.0001    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
@@ -99,8 +99,8 @@ class Config:
     LENS_BASE_SPEED_MULTIPLIER = 0.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
     LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
     LENS_INERTIA = 0.75                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0.03     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0.03      # Velocità rotazione massima (range: 0 a 0.02)
+    LENS_ROTATION_SPEED_MIN = -0.005     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0.005      # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
@@ -112,7 +112,7 @@ class Config:
     
     WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
     WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
-    WORM_COMPLEXITY = 4        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
+    WORM_COMPLEXITY = 7        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
     # --- Smussamento Contorni ---
     SMOOTHING_ENABLED = True      # Attiva bordi lisci del logo
@@ -131,8 +131,8 @@ class Config:
     BG_TRACER_TRAIL_LENGTH = 10 if TEST_MODE else 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
-    BG_TRACER_THRESHOLD1 = 30        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+    BG_TRACER_THRESHOLD1 = 25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+    BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
