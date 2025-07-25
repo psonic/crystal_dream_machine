@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -115,7 +115,7 @@ class Config:
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.3      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 80         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 90         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
