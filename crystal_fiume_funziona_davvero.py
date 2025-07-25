@@ -45,8 +45,14 @@ class Config:
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
     TEXTURE_FALLBACK_PATH = 'input/26.png'  # Texture di fallback
-    TEXTURE_ENABLED = True       # Attiva texture sul logo
+    
+    # --- Sistema Texture Avanzato ---
+    TEXTURE_ENABLED = True       # Attiva sistema texture
+    TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
     TEXTURE_ALPHA = 0.5          # Opacità della texture (0=invisibile, 1=opaca)
+    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture su sfondo (quando target=background/both)
+    # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
+    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 100            # Spazio intorno al logo (pixel)
@@ -129,8 +135,9 @@ class Config:
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
     
     # Parametri blending configurabili
-    BLENDING_MODE = 'difference'     # Modalità fusione (vedi lista completa sopra)
-    BLENDING_STRENGTH = 0.9          # Intensità fusione (0=solo logo, 1=solo effetto)
+    # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
+    BLENDING_MODE = 'color_dodge'     # Modalità fusione logo-sfondo
+    BLENDING_STRENGTH = 0.7          # Intensità fusione (0=solo logo, 1=solo effetto)
     EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
     EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi
     ADAPTIVE_BLENDING = False        # Adatta fusione ai colori dello sfondo
@@ -226,6 +233,64 @@ def load_texture(texture_path, width, height):
     except Exception as e:
         print(f"Errore durante il caricamento della texture: {e}")
         return None
+
+def apply_texture_blending(base_image, texture_image, alpha, blending_mode='overlay', mask=None):
+    """
+    Applica texture su un'immagine con diversi modalità di blending.
+    
+    Args:
+        base_image: Immagine base (BGR)
+        texture_image: Texture da applicare (BGR)
+        alpha: Opacità texture (0.0-1.0)
+        blending_mode: Modalità blending ('overlay', 'multiply', 'screen', 'normal')
+        mask: Maschera opzionale per limitare l'applicazione
+    """
+    if texture_image is None or alpha <= 0:
+        return base_image.copy()
+    
+    # Converti in float32 per calcoli precisi
+    base_float = base_image.astype(np.float32) / 255.0
+    texture_float = texture_image.astype(np.float32) / 255.0
+    
+    # Applica blending mode
+    if blending_mode == 'overlay':
+        # Overlay: moltiplica se base < 0.5, altrimenti screen
+        condition = base_float < 0.5
+        blended = np.where(condition, 
+                          2 * base_float * texture_float,
+                          1 - 2 * (1 - base_float) * (1 - texture_float))
+    
+    elif blending_mode == 'multiply':
+        # Multiply: moltiplica i valori
+        blended = base_float * texture_float
+    
+    elif blending_mode == 'screen':
+        # Screen: inverso del multiply
+        blended = 1 - (1 - base_float) * (1 - texture_float)
+    
+    elif blending_mode == 'normal':
+        # Normal: sovrapposizione diretta
+        blended = texture_float
+    
+    else:
+        # Default overlay
+        condition = base_float < 0.5
+        blended = np.where(condition, 
+                          2 * base_float * texture_float,
+                          1 - 2 * (1 - base_float) * (1 - texture_float))
+    
+    # Miscela con alpha
+    result = base_float * (1 - alpha) + blended * alpha
+    
+    # Applica maschera se fornita
+    if mask is not None:
+        mask_norm = mask.astype(np.float32) / 255.0
+        if len(mask_norm.shape) == 2:
+            mask_norm = cv2.cvtColor(mask_norm, cv2.COLOR_GRAY2BGR)
+        result = base_float * (1 - mask_norm) + result * mask_norm
+    
+    # Converti back a uint8
+    return np.clip(result * 255, 0, 255).astype(np.uint8)
 
 def get_svg_dimensions(svg_path):
     """Estrae dimensioni da file SVG."""
@@ -1233,21 +1298,42 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     # Combina i traccianti del logo con quelli dello sfondo per un effetto più ricco
     combined_logo_edges = cv2.add(current_logo_edges, logo_tracers)
 
-    # --- 6. Creazione Layer Logo e Glow ---
+    # --- 6. Applicazione Texture Dinamica (NUOVO SISTEMA) ---
+    # Applica texture secondo la modalità configurata PRIMA di creare i layer del logo
+    if config.TEXTURE_ENABLED and texture_image is not None:
+        if config.TEXTURE_TARGET in ['background', 'both']:
+            # Applica texture allo sfondo
+            
+            final_frame = apply_texture_blending(
+                final_frame, 
+                texture_image, 
+                config.TEXTURE_BACKGROUND_ALPHA, 
+                config.TEXTURE_BLENDING_MODE
+            )
+    
+    # --- 7. Creazione Layer Logo e Glow ---
     logo_layer = np.zeros_like(final_frame)
     glow_layer = np.zeros_like(final_frame)
 
-    # Applica la texture al logo se disponibile e abilitata
-    if config.TEXTURE_ENABLED and texture_image is not None:
-        # Crea una base di colore solido
+    # Applica texture al logo (se configurato)
+    if config.TEXTURE_ENABLED and texture_image is not None and config.TEXTURE_TARGET in ['logo', 'both']:
+        # NUOVO: Sistema avanzato per texture sul logo
+        print(f"🎨 Applicando texture al logo con modalità {config.TEXTURE_BLENDING_MODE}")
+        
+        # Crea base di colore solido
         solid_color_layer = np.zeros_like(final_frame)
         solid_color_layer[logo_mask > 0] = config.LOGO_COLOR
-        # Crea la texture mascherata
-        textured_logo_masked = cv2.bitwise_and(texture_image, texture_image, mask=logo_mask)
-        # Fonde il colore e la texture con alpha
-        logo_layer = cv2.addWeighted(solid_color_layer, 1.0 - config.TEXTURE_ALPHA, textured_logo_masked, config.TEXTURE_ALPHA, 0)
+        
+        # Applica texture usando il nuovo sistema di blending
+        logo_layer = apply_texture_blending(
+            solid_color_layer,
+            texture_image,
+            config.TEXTURE_ALPHA,
+            config.TEXTURE_BLENDING_MODE,
+            logo_mask
+        )
     else:
-        # Usa colore solido se la texture è disabilitata o non trovata
+        # Usa colore solido se la texture è disabilitata o non per il logo
         logo_layer[logo_mask > 0] = config.LOGO_COLOR
 
     # Applica l'effetto Glow (se abilitato)
