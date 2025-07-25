@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -137,7 +137,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'geometric'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'bright'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
