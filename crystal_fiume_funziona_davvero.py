@@ -2329,7 +2329,6 @@ def main():
                     [sys.executable, version_manager_path, final_output_filename, source_script_path],
                     capture_output=True,
                     text=True,
-                    timeout=30,  # Timeout di 30 secondi per evitare blocchi
                     check=False # Mettiamo a False per gestire l'errore manualmente
                 )
                 # Stampa sempre stdout e stderr per il debug
@@ -2343,9 +2342,6 @@ def main():
             else:
                 print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
 
-        except subprocess.TimeoutExpired:
-            print(f"{C_YELLOW}⏰ Timeout del gestore versioni (30s) - probabilmente in attesa di credenziali Git.{C_END}")
-            print(f"{C_YELLOW}💡 Suggerimento: Configura Git con token di accesso per evitare richieste interattive.{C_END}")
         except Exception as e:
             print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
 
