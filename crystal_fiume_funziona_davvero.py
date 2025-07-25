@@ -57,7 +57,7 @@ class Config:
     # --- Parametri Video ---
     SVG_PADDING = 50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 5  # Durata video in secondi
+    DURATION_SECONDS = 5  if TEST_MODE else 10  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
@@ -1833,11 +1833,11 @@ def main():
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
     
     # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
-    #if Config.TEST_MODE:
-    # Riduci di un terzo le dimensioni per test veloce
-    svg_width = int(svg_width / 3)
-    svg_height = int(svg_height / 3)
-    print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
+    if Config.TEST_MODE:
+        # Riduci di un terzo le dimensioni per test veloce
+        svg_width = int(svg_width / 3)
+        svg_height = int(svg_height / 3)
+        print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
     
     Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
     Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
