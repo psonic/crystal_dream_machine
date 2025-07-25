@@ -79,23 +79,23 @@ class Config:
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
     LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 10 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
+    NUM_LENSES = 30 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
-    LENS_MIN_RADIUS = 20     # Aumentato per copertura maggiore
-    LENS_MAX_RADIUS = 100    # Lenti ancora più grandi per effetti ampi
+    LENS_MIN_RADIUS = 10     # Aumentato per copertura maggiore
+    LENS_MAX_RADIUS = 300    # Lenti ancora più grandi per effetti ampi
     LENS_SPEED_FACTOR = 0.001  # VELOCITÀ AUMENTATA per movimento ultra-evidente
     
     # --- PARAMETRI MOVIMENTO LENTI (NUOVI - PRECEDENTEMENTE HARDCODED) ---
     LENS_PATH_SPEED_MULTIPLIER = 8.5  # Velocità con cui le lenti seguono il loro percorso
     LENS_BASE_SPEED_MULTIPLIER = 1.4  # Moltiplicatore per la velocità di base delle lenti
     LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità di rotazione delle lenti a "verme"
-    LENS_INERTIA = 1  # Inerzia delle lenti (0.0=scattanti, 1.0=molto fluide)
+    LENS_INERTIA = 0.85  # Inerzia delle lenti (0.0=scattanti, 1.0=molto fluide)
     LENS_ROTATION_SPEED_MIN = -0.008  # Velocità di rotazione minima
     LENS_ROTATION_SPEED_MAX = 0.008   # Velocità di rotazione massima
     
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
-    LENS_HORIZONTAL_BIAS = 10  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
+    LENS_HORIZONTAL_BIAS = 1.5  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
     LENS_PULSATION_SPEED = 0.005  # RALLENTATO: pulsazione più lenta e calma
     LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
