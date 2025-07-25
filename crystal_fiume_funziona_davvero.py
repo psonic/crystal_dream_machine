@@ -130,13 +130,13 @@ class Config:
     ADVANCED_BLENDING = True # Abilita il blending avanzato scritta-sfondo
     
     # NUOVI PARAMETRI BLENDING CONFIGURABILI
-    BLENDING_MODE = 'multiply'  # Opzioni: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'difference', 'exclusion'
-    BLENDING_STRENGTH = 0.7    # Forza del blending (0.0=solo logo, 1.0=solo blending)
+    BLENDING_MODE = 'overlay'  # Opzioni: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'difference', 'exclusion'
+    BLENDING_STRENGTH = 0.8    # Forza del blending (0.0=solo logo, 1.0=solo blending)
     EDGE_DETECTION_ENABLED = True  # Abilita rilevamento bordi per blending selettivo
     EDGE_BLUR_RADIUS = 15      # Raggio blur per i bordi (più alto = transizione più morbida)
     ADAPTIVE_BLENDING = True   # Abilita blending che si adatta al contenuto dello sfondo
     COLOR_HARMONIZATION = True # Armonizza i colori tra logo e sfondo
-    LUMINANCE_MATCHING = True  # Adatta la luminosità del logo allo sfondo locale
+    LUMINANCE_MATCHING = False  # Adatta la luminosità del logo allo sfondo locale (disabilito per overlay)
     
     # Parametri esistenti (ora più configurabili)
     LOGO_BLEND_FACTOR = 0.6 # DIMINUITO: da 0.5 a 0.3 per più fusione con sfondo
