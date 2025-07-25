@@ -43,14 +43,14 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
+    USE_SVG_SOURCE = False        # True = usa SVG, False = usa PDF
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
