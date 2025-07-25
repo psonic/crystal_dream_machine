@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -57,7 +57,7 @@ class Config:
     # --- Parametri Video ---
     SVG_PADDING = 50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
     FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3  if TEST_MODE else 10  # Durata video in secondi
+    DURATION_SECONDS = 3  if TEST_MODE else 3  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
