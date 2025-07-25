@@ -40,7 +40,7 @@ class Config:
     CREATE_WHATSAPP_VERSION = True  # True = crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = False  # True = SVG, False = PDF
+    USE_SVG_SOURCE = True  # True = SVG, False = PDF
     SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
     PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
@@ -51,8 +51,8 @@ class Config:
     # --- Parametri Video - ADATTATI ALLE DIMENSIONI SVG + PADDING ---
     # Le dimensioni del video saranno calcolate dall'SVG + padding
     SVG_PADDING = 100  # Padding attorno all'SVG (bei bordi)
-    FPS = 30
-    DURATION_SECONDS = 5 if TEST_MODE else 60 # Durata normale per il rendering finale
+    FPS = 10 if TEST_MODE else 30
+    DURATION_SECONDS = 3 if TEST_MODE else 60 # Durata normale per il rendering finale
     TOTAL_FRAMES = DURATION_SECONDS * FPS
 
     # --- Colore e Stile ---
@@ -79,7 +79,7 @@ class Config:
 
     # --- Deformazione a Lenti ULTRA-CINEMATOGRAFICHE (MOVIMENTO VIVO E ORIZZONTALE) ---
     LENS_DEFORMATION_ENABLED = True # RIATTIVATA per combo effetti
-    NUM_LENSES = 40 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
+    NUM_LENSES = 10 # AUMENTATO: più lenti per movimento ultra-denso e spettacolare
     LENS_MIN_STRENGTH = -2.0 # POTENZIATO: effetti ancora più drammatici
     LENS_MAX_STRENGTH = 2.5  # POTENZIATO: deformazioni ultra-spettacolari
     LENS_MIN_RADIUS = 20     # Aumentato per copertura maggiore
@@ -95,12 +95,12 @@ class Config:
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
     
     WORM_SHAPE_ENABLED = True # NUOVA OPZIONE per lenti a forma di verme
-    WORM_LENGTH = 3 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
-    WORM_COMPLEXITY = 7 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
+    WORM_LENGTH = 2.2 # RIDOTTO: da 2.5 a 2.2 per forme più dinamiche
+    WORM_COMPLEXITY = 4 # AUMENTATO: da 3 a 4 per movimento più complesso e interessante
 
     # --- Smussamento Contorni (QUALITÀ ULTRA-ALTA) ---
     SMOOTHING_ENABLED = True
-    SMOOTHING_FACTOR = 0.00001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
+    SMOOTHING_FACTOR = 0.0001 # ULTRA-MIGLIORATO: da 0.0008 a 0.0006 per curve perfette
 
     # --- Effetto Traccianti Psichedelici (ULTRA-RIDOTTI SULLA SCRITTA) ---
     TRACER_ENABLED = True
@@ -130,10 +130,10 @@ class Config:
     
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
     DYNAMIC_VARIATION_ENABLED = True
-    VARIATION_AMPLITUDE = 0.5 # ±10% di variazione massima
-    VARIATION_SPEED_SLOW = 0.001  # RALLENTATO: Velocità variazione lenta
-    VARIATION_SPEED_MEDIUM = 0.0025 # RALLENTATO: Velocità variazione media
-    VARIATION_SPEED_FAST = 0.0005  # RALLENTATO: Velocità variazione veloce
+    VARIATION_AMPLITUDE = 0.8 # ±10% di variazione massima
+    VARIATION_SPEED_SLOW = 0.01  # RALLENTATO: Velocità variazione lenta
+    VARIATION_SPEED_MEDIUM = 0.025 # RALLENTATO: Velocità variazione media
+    VARIATION_SPEED_FAST = 0.005  # RALLENTATO: Velocità variazione veloce
 
 # --- FUNZIONI DI SUPPORTO ---
 
