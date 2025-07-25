@@ -92,7 +92,7 @@ class Config:
     LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
     LENS_MAX_RADIUS = 50         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.0001    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
     LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
@@ -104,10 +104,10 @@ class Config:
     
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
-    LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
+    LENS_PULSATION_ENABLED = False        # Attiva pulsazione dimensioni lenti
     LENS_PULSATION_SPEED = 0.0005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
     LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
-    LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
+    LENS_FORCE_PULSATION_ENABLED = False  # Attiva pulsazione anche della forza
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
     
     WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
