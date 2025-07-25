@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     SMALL = False
     LONG = False
 
@@ -87,7 +87,7 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 20 if TEST_MODE else 20             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
