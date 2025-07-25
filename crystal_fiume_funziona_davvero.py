@@ -52,7 +52,7 @@ class Config:
     TEXTURE_ALPHA = 0.7          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
     TEXTURE_BACKGROUND_ALPHA = 0.4  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
-    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'overlay'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 50 if TEST_MODE else 100  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
