@@ -80,7 +80,7 @@ class Config:
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.1   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.005   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_SCALE = 0.05   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
     DEFORMATION_INTENSITY = 15.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
@@ -97,8 +97,8 @@ class Config:
     LENS_BASE_SPEED_MULTIPLIER = 1.4    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
     LENS_ROTATION_SPEED_MULTIPLIER = 7.0  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
     LENS_INERTIA = 0.85                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0.008     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0.008      # Velocità rotazione massima (range: 0 a 0.02)
+    LENS_ROTATION_SPEED_MIN = -0.03     # Velocità rotazione minima (range: -0.02 a 0)
+    LENS_ROTATION_SPEED_MAX = 0.03      # Velocità rotazione massima (range: 0 a 0.02)
     
     # --- Movimento e Pulsazione Lenti ---
     LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
