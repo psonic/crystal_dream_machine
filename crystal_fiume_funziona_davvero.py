@@ -84,6 +84,7 @@ class Config:
     BG_SLOWDOWN_FACTOR = 1.3     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
     BG_DARKEN_FACTOR = 0.5       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
     BG_CONTRAST_FACTOR = 1.3     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
     # --- Sistema Audio Reattivo ---
     AUDIO_ENABLED = True         # Attiva reattività audio per lenti
@@ -105,17 +106,17 @@ class Config:
     # --- Deformazione Organica ---
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.03   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.015   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
-    DEFORMATION_INTENSITY = 12.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+    DEFORMATION_SPEED = 0.01   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
+    DEFORMATION_SCALE = 0.025   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_INTENSITY = 13.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 6             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 30             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.3      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 40         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 100         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
@@ -2195,11 +2196,33 @@ def main():
         print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
         # Crea uno sfondo nero di fallback
         bg_video = None
+        bg_start_frame = 0
     else:
         # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
         bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
         bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
-        print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+        
+        # 🎲 RANDOM START: Calcola frame di inizio casuale (max 2/3 del video)
+        bg_start_frame = 0
+        if Config.BG_RANDOM_START and bg_total_frames > Config.TOTAL_FRAMES:
+            # Assicurati di avere abbastanza frame rimanenti per il rendering
+            max_start_frame = int(bg_total_frames * 2/3) - Config.TOTAL_FRAMES
+            if max_start_frame > 0:
+                bg_start_frame = np.random.randint(0, max_start_frame)
+                # Salta al frame di inizio
+                bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_start_frame)
+                start_time = bg_start_frame / bg_fps
+                end_time = start_time + (Config.TOTAL_FRAMES / bg_fps * Config.BG_SLOWDOWN_FACTOR)
+                print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+                print(f"🎲 Inizio casuale da frame {bg_start_frame} ({start_time:.1f}s -> {end_time:.1f}s)")
+            else:
+                print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+                print(f"⚠️ Video troppo corto per random start")
+        else:
+            print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
+            if not Config.BG_RANDOM_START:
+                print(f"🔄 Inizio dal primo frame (random start disabilitato)")
+        
         print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo {Config.BG_SLOWDOWN_FACTOR}x più lento")
     
     # Setup video writer con codec ottimizzato per WhatsApp
