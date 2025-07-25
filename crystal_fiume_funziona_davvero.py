@@ -110,7 +110,7 @@ class Config:
     LENS_FORCE_PULSATION_ENABLED = False  # Attiva pulsazione anche della forza
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
     
-    WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
+    WORM_SHAPE_ENABLED = False  # Forma allungata delle lenti (tipo verme)
     WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
     WORM_COMPLEXITY = 7        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
