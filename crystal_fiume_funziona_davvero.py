@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
+    TEST_MODE = False # Test rapido per verificare le modifiche (SVG/PDF + lenti migliorate)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True  # True = ottimizza per WhatsApp/social media
