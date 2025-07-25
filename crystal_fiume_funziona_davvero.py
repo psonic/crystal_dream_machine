@@ -86,7 +86,7 @@ class Config:
     # --- PARAMETRI MOVIMENTO ORIZZONTALE E PULSAZIONE ULTRA-POTENZIATI ---
     LENS_HORIZONTAL_BIAS = 2  # AUMENTATO: bias ultra-forte verso movimento orizzontale lungo la scritta
     LENS_PULSATION_ENABLED = True  # Abilita pulsazione/ridimensionamento delle lenti
-    LENS_PULSATION_SPEED = 0.01  # AUMENTATO: pulsazione più rapida e visibile
+    LENS_PULSATION_SPEED = 0.005  # RALLENTATO: pulsazione più lenta e calma
     LENS_PULSATION_AMPLITUDE = 0.2  # AUMENTATO: pulsazione più ampia (+/-60% del raggio)
     LENS_FORCE_PULSATION_ENABLED = True  # NUOVO: anche la forza pulsa insieme al raggio
     LENS_FORCE_PULSATION_AMPLITUDE = 0.2  # NUOVO: variazione forza +/-50%
@@ -128,9 +128,9 @@ class Config:
     # --- Variazione Dinamica Parametri (NUOVO SISTEMA) ---
     DYNAMIC_VARIATION_ENABLED = True
     VARIATION_AMPLITUDE = 0.5 # ±10% di variazione massima
-    VARIATION_SPEED_SLOW = 0.002  # Velocità variazione lenta (per deformazioni)
-    VARIATION_SPEED_MEDIUM = 0.005 # Velocità variazione media (per traccianti)
-    VARIATION_SPEED_FAST = 0.001  # Velocità variazione veloce (per effetti minori)
+    VARIATION_SPEED_SLOW = 0.001  # RALLENTATO: Velocità variazione lenta
+    VARIATION_SPEED_MEDIUM = 0.0025 # RALLENTATO: Velocità variazione media
+    VARIATION_SPEED_FAST = 0.0005  # RALLENTATO: Velocità variazione veloce
 
 # --- FUNZIONI DI SUPPORTO ---
 
