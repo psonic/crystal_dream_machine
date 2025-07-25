@@ -22,6 +22,9 @@ except ImportError:
     PDF_AVAILABLE = False
     print("⚠️ PyMuPDF non disponibile, solo modalità SVG")
 
+# CAIROSVG verrà importato solo se necessario
+CAIROSVG_AVAILABLE = None
+
 # Disabilita il warning PIL per le immagini ad alta risoluzione
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
@@ -37,7 +40,7 @@ class Config:
     CREATE_WHATSAPP_VERSION = True  # True = crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True  # True = SVG, False = PDF
+    USE_SVG_SOURCE = False  # True = SVG, False = PDF
     SVG_PATH = 'input/logo.svg'  # SVG con tracciato unificato
     PDF_PATH = 'input/logo.pdf'  # Opzione PDF alternativa
     TEXTURE_AUTO_SEARCH = True  # True = cerca automaticamente texture.tif/png/jpg
@@ -1461,7 +1464,7 @@ def main():
     if Config.USE_SVG_SOURCE:
         contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
     else:
-        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.LOGO_PADDING)
+        contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
 
     if not contours:
         source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
