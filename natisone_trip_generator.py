@@ -107,8 +107,8 @@ class Config:
     # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
     DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
     DEFORMATION_SPEED = 0.01   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.02   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
-    DEFORMATION_INTENSITY = 11.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+    DEFORMATION_SCALE = 0.002   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+    DEFORMATION_INTENSITY = 10.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
     
     # --- Reattività Audio Deformazione Organica ---
     DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
@@ -2192,19 +2192,6 @@ def main():
     C_END = '\033[0m'
     SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
     
-    # Welcome message con crediti al team creativo
-    print(f"\n{C_BOLD}{C_CYAN}🌊 ═══════════════════════════════════════════════════════════ 🌊{C_END}")
-    print(f"{C_BOLD}{C_CYAN}              NATISONE TRIP GENERATOR{C_END}")
-    print(f"{C_CYAN}        Mystical Video Journey from the Sacred Waters{C_END}")
-    print(f"{C_BOLD}{C_CYAN}🌊 ═══════════════════════════════════════════════════════════ 🌊{C_END}")
-    print(f"")
-    print(f"🎨 {C_BOLD}Creative Team:{C_END}")
-    print(f"   🖌️  Alex Ortiga - Logo Design & Visual Identity")  
-    print(f"   🌟 TV Int - Mystical Textures & Digital Art")
-    print(f"   🧊 Iaia & Friend - Ice Video Backgrounds") 
-    print(f"   🌊 Natisone River - Eternal Source of Inspiration")
-    print(f"")
-    
     # Mostra le opzioni di blending disponibili
     print_blending_options()
     
@@ -2238,8 +2225,7 @@ def main():
         Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
         format_info = "SVG-based"
     
-    print(f"{C_BOLD}{C_CYAN}🌊 Avvio Natisone Trip Generator - Viaggio Mistico Iniziato...{C_END}")
-    print(f"✨ Un'esperienza visiva dalle acque cristalline del Natisone")
+    print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
     print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
     if Config.INSTAGRAM_STORIES_MODE and not Config.TEST_MODE:
@@ -2247,9 +2233,9 @@ def main():
     if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE:
         print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
-        print(f"🎬 TEST MODE: {Config.FPS}fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
+        print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
     else:
-        print(f"🎬 PRODUZIONE: {Config.FPS}fps, {Config.DURATION_SECONDS}s, risoluzione completa")
+        print(f"🎬 PRODUZIONE: 30fps, {Config.DURATION_SECONDS}s, risoluzione completa")
     source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
     print(f"📄 Sorgente: {source_type} con smoothing ottimizzato")
     print(f"🎥 Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
@@ -2368,8 +2354,7 @@ def main():
     lenses = []
     if Config.LENS_DEFORMATION_ENABLED:
         lenses = initialize_lenses(Config)
-        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per il team creativo.")
-        print("🎨 Logo di Alex Ortiga • 🌟 Texture di TV Int • 🧊 Video di Iaia & Friend")
+        print(f"🌊 Liberate {len(lenses)} creature liquide dal Natisone per Alex Ortiga.")
 
     # --- NUOVO: Caricamento e Analisi Audio ---
     audio_data = None
@@ -2466,17 +2451,11 @@ def main():
             )
             print(log_message, end="")
         
-        print(f"\n{C_BOLD}{C_GREEN}🌿 Natisone Trip completato con effetti IPNOTICI!{C_END}")
-        print(f"💥 Deformazioni organiche ULTRA-FLUIDE con audio reattivo!")
-        print(f"🌊 Traccianti DINAMICI che seguono il ritmo del fiume!")
-        print(f"💎 Qualità SUPREMA con optimizzazioni magiche!")
-        print(f"🔮 Movimento IPNOTICO - Un viaggio digitale nel Natisone!")
-        print(f"")
-        print(f"🎨 {C_BOLD}CREATIVE TEAM:{C_END}")
-        print(f"   🖌️  Alex Ortiga - Logo Design & Visual Identity")
-        print(f"   🌟 TV Int - Mystical Textures & Digital Art") 
-        print(f"   🧊 Iaia & Friend - Ice Video Backgrounds")
-        print(f"   🌊 Natisone River - Eternal Inspiration")
+        print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
+        print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
+        print(f"� Traccianti DOPPI (logo rosa + sfondo viola) dinamici!")
+        print(f"💎 Qualità SUPREMA (1000 DPI, smoothing perfetto)!")
+        print(f"🔮 Movimento IPNOTICO e curioso - Alex Ortiga & TV Int ULTIMATE!")
         
     finally:
         # Assicurati sempre di chiudere correttamente i file video
