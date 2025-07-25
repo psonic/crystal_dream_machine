@@ -34,8 +34,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
-    SMALL = False
-    LONG = False
+    SMALL = False    
 
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -58,8 +57,8 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 20 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 10  if LONG else 2  # Durata video in secondi
+    FPS = 10 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 2  if TEST_MODE else 6  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati
 
     # --- Colore e Stile ---
@@ -87,30 +86,30 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
-    LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
-    LENS_MAX_STRENGTH = 2.0      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
-    LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 50         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+    NUM_LENSES = 20 if TEST_MODE else 30             # Numero di lenti (ridotto per movimenti più armoniosi)
+    LENS_MIN_STRENGTH = -1.0     # Forza minima ridotta per deformazioni più delicate
+    LENS_MAX_STRENGTH = 1.0      # Forza massima ridotta per deformazioni più delicate
+    LENS_MIN_RADIUS = 10         # Raggio minimo aumentato per lenti più grandi e fluide
+    LENS_MAX_RADIUS = 60         # Raggio massimo aumentato per lenti più grandi e fluide
+    LENS_SPEED_FACTOR = 0.02     # Velocità movimento drasticamente ridotta per fluidità
     
-    # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
-    LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0     # Velocità rotazione massima (range: 0 a 0.02)
+    # --- Parametri Movimento Lenti (molti ora inutilizzati nel nuovo sistema) ---
+    LENS_PATH_SPEED_MULTIPLIER = 0.05    # Ridotto ma mantenuto per compatibilità
+    LENS_BASE_SPEED_MULTIPLIER = 0.05    # Ridotto ma mantenuto per compatibilità
+    LENS_ROTATION_SPEED_MULTIPLIER = 0.005  # Ridotto per rotazione ultra-lenta
+    LENS_INERTIA = 0.98                  # Aumentato per massima fluidità
+    LENS_ROTATION_SPEED_MIN = -0.001     # Ridotto per rotazione molto lenta
+    LENS_ROTATION_SPEED_MAX = 0.001      # Ridotto per rotazione molto lenta
     
     # --- Movimento e Pulsazione Lenti ---
-    LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
-    LENS_PULSATION_ENABLED = False        # Attiva pulsazione dimensioni lenti
-    LENS_PULSATION_SPEED = 0.0005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
-    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
-    LENS_FORCE_PULSATION_ENABLED = False  # Attiva pulsazione anche della forza
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
+    LENS_HORIZONTAL_BIAS = 3             # Mantenuto per seguire la scritta orizzontalmente
+    LENS_PULSATION_ENABLED = True        # Mantieni pulsazione per dinamismo
+    LENS_PULSATION_SPEED = 0.001         # Velocità pulsazione drasticamente ridotta
+    LENS_PULSATION_AMPLITUDE = 0.15      # Ampiezza pulsazione ridotta per movimenti delicati
+    LENS_FORCE_PULSATION_ENABLED = True  # Mantieni pulsazione forza
+    LENS_FORCE_PULSATION_AMPLITUDE = 0.1 # Ampiezza pulsazione forza ridotta per delicatezza
     
-    WORM_SHAPE_ENABLED = False  # Forma allungata delle lenti (tipo verme)
+    WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
     WORM_LENGTH = 2.2          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
     WORM_COMPLEXITY = 7        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
@@ -1148,8 +1147,8 @@ def generate_cinematic_path(width, height, path_type, total_frames):
 
 def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=None):
     """
-    Applica una deformazione basata su "lenti" che seguono percorsi cinematografici predefiniti.
-    Sistema completamente rivisto per movimenti ampi, fluidi e cinematografici.
+    Sistema di lenti COMPLETAMENTE RIVISTO per movimenti fluidi e armoniosi.
+    Elimina sfarfallii e movimenti erratici, enfatizza movimenti lenti lungo la scritta.
     """
     h, w = mask.shape
     
@@ -1160,102 +1159,86 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
     final_map_x = np.copy(map_x_grid)
     final_map_y = np.copy(map_y_grid)
 
+    # AGGIORNAMENTO POSIZIONI: Sistema semplificato e armonioso
+    for lens in lenses:
+        # NUOVO SISTEMA: Movimento fluido lungo la scritta (orizzontale prioritario)
+        time = frame_index * 0.02  # Velocità base molto ridotta per fluidità
+        
+        # Movimento principale: oscillazione orizzontale lenta lungo la scritta
+        center_x = w * 0.5  # Centro orizzontale
+        center_y = h * 0.5  # Centro verticale
+        
+        # Movimento orizzontale ampio e lento (segue la forma della scritta)
+        horizontal_amplitude = w * 0.3  # Movimento orizzontale ampio
+        horizontal_offset = np.sin(time + lens['phase_offset']) * horizontal_amplitude
+        
+        # Movimento verticale molto contenuto (non vogliamo allontanarci dalla scritta)
+        vertical_amplitude = h * 0.08  # Movimento verticale molto ridotto
+        vertical_offset = np.cos(time * 0.7 + lens['phase_offset'] * 1.3) * vertical_amplitude
+        
+        # NUOVO: Aggiungi variazione lenta secondaria per più complessità
+        secondary_time = time * 0.3  # Ancora più lento
+        secondary_horizontal = np.sin(secondary_time + lens['phase_offset'] * 2) * horizontal_amplitude * 0.4
+        secondary_vertical = np.cos(secondary_time * 1.1 + lens['phase_offset'] * 0.7) * vertical_amplitude * 0.5
+        
+        # Posizione finale: combinazione armoniosa dei movimenti
+        new_x = center_x + horizontal_offset + secondary_horizontal
+        new_y = center_y + vertical_offset + secondary_vertical
+        
+        # Mantieni le lenti entro i limiti con margini morbidi
+        margin = lens['radius']
+        new_x = np.clip(new_x, margin, w - margin)
+        new_y = np.clip(new_y, margin, h - margin)
+        
+        # Aggiorna posizione con transizione ultra-smooth (elimina sfarfallii)
+        smooth_factor = 0.95  # Alto valore = movimento molto fluido
+        lens['pos'][0] = lens['pos'][0] * smooth_factor + new_x * (1 - smooth_factor)
+        lens['pos'][1] = lens['pos'][1] * smooth_factor + new_y * (1 - smooth_factor)
+        
+        # SISTEMA PULSAZIONE SEMPLIFICATO (elimina variazioni caotiche)
+        if config.LENS_PULSATION_ENABLED:
+            # Una sola pulsazione semplice e armoniosa
+            pulse_time = time + lens['phase_offset']
+            pulse_factor = 1.0 + np.sin(pulse_time) * config.LENS_PULSATION_AMPLITUDE * 0.5
+            lens['radius'] = lens['base_radius'] * pulse_factor
+            
+            # Pulsazione forza opzionale (molto ridotta)
+            if config.LENS_FORCE_PULSATION_ENABLED:
+                force_pulse = 1.0 + np.cos(pulse_time * 1.2) * config.LENS_FORCE_PULSATION_AMPLITUDE * 0.3
+                lens['strength'] = lens['base_strength'] * force_pulse
+        
+        # Rotazione molto lenta e costante (elimina movimenti erratici)
+        if config.WORM_SHAPE_ENABLED:
+            lens['angle'] += 0.005  # Rotazione ultra-lenta e costante
+
+    # APPLICAZIONE DEFORMAZIONE: Sistema invariato ma ottimizzato
     for lens in lenses:
         dx = map_x_grid - lens['pos'][0]
         dy = map_y_grid - lens['pos'][1]
 
         if config.WORM_SHAPE_ENABLED:
-            # Deformazione a "verme": distorciamo lo spazio di calcolo della distanza
+            # Forma verme semplificata
             angle = lens['angle']
             dx_rot = dx * np.cos(angle) - dy * np.sin(angle)
             dy_rot = dx * np.sin(angle) + dy * np.cos(angle)
             
-            # Allunghiamo la forma su un asse per creare il "corpo" del verme
+            # Allungamento orizzontale per seguire la scritta
             dx_scaled = dx_rot / config.WORM_LENGTH
-            
-            # Aggiungiamo noise per creare le curve del "verme"
-            noise_val = pnoise2(
-                (lens['pos'][0] + frame_index * 2) * 0.01 * config.WORM_COMPLEXITY, 
-                (lens['pos'][1] + frame_index * 2) * 0.01 * config.WORM_COMPLEXITY, 
-                octaves=1
-            )
-            dy_scaled = dy_rot + noise_val * 50
-            
-            distance = np.sqrt(dx_scaled**2 + dy_scaled**2)
+            distance = np.sqrt(dx_scaled**2 + dy_rot**2)
         else:
             distance = np.sqrt(dx**2 + dy**2)
 
         normalized_distance = distance / (lens['radius'] + 1e-6)
         lens_mask = normalized_distance < 1.0
         
-        # Applica moltiplicatore dinamico alla forza della lente
-        dynamic_strength = lens['strength'] * lens_strength_mult
-        displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
-        
-        # Applica lo spostamento lungo la linea dal pixel al centro della lente
-        final_map_x[lens_mask] += dx[lens_mask] * displacement
-        final_map_y[lens_mask] += dy[lens_mask] * displacement
-
-    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA ULTRA-POTENZIATA
-    for lens in lenses:
-        # === PULSAZIONE DINAMICA ULTRA-MIGLIORATA ===
-        if config.LENS_PULSATION_ENABLED:
-            # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
-            pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
+        # Applica deformazione con forza dinamica
+        if np.any(lens_mask):
+            dynamic_strength = lens['strength'] * lens_strength_mult
+            displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
             
-            # Pulsazione del raggio con pattern complesso per più "vita"
-            base_pulsation = np.sin(pulsation_time)
-            secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # Frequenza diversa
-            tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # Ancora più complessa
-            
-            total_pulsation = base_pulsation + secondary_pulsation + tertiary_pulsation
-            pulsation_factor = 1.0 + config.LENS_PULSATION_AMPLITUDE * total_pulsation
-            lens['radius'] = lens['base_radius'] * pulsation_factor
-            
-            # NUOVO: Pulsazione anche della forza per effetto drammatico
-            if config.LENS_FORCE_PULSATION_ENABLED:
-                force_pulsation_time = pulsation_time * 1.8  # Velocità leggermente diversa
-                force_pulsation = np.sin(force_pulsation_time) + 0.5 * np.cos(force_pulsation_time * 1.6)
-                force_factor = 1.0 + config.LENS_FORCE_PULSATION_AMPLITUDE * force_pulsation
-                lens['strength'] = lens['base_strength'] * force_factor
-        
-        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
-        # Velocità configurabile tramite parametri della Config
-        movement_speed_multiplier = config.LENS_PATH_SPEED_MULTIPLIER
-        path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
-        current_target = lens['path'][int(path_progress)]
-        
-        # Interpolazione ultra-fluida tra i punti del percorso
-        next_index = (int(path_progress) + 1) % len(lens['path'])
-        next_target = lens['path'][next_index]
-        interpolation_factor = path_progress - int(path_progress)
-        
-        # Interpolazione con curva smooth per movimento più naturale
-        smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
-        smooth_target = current_target + (next_target - current_target) * smooth_factor
-        
-        # Movimento ultra-aggressivo e reattivo verso il target
-        direction = smooth_target - lens['pos']
-        distance_to_target = np.linalg.norm(direction)
-        
-        if distance_to_target > 0:
-            # Velocità configurabile con adattamento dinamico alla distanza
-            base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
-            adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))
-            desired_velocity = (direction / distance_to_target) * adaptive_speed
-            
-            # Inerzia configurabile per controllo del movimento
-            inertia_strength = config.LENS_INERTIA
-            lens['velocity'] = lens['velocity'] * inertia_strength + desired_velocity * (1 - inertia_strength)
-        
-        # Aggiorna posizione e angolo con velocità configurabile
-        lens['pos'] += lens['velocity']
-        lens['angle'] += lens['rotation_speed'] * config.LENS_ROTATION_SPEED_MULTIPLIER
-        
-        # Assicurati che rimanga nei limiti con margini morbidi
-        margin = config.LENS_MIN_RADIUS
-        lens['pos'][0] = np.clip(lens['pos'][0], margin, w - margin)
-        lens['pos'][1] = np.clip(lens['pos'][1], margin, h - margin)
+            # Applica spostamento
+            final_map_x[lens_mask] += dx[lens_mask] * displacement / distance[lens_mask] * 0.1
+            final_map_y[lens_mask] += dy[lens_mask] * displacement / distance[lens_mask] * 0.1
 
     deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return deformed_mask
@@ -1683,72 +1666,41 @@ def extract_logo_tracers(logo_mask, config):
     return logo_edges
 
 def initialize_lenses(config):
-    """Inizializza una lista di lenti con percorsi cinematografici predefiniti per movimenti ampi e fluidi."""
+    """
+    Inizializza lenti con sistema SEMPLIFICATO per movimenti fluidi e armoniosi.
+    Elimina percorsi complessi, usa solo fasi per movimenti sinusoidali.
+    """
     lenses = []
     
-    # Tipi di percorsi cinematografici - ULTRA-BIAS ORIZZONTALE per seguire la scritta
-    horizontal_paths = ['horizontal_sweep', 'horizontal_zigzag', 'horizontal_wave_complex', 'wave']  # Percorsi orizzontali privilegiati
-    mixed_paths = ['figure_eight', 'spiral', 'circular', 'cross']  # Percorsi misti
-    
-    # BIAS ORIZZONTALE: 70% delle lenti usa percorsi orizzontali
-    horizontal_lens_count = int(config.NUM_LENSES * 0.7)
-    mixed_lens_count = config.NUM_LENSES - horizontal_lens_count
-    
-    # Lista combinata con bias orizzontale
-    path_assignments = []
-    # Assegna percorsi orizzontali alla maggior parte delle lenti
-    for i in range(horizontal_lens_count):
-        path_assignments.append(horizontal_paths[i % len(horizontal_paths)])
-    # Aggiungi alcuni percorsi misti per varietà
-    for i in range(mixed_lens_count):
-        path_assignments.append(mixed_paths[i % len(mixed_paths)])
-    
-    # Mescola per evitare che tutte le lenti orizzontali siano consecutive
-    np.random.shuffle(path_assignments)
-    
-    # Durata del video in frame (per calcolare i percorsi)
-    total_frames = int(config.DURATION_SECONDS * config.FPS)
-    
     for i in range(config.NUM_LENSES):
-        # Usa il tipo di percorso assegnato con bias orizzontale
-        path_type = path_assignments[i]
+        # Posizione iniziale: distribuzione lungo la scritta (orizzontale)
+        initial_x = config.WIDTH * (0.2 + 0.6 * (i / max(1, config.NUM_LENSES - 1)))  # Distribuzione orizzontale
+        initial_y = config.HEIGHT * (0.4 + 0.2 * np.random.random())  # Piccola variazione verticale
         
-        # Genera il percorso cinematografico completo
-        path = generate_cinematic_path(config.WIDTH, config.HEIGHT, path_type, total_frames)
-        
-        # Posizione iniziale casuala lungo il percorso
-        path_offset = np.random.randint(0, len(path))
-        initial_pos = path[path_offset]
-        
-        # NUOVA: Base radius variabile per pulsazioni più interessanti
+        # Raggio base variabile
         base_radius = np.random.uniform(config.LENS_MIN_RADIUS, config.LENS_MAX_RADIUS)
-        current_radius = base_radius  # Inizia con il raggio base
         
-        # NUOVA: Forza base che verrà modulata dalla pulsazione
+        # Forza base variabile
         base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
         
+        # FASE UNICA per ogni lente: crea automaticamente movimenti diversi
+        phase_offset = (i / config.NUM_LENSES) * 2 * np.pi + np.random.uniform(0, np.pi)
+        
         lens = {
-            'pos': np.array(initial_pos, dtype=np.float32),
-            'velocity': np.array([0.0, 0.0]),  # Inizia ferma, si muove verso il percorso
-            'radius': current_radius,
-            'base_radius': base_radius,  # Raggio base per pulsazione
+            'pos': np.array([initial_x, initial_y], dtype=np.float32),
+            'radius': base_radius,
+            'base_radius': base_radius,
             'strength': base_strength,
-            'base_strength': base_strength,  # NUOVO: forza base per pulsazione
+            'base_strength': base_strength,
             'angle': np.random.uniform(0, 2 * np.pi),
-            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
-            'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
-            'path': path,  # Percorso cinematografico completo
-            'path_offset': path_offset,  # Offset iniziale nel percorso
-            'path_type': path_type  # Tipo di percorso per debug
+            'phase_offset': phase_offset,  # NUOVO: fase unica per movimento armonioso
         }
         lenses.append(lens)
     
-    print(f"🔮 Inizializzate {config.NUM_LENSES} lenti ULTRA-CINEMATOGRAFICHE:")
-    print(f"   📏 {horizontal_lens_count} lenti con percorsi ORIZZONTALI (bias 70%)")
-    print(f"   🌀 {mixed_lens_count} lenti con percorsi MISTI per varietà")
-    for i, lens in enumerate(lenses):
-        movement_type = "ORIZZONTALE" if lens['path_type'] in horizontal_paths else "MISTO"
-        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type})")
+    print(f"🔮 Inizializzate {config.NUM_LENSES} lenti con sistema ARMONIOSO semplificato")
+    print(f"   � Movimenti fluidi basati su oscillazioni sinusoidali")
+    print(f"   📏 Distribuzione orizzontale lungo la scritta")
+    print(f"   ✨ Eliminati sfarfallii e movimenti erratici")
     
     return lenses
 
