@@ -33,7 +33,7 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)
     
     # --- Compatibilità WhatsApp ---
     WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
@@ -44,7 +44,7 @@ class Config:
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
-    TEXTURE_FALLBACK_PATH = 'input/26.png'  # Texture di fallback
+    TEXTURE_FALLBACK_PATH = 'input/texture.jpg'  # Texture di fallback
     
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
@@ -85,11 +85,11 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 20 if TEST_MODE else 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 20 if TEST_MODE else 30             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -2.0     # Forza minima (range: -5 a 5, negativo=concavo, positivo=convesso)
     LENS_MAX_STRENGTH = 2.5      # Forza massima (range: -5 a 5, 1=leggera, 3=forte, 5=estrema)
     LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 70         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 50         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.01    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
