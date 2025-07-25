@@ -2109,8 +2109,8 @@ def main():
     # OTTIMIZZAZIONE TEST MODE: Riduci risoluzione per render più veloce
     if Config.TEST_MODE:
         # Riduci di un terzo le dimensioni per test veloce
-        svg_width = int(svg_width / 3)
-        svg_height = int(svg_height / 3)
+        svg_width = int(svg_width / 2)
+        svg_height = int(svg_height / 2)
         print(f"🚀 TEST MODE: Risoluzione ridotta per rendering veloce")
 
     # 📱 FORMATO INSTAGRAM STORIES (9:16)
