@@ -1195,78 +1195,63 @@ def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=Non
         final_map_x[lens_mask] += dx[lens_mask] * displacement
         final_map_y[lens_mask] += dy[lens_mask] * displacement
 
-    # SISTEMA COMPLETAMENTE RINNOVATO: Movimento armonioso senza sfarfallio
+    # SISTEMA RIPRISTINATO: Movimento cinematografico originale MA con correzioni anti-sfarfallio
     for lens in lenses:
-        # === PULSAZIONE DOLCE E CONTROLLATA ===
+        # === PULSAZIONE CON PARAMETRI INDIVIDUALI (originale ma meno aggressiva) ===
         if config.LENS_PULSATION_ENABLED:
-            # Pulsazione molto più lenta e fluida
+            # Usa parametri individuali di pulsazione per ogni lente
             pulsation_time = frame_index * lens['individual_pulsation_speed'] + lens['pulsation_offset']
             
-            # Pattern di pulsazione SEMPLIFICATO per eliminare sfarfallio
-            base_pulsation = np.sin(pulsation_time)  # Solo sinusoide principale
-            # Rimuovo pulsazioni secondarie che causano sfarfallio
+            # Pulsazione SEMPLIFICATA per ridurre sfarfallio (meno componenti)
+            base_pulsation = np.sin(pulsation_time)
+            secondary_pulsation = 0.2 * np.sin(pulsation_time * 2.0)  # Ridotto da 0.3 e freq. da 2.7
+            # Rimuovo tertiary_pulsation che causava troppo caos
             
-            pulsation_factor = 1.0 + lens['individual_pulsation_amplitude'] * base_pulsation * 0.3  # Ridotto per dolcezza
+            total_pulsation = base_pulsation + secondary_pulsation
+            pulsation_factor = 1.0 + lens['individual_pulsation_amplitude'] * total_pulsation
             lens['radius'] = lens['base_radius'] * pulsation_factor
             
-            # Pulsazione forza molto ridotta
+            # Pulsazione forza ridotta
             if config.LENS_FORCE_PULSATION_ENABLED:
-                force_factor = 1.0 + lens['individual_pulsation_amplitude'] * 0.1 * base_pulsation  # Molto ridotta
+                force_pulsation_time = pulsation_time * 1.5  # Ridotto da 1.8
+                force_pulsation = np.sin(force_pulsation_time)  # Semplificato, un solo componente
+                force_factor = 1.0 + lens['individual_pulsation_amplitude'] * 0.3 * force_pulsation  # Ridotto
                 lens['strength'] = lens['base_strength'] * force_factor
         
-        # === MOVIMENTO ARMONIOSO BASATO SU FUNZIONI TRIGONOMETRICHE PURE ===
-        # Invece di seguire percorsi complessi, usiamo movimento matematico fluido
+        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ORIGINALE MA FLUIDO ===
+        # Usa la velocità individuale della lente invece del parametro globale
+        path_progress = ((frame_index + lens['path_offset']) * lens['individual_path_speed']) % len(lens['path'])
+        current_target = lens['path'][int(path_progress)]
         
-        # Tempo normalizzato per questa lente
-        lens_time = frame_index * lens['individual_path_speed']
+        # Interpolazione ultra-fluida tra i punti del percorso
+        next_index = (int(path_progress) + 1) % len(lens['path'])
+        next_target = lens['path'][next_index]
+        interpolation_factor = path_progress - int(path_progress)
         
-        # Movimento di base con frequenze armoniche
-        if lens['movement_style'] == 0:  # LENTA-AMPIA
-            # Movimento molto lento e ampio, solo frequenze basse
-            base_x = np.sin(lens_time * 0.02) * (config.WIDTH * 0.3)
-            base_y = np.cos(lens_time * 0.015) * (config.HEIGHT * 0.1)
+        # Interpolazione con curva smooth per movimento più naturale
+        smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
+        smooth_target = current_target + (next_target - current_target) * smooth_factor
+        
+        # Movimento con parametri individuali per ogni lente MA SENZA velocità adattiva aggressiva
+        direction = smooth_target - lens['pos']
+        distance_to_target = np.linalg.norm(direction)
+        
+        if distance_to_target > 0:
+            # CORREZIONE: velocità costante invece di adattiva per ridurre sfarfallio
+            desired_velocity = (direction / distance_to_target) * lens['individual_speed']
             
-        elif lens['movement_style'] == 1:  # VELOCE-PICCOLA
-            # Movimento veloce ma in spazio ristretto
-            base_x = np.sin(lens_time * 0.08) * (config.WIDTH * 0.1)
-            base_y = np.cos(lens_time * 0.06) * (config.HEIGHT * 0.05)
-            
-        elif lens['movement_style'] == 2:  # OSCILLATORIA
-            # Movimento pendolare fluido
-            base_x = np.sin(lens_time * 0.04) * (config.WIDTH * 0.25)
-            base_y = np.sin(lens_time * 0.03 + np.pi/2) * (config.HEIGHT * 0.08)  # Sfasato di 90°
-            
-        else:  # ERRATICA ma controllata
-            # Combinazione di 2 frequenze semplici per varietà senza caos
-            base_x = (np.sin(lens_time * 0.03) + 0.3 * np.sin(lens_time * 0.07)) * (config.WIDTH * 0.2)
-            base_y = (np.cos(lens_time * 0.025) + 0.3 * np.cos(lens_time * 0.055)) * (config.HEIGHT * 0.06)
+            # Usa inerzia individuale della lente (aumentata per fluidità)
+            effective_inertia = max(0.99, lens['individual_inertia'])  # MIN 99% inerzia
+            lens['velocity'] = lens['velocity'] * effective_inertia + desired_velocity * (1 - effective_inertia)
         
-        # Posizione target con movimento centrato
-        center_x, center_y = config.WIDTH // 2, config.HEIGHT // 2
-        target_x = center_x + base_x
-        target_y = center_y + base_y
-        
-        # MOVIMENTO ULTRA-FLUIDO CON INERZIA FORTE
-        target_pos = np.array([target_x, target_y])
-        direction = target_pos - lens['pos']
-        
-        # Velocità costante e dolce (NO accelerazione adattiva che causa sfarfallio)
-        desired_velocity = direction * lens['individual_speed']
-        
-        # Inerzia molto alta per movimento fluido
-        high_inertia = max(0.98, lens['individual_inertia'])  # Minimo 98% di inerzia
-        lens['velocity'] = lens['velocity'] * high_inertia + desired_velocity * (1 - high_inertia)
-        
-        # Aggiorna posizione con movimento fluido
+        # Aggiorna posizione e angolo con parametri individuali
         lens['pos'] += lens['velocity']
+        lens['angle'] += lens['rotation_speed'] * lens['individual_rotation_multiplier']
         
-        # Rotazione dolce e costante (NO accelerazioni)
-        lens['angle'] += lens['rotation_speed'] * 0.5  # Ridotto per dolcezza
-        
-        # Mantieni nei limiti con margini morbidi
+        # Assicurati che rimanga nei limiti con margini morbidi
         margin = config.LENS_MIN_RADIUS
-        lens['pos'][0] = np.clip(lens['pos'][0], margin, config.WIDTH - margin)
-        lens['pos'][1] = np.clip(lens['pos'][1], margin, config.HEIGHT - margin)
+        lens['pos'][0] = np.clip(lens['pos'][0], margin, w - margin)
+        lens['pos'][1] = np.clip(lens['pos'][1], margin, h - margin)
 
     deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return deformed_mask
