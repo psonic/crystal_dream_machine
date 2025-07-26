@@ -2455,17 +2455,17 @@ def main():
         for i in range(Config.TOTAL_FRAMES):
             # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
             if bg_video:
-                # NUOVO: Calcola il frame del video di sfondo rallentato
-                # Frame rallentato: i / BG_SLOWDOWN_FACTOR
-                bg_frame_index = int(i / Config.BG_SLOWDOWN_FACTOR)  # Rallentamento configurabile
+                # NUOVO: Calcola il frame del video di sfondo rallentato con offset casuale
+                # Frame rallentato: (bg_start_frame + i) / BG_SLOWDOWN_FACTOR
+                bg_frame_index = bg_start_frame + int(i / Config.BG_SLOWDOWN_FACTOR)  # Rallentamento + offset casuale
                 
                 # Imposta la posizione nel video di sfondo
                 bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
                 ret, bg_frame = bg_video.read()
                 
-                # Se arriviamo alla fine del video, riavvolgi
+                # Se arriviamo alla fine del video, riavvolgi al punto di partenza casuale
                 if not ret:
-                    bg_video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_start_frame)
                     ret, bg_frame = bg_video.read()
                 # RIMOSSO: Non ridimensionare qui, lo fa process_background
                 # bg_frame = cv2.resize(bg_frame, (Config.WIDTH, Config.HEIGHT))
