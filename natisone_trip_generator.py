@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -64,11 +64,11 @@ class Config:
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.3          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.2  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
+    TEXTURE_ALPHA = 0.4          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
+    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'color_burn'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'exclusion'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -84,10 +84,10 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.2         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-    BG_SLOWDOWN_FACTOR = 0.9     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.4       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.6     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_ZOOM_FACTOR = 1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_SLOWDOWN_FACTOR = 0.7     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.6      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.8     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
     # --- Sistema Audio Reattivo ---
@@ -171,10 +171,10 @@ class Config:
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
     BG_TRACER_TRAIL_LENGTH = 40  # Lunghezza scie sfondo (ridotta in test mode)
-    BG_TRACER_MAX_OPACITY = 0.01     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
-    BG_TRACER_THRESHOLD1 = 15        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 50       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+    BG_TRACER_THRESHOLD1 = 10        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+    BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
