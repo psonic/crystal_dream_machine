@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -86,7 +86,7 @@ class Config:
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
     BG_ZOOM_FACTOR = 1.2         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
     BG_SLOWDOWN_FACTOR = 0.7     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.6      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_DARKEN_FACTOR = 0.3      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
     BG_CONTRAST_FACTOR = 1.8     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
@@ -122,18 +122,18 @@ class Config:
     # --- Reattività Audio Deformazione Organica ---
     DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
     DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (range: 0.1-0.5, 0.15=leggero, 0.3=forte)
-    DEFORMATION_BASS_SPEED = 0.015     # Quanto i bassi influenzano la velocità (range: 0.005-0.03, 0.01=lento, 0.02=veloce)
-    DEFORMATION_MID_SCALE = 0.0015     # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.003, 0.001=sottile, 0.002=ampio)
+    DEFORMATION_BASS_SPEED = 0.03     # Quanto i bassi influenzano la velocità (range: 0.005-0.03, 0.01=lento, 0.02=veloce)
+    DEFORMATION_MID_SCALE = 0.002     # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.003, 0.001=sottile, 0.002=ampio)
     DEFORMATION_SMOOTHING = 0.85       # Smoothing per effetto rimbalzo (range: 0.6-0.95, 0.7=veloce, 0.9=lento)
-    DEFORMATION_AUDIO_MULTIPLIER = 1.2 # Moltiplicatore globale audio deformazione (range: 0.5-2.0, 1=normale, 1.5=intenso)
+    DEFORMATION_AUDIO_MULTIPLIER = 1.4 # Moltiplicatore globale audio deformazione (range: 0.5-2.0, 1=normale, 1.5=intenso)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 60             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
-    LENS_MAX_STRENGTH = 1.4      # Forza massima ridotta per deformazione più delicata
-    LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 85         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_STRENGTH = 1.5      # Forza massima ridotta per deformazione più delicata
+    LENS_MIN_RADIUS = 7         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 65         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
