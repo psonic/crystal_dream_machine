@@ -68,7 +68,7 @@ class Config:
     TEXTURE_BACKGROUND_ALPHA = 0.2  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'lighten'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -83,9 +83,10 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_SLOWDOWN_FACTOR = 1.3     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.6       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.5     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_ZOOM_FACTOR = 1.5         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_SLOWDOWN_FACTOR = 0.6     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.7       # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.2     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
     # --- Sistema Audio Reattivo ---
@@ -1746,14 +1747,21 @@ def process_background(bg_frame, config):
         scale_y = target_height / h
         scale = max(scale_x, scale_y)  # Usa il maggiore per coprire tutto
         
-        # Nuove dimensioni scalate
+        # Applica lo zoom configurabile moltiplicando il fattore di scala
+        zoom_factor = getattr(config, 'BG_ZOOM_FACTOR', 1.0)
+        scale = scale * zoom_factor
+        
+        if zoom_factor != 1.0:
+            print(f"🔍 Zoom sfondo attivo: {zoom_factor}x (scala finale: {scale:.2f})")
+        
+        # Nuove dimensioni scalate (ora con zoom)
         new_w = int(w * scale)
         new_h = int(h * scale)
         
         # Ridimensiona
         scaled_bg = cv2.resize(bg_frame, (new_w, new_h))
         
-        # Centro-crop per adattare alle dimensioni esatte
+        # Centro-crop per adattare alle dimensioni esatte (il crop sarà più stretto con zoom > 1)
         start_x = (new_w - target_width) // 2
         start_y = (new_h - target_height) // 2
         final_bg = scaled_bg[start_y:start_y + target_height, start_x:start_x + target_width]
