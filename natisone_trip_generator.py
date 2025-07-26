@@ -65,7 +65,8 @@ class Config:
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
     TEXTURE_ALPHA = 0.5          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
     TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
-    # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
+    # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
+    # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
     TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
@@ -723,7 +724,9 @@ def apply_texture_blending(base_image, texture_image, alpha, blending_mode='over
         base_image: Immagine base (BGR)
         texture_image: Texture da applicare (BGR)
         alpha: Opacità texture (0.0-1.0)
-        blending_mode: Modalità blending ('overlay', 'multiply', 'screen', 'normal')
+        blending_mode: Modalità blending ('normal', 'overlay', 'multiply', 'screen',
+                      'soft_light', 'hard_light', 'color_dodge', 'color_burn', 
+                      'darken', 'lighten', 'difference', 'exclusion')
         mask: Maschera opzionale per limitare l'applicazione
     """
     if texture_image is None or alpha <= 0:
@@ -734,7 +737,11 @@ def apply_texture_blending(base_image, texture_image, alpha, blending_mode='over
     texture_float = texture_image.astype(np.float32) / 255.0
     
     # Applica blending mode
-    if blending_mode == 'overlay':
+    if blending_mode == 'normal':
+        # Normal: sovrapposizione diretta
+        blended = texture_float
+    
+    elif blending_mode == 'overlay':
         # Overlay: moltiplica se base < 0.5, altrimenti screen
         condition = base_float < 0.5
         blended = np.where(condition, 
@@ -749,9 +756,47 @@ def apply_texture_blending(base_image, texture_image, alpha, blending_mode='over
         # Screen: inverso del multiply
         blended = 1 - (1 - base_float) * (1 - texture_float)
     
-    elif blending_mode == 'normal':
-        # Normal: sovrapposizione diretta
-        blended = texture_float
+    elif blending_mode == 'soft_light':
+        # Soft Light: versione più morbida di overlay
+        condition = texture_float <= 0.5
+        blended = np.where(condition,
+                          base_float - (1 - 2 * texture_float) * base_float * (1 - base_float),
+                          base_float + (2 * texture_float - 1) * (np.sqrt(base_float) - base_float))
+    
+    elif blending_mode == 'hard_light':
+        # Hard Light: overlay invertito
+        condition = texture_float < 0.5
+        blended = np.where(condition,
+                          2 * base_float * texture_float,
+                          1 - 2 * (1 - base_float) * (1 - texture_float))
+    
+    elif blending_mode == 'color_dodge':
+        # Color Dodge: schiarisce drasticamente
+        blended = np.where(texture_float >= 1.0, 
+                          1.0, 
+                          np.minimum(1.0, base_float / (1.0 - texture_float + 1e-10)))
+    
+    elif blending_mode == 'color_burn':
+        # Color Burn: scurisce drasticamente
+        blended = np.where(texture_float <= 0.0,
+                          0.0,
+                          1.0 - np.minimum(1.0, (1.0 - base_float) / (texture_float + 1e-10)))
+    
+    elif blending_mode == 'darken':
+        # Darken: prende il più scuro
+        blended = np.minimum(base_float, texture_float)
+    
+    elif blending_mode == 'lighten':
+        # Lighten: prende il più chiaro
+        blended = np.maximum(base_float, texture_float)
+    
+    elif blending_mode == 'difference':
+        # Difference: differenza assoluta
+        blended = np.abs(base_float - texture_float)
+    
+    elif blending_mode == 'exclusion':
+        # Exclusion: simile a difference ma più morbido
+        blended = base_float + texture_float - 2 * base_float * texture_float
     
     else:
         # Default overlay
