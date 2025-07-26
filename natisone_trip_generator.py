@@ -68,11 +68,11 @@ class Config:
     TEXTURE_BACKGROUND_ALPHA = 0.2  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'color_burn'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 5 if TEST_MODE else 1  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    FPS = 5 if TEST_MODE else 25  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 3 if TEST_MODE else 15  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
 
@@ -170,8 +170,8 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 20  # Lunghezza scie sfondo (ridotta in test mode)
-    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+    BG_TRACER_TRAIL_LENGTH = 40  # Lunghezza scie sfondo (ridotta in test mode)
+    BG_TRACER_MAX_OPACITY = 0.01     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 15        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
     BG_TRACER_THRESHOLD2 = 50       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
