@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -63,10 +63,10 @@ class Config:
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.7          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.4  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
+    TEXTURE_ALPHA = 0.8          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
+    TEXTURE_BACKGROUND_ALPHA = 0.5  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen'
-    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'overlay'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -75,7 +75,7 @@ class Config:
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
 
     # --- Colore e Stile ---
-    LOGO_COLOR = (50, 50, 50)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
+    LOGO_COLOR = (255, 255, 255)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
     LOGO_ALPHA = 1.0             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
     
     # --- Video di Sfondo ---
@@ -92,11 +92,16 @@ class Config:
     AUDIO_RANDOM_SELECTION = True  # Seleziona casualmente un file dalla lista
     AUDIO_RANDOM_START = True    # Inizia da punto casuale (max 2/3 del file)
     AUDIO_REACTIVE_LENSES = True # Le lenti reagiscono all'audio
-    AUDIO_BASS_SENSITIVITY = 0.3 # Sensibilità alle frequenze basse ridotta per movimento delicato
-    AUDIO_MID_SENSITIVITY = 0.2  # Sensibilità alle frequenze medie ridotta per movimento delicato
-    AUDIO_HIGH_SENSITIVITY = 0.15 # Sensibilità alle frequenze acute ridotta per movimento delicato
-    AUDIO_SMOOTHING = 0.8        # Smoothing reattività audio (range: 0.3-0.95, 0.5=reattivo, 0.9=fluido)
-    AUDIO_BOOST_FACTOR = 3.0     # Amplificazione reattività (range: 1.0-10.0, 2=normale, 5=estrema)
+    AUDIO_BASS_SENSITIVITY = 0.5 # Sensibilità alle frequenze basse (range: 0.1-1.0, 0.2=delicato, 0.5=forte)
+    AUDIO_MID_SENSITIVITY = 0.3  # Sensibilità alle frequenze medie (range: 0.1-0.8, 0.15=sottile, 0.4=intensa)
+    AUDIO_HIGH_SENSITIVITY = 0.25 # Sensibilità alle frequenze acute (range: 0.05-0.5, 0.1=leggero, 0.3=vivace)
+    AUDIO_SMOOTHING = 0.5        # Smoothing reattività audio (range: 0.3-0.95, 0.5=reattivo, 0.9=fluido)
+    AUDIO_BOOST_FACTOR = 4.0     # Amplificazione reattività (range: 1.0-10.0, 2=normale, 5=estrema)
+    
+    # --- Parametri Audio Lenti ---
+    AUDIO_SPEED_INFLUENCE = 1.0   # Quanto l'audio influenza velocità lenti (range: 0.5-3.0, 1=normale, 2=doppia)
+    AUDIO_STRENGTH_INFLUENCE = 2 # Quanto l'audio influenza forza lenti (range: 0.8-2.5, 1=normale, 2=intensa)
+    AUDIO_PULSATION_INFLUENCE = 1.3 # Quanto l'audio influenza pulsazione (range: 0.5-2.0, 1=normale, 1.8=estrema)
     
     # --- Effetto Glow ---
     GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
@@ -112,10 +117,11 @@ class Config:
     
     # --- Reattività Audio Deformazione Organica ---
     DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
-    DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (leggermente più ampio)
-    DEFORMATION_BASS_SPEED = 0.015     # Quanto i bassi influenzano la velocità (più lento per effetto rimbalzo)
-    DEFORMATION_MID_SCALE = 0.0015     # Quanto i medi influenzano la scala/frequenza (leggermente più ampio)
-    DEFORMATION_SMOOTHING = 0.85       # Smoothing per effetto rimbalzo (0.7=veloce, 0.9=lento)
+    DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (range: 0.1-0.5, 0.15=leggero, 0.3=forte)
+    DEFORMATION_BASS_SPEED = 0.015     # Quanto i bassi influenzano la velocità (range: 0.005-0.03, 0.01=lento, 0.02=veloce)
+    DEFORMATION_MID_SCALE = 0.0015     # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.003, 0.001=sottile, 0.002=ampio)
+    DEFORMATION_SMOOTHING = 0.85       # Smoothing per effetto rimbalzo (range: 0.6-0.95, 0.7=veloce, 0.9=lento)
+    DEFORMATION_AUDIO_MULTIPLIER = 1.2 # Moltiplicatore globale audio deformazione (range: 0.5-2.0, 1=normale, 1.5=intenso)
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
