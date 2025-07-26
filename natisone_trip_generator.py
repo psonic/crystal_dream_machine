@@ -79,6 +79,7 @@ class Config:
     # --- Colore e Stile ---
     LOGO_COLOR = (255, 255, 255)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
     LOGO_ALPHA = 1.0             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
+    LOGO_ZOOM_FACTOR = 1.5       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
     
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
@@ -851,13 +852,14 @@ def get_svg_dimensions(svg_path):
         print(f"⚠️ Errore lettura dimensioni SVG: {e}")
         return 1920, 1080  # Fallback
 
-def extract_contours_from_svg(svg_path, width, height, padding, left_padding=0):
+def extract_contours_from_svg(svg_path, width, height, padding, left_padding=0, logo_zoom_factor=1.0):
     """
     Estrae SOLO I CONTORNI/BORDI da un file SVG, senza riempimento.
     Utilizza rasterizzazione + edge detection per ottenere linee precise.
     
     Args:
         left_padding: Padding aggiuntivo dal lato sinistro per SVG
+        logo_zoom_factor: Fattore di zoom del logo (1.0=normale, 2.0=doppio, 0.5=metà)
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
@@ -885,7 +887,7 @@ def extract_contours_from_svg(svg_path, width, height, padding, left_padding=0):
             # Disegna solo i bordi del testo (non il riempimento)
             # Questo approccio è limitato ma più compatibile
             print("⚠️ Usando metodo semplificato - potrebbero includere riempimenti")
-            return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding)
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding, logo_zoom_factor)
             
         except:
             # Fallback al metodo cairosvg se PIL non funziona
@@ -963,14 +965,15 @@ def extract_contours_from_svg(svg_path, width, height, padding, left_padding=0):
     except Exception as e:
         print(f"Errore durante l'estrazione dall'SVG: {e}")
         print("Tentativo fallback al metodo originale...")
-        return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding)
+        return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding, logo_zoom_factor)
 
-def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding=0):
+def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding=0, logo_zoom_factor=1.0):
     """
     Metodo per l'estrazione SVG con OPZIONE per SOLO CONTORNI senza riempimento.
     
     Args:
         left_padding: Padding aggiuntivo dal lato sinistro per SVG
+        logo_zoom_factor: Fattore di zoom del logo (1.0=normale, 2.0=doppio, 0.5=metà)
     """
     try:
         print("🔄 Usando estrazione migliorata per SOLI CONTORNI...")
@@ -1071,7 +1074,8 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_pa
         # Filtra e scala i contorni alla risoluzione target
         target_w = width - (2 * padding)
         target_h = height - (2 * padding)
-        scale = min(target_w / svg_width, target_h / svg_height)
+        base_scale = min(target_w / svg_width, target_h / svg_height)
+        scale = base_scale * logo_zoom_factor  # Applica zoom del logo
         
         # Calcola offset per centrare con padding sinistro aggiuntivo
         scaled_w = svg_width * scale
@@ -1081,6 +1085,8 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_pa
         
         if left_padding > 0:
             print(f"📐 SVG con padding sinistro: {left_padding}px (offset_x: {offset_x:.1f})")
+        if logo_zoom_factor != 1.0:
+            print(f"🔍 Logo zoom attivo: {logo_zoom_factor}x (scala finale: {scale:.2f})")
         
         for i, contour in enumerate(contours):
             area = cv2.contourArea(contour)
@@ -1113,10 +1119,13 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_pa
         print("Assicurati che 'svgpathtools' sia installato: pip install svgpathtools")
         return None, None
 
-def extract_contours_from_pdf(pdf_path, width, height, padding):
+def extract_contours_from_pdf(pdf_path, width, height, padding, logo_zoom_factor=1.0):
     """
     Estrae i contorni da un file PDF usando il metodo corretto di simple_logo_video.py.
     Questo approccio gestisce correttamente i buchi nelle lettere e i contorni esterni.
+    
+    Args:
+        logo_zoom_factor: Fattore di zoom del logo (1.0=normale, 2.0=doppio, 0.5=metà)
     """
     if not PDF_AVAILABLE:
         raise Exception("PyMuPDF non disponibile. Installa con: pip install PyMuPDF")
@@ -1184,16 +1193,20 @@ def extract_contours_from_pdf(pdf_path, width, height, padding):
         canvas_drawable_width = width * (1 - padding_fraction)
         canvas_drawable_height = height * (1 - padding_fraction)
         
-        # Calcola scala per adattare al canvas
-        scale = min(canvas_drawable_width / w if w > 0 else 1, 
-                   canvas_drawable_height / h if h > 0 else 1)
+        # Calcola scala per adattare al canvas con zoom del logo
+        base_scale = min(canvas_drawable_width / w if w > 0 else 1, 
+                        canvas_drawable_height / h if h > 0 else 1)
+        scale = base_scale * logo_zoom_factor  # Applica zoom del logo
+        
+        if logo_zoom_factor != 1.0:
+            print(f"🔍 Logo PDF zoom attivo: {logo_zoom_factor}x (scala finale: {scale:.2f})")
         
         # Trasforma tutti i contorni
         scaled_contours = []
         for contour in contours:
             # Converti in float per calcoli precisi
             c_float = contour.astype(np.float32)
-            # Trasla al centro e scala
+            # Trasla al centro e scala (con zoom applicato)
             c_float[:, 0, 0] = (c_float[:, 0, 0] - contour_center_x) * scale + canvas_center_x
             c_float[:, 0, 1] = (c_float[:, 0, 1] - contour_center_y) * scale + canvas_center_y
             # Riconverti in int32
@@ -2310,9 +2323,9 @@ def main():
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING)
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
         else:
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING)
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
     else:
         if Config.INSTAGRAM_STORIES_MODE:
             # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
@@ -2320,9 +2333,9 @@ def main():
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
-            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
         else:
-            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.LOGO_ZOOM_FACTOR)
 
     if not contours:
         source_name = "SVG" if Config.USE_SVG_SOURCE else "PDF"
