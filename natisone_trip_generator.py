@@ -68,7 +68,7 @@ class Config:
     TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'exclusion'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -129,7 +129,7 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 60             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.5      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 7         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
@@ -181,7 +181,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'cinematic'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'glow'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
