@@ -61,10 +61,10 @@ class Config:
     TEXTURE_FALLBACK_PATH = 'input/texture.jpg'  # Texture di fallback
     
     # --- Sistema Texture Avanzato ---
-    TEXTURE_ENABLED = False       # Attiva sistema texture
+    TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
     TEXTURE_ALPHA = 0.3          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
+    TEXTURE_BACKGROUND_ALPHA = 0.2  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
     TEXTURE_BLENDING_MODE = 'difference'  # Modalità blending texture
