@@ -46,7 +46,7 @@ class Config:
     TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Compatibilità WhatsApp ---
@@ -54,7 +54,7 @@ class Config:
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = False        # True = usa SVG, False = usa PDF
+    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     SVG_LEFT_PADDING = 50        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
