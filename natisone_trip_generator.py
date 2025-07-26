@@ -2363,6 +2363,7 @@ def main():
         # Crea uno sfondo nero di fallback
         bg_video = None
         bg_start_frame = 0
+        bg_total_frames = 0  # Aggiungo variabile per fallback
     else:
         # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
         bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -2371,16 +2372,17 @@ def main():
         # 🎲 RANDOM START: Calcola frame di inizio casuale (max 2/3 del video)
         bg_start_frame = 0
         if Config.BG_RANDOM_START and bg_total_frames > Config.TOTAL_FRAMES:
+            # Calcola quanti frame servono considerando il rallentamento
+            frames_needed = int(Config.TOTAL_FRAMES / Config.BG_SLOWDOWN_FACTOR) + 1
             # Assicurati di avere abbastanza frame rimanenti per il rendering
-            max_start_frame = int(bg_total_frames * 2/3) - Config.TOTAL_FRAMES
+            max_start_frame = max(0, int(bg_total_frames * 2/3) - frames_needed)
             if max_start_frame > 0:
                 bg_start_frame = np.random.randint(0, max_start_frame)
-                # Salta al frame di inizio
-                bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_start_frame)
                 start_time = bg_start_frame / bg_fps
-                end_time = start_time + (Config.TOTAL_FRAMES / bg_fps * Config.BG_SLOWDOWN_FACTOR)
+                end_time = start_time + (frames_needed / bg_fps)
                 print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
                 print(f"🎲 Inizio casuale da frame {bg_start_frame} ({start_time:.1f}s -> {end_time:.1f}s)")
+                print(f"📊 Frame necessari: {frames_needed} (con rallentamento {Config.BG_SLOWDOWN_FACTOR}x)")
             else:
                 print(f"🎬 Video sfondo: {bg_total_frames} frame @ {bg_fps}fps")
                 print(f"⚠️ Video troppo corto per random start")
@@ -2456,17 +2458,25 @@ def main():
             # --- Gestione Frame di Sfondo con RALLENTAMENTO ---
             if bg_video:
                 # NUOVO: Calcola il frame del video di sfondo rallentato con offset casuale
-                # Frame rallentato: (bg_start_frame + i) / BG_SLOWDOWN_FACTOR
-                bg_frame_index = bg_start_frame + int(i / Config.BG_SLOWDOWN_FACTOR)  # Rallentamento + offset casuale
+                bg_frame_index = bg_start_frame + int(i / Config.BG_SLOWDOWN_FACTOR)
+                
+                # Controllo di sicurezza: assicurati che il frame sia valido
+                if bg_frame_index >= bg_total_frames:
+                    # Se superiamo la fine, torna al punto di partenza casuale
+                    bg_frame_index = bg_start_frame + (bg_frame_index - bg_start_frame) % (bg_total_frames - bg_start_frame)
                 
                 # Imposta la posizione nel video di sfondo
                 bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
                 ret, bg_frame = bg_video.read()
                 
-                # Se arriviamo alla fine del video, riavvolgi al punto di partenza casuale
+                # Doppio controllo di sicurezza
                 if not ret:
+                    print(f"⚠️ Errore lettura frame {bg_frame_index}, riavvolgendo...")
                     bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_start_frame)
                     ret, bg_frame = bg_video.read()
+                    if not ret:
+                        # Ultima risorsa: crea frame nero
+                        bg_frame = np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
                 # RIMOSSO: Non ridimensionare qui, lo fa process_background
                 # bg_frame = cv2.resize(bg_frame, (Config.WIDTH, Config.HEIGHT))
             else:
