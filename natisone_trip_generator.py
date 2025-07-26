@@ -173,8 +173,8 @@ class Config:
     BG_TRACER_TRAIL_LENGTH = 20  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
-    BG_TRACER_THRESHOLD1 = 25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+    BG_TRACER_THRESHOLD1 = 15        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+    BG_TRACER_THRESHOLD2 = 50       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
