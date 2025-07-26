@@ -41,11 +41,13 @@ git clone https://github.com/psonic/crystal_dream_machine.git
 cd crystal_dream_machine
 
 # Place your logo (SVG/PDF) in the input/ folder
-cp your_logo.svg input/
+cp logo.svg input/
+cp logo.pdf input/
 
-# Optional: Add background video and audio
+# Optional: Add background video, texture and audio
 cp background.mov input/sfondo.MOV
 cp audio.aif input/
+cp texture.jpg input/
 
 # Cast the spell - transform your Alex Ortiga logos into flowing journeys
 python natisone_trip_generator.py
