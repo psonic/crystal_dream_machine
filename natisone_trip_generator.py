@@ -84,10 +84,10 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.2         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-    BG_SLOWDOWN_FACTOR = 1.2     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.3      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.8     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_ZOOM_FACTOR = 1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_SLOWDOWN_FACTOR = 1.3     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.2      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.9     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
     # --- Sistema Audio Reattivo ---
@@ -2267,6 +2267,7 @@ def main():
     C_YELLOW = '\033[93m'
     C_BLUE = '\033[94m'
     C_MAGENTA = '\033[95m'
+    C_RED = '\033[91m'  # Aggiungo colore rosso
     C_BOLD = '\033[1m'
     C_END = '\033[0m'
     SPINNER_CHARS = ['🔮', '✨', '🌟', '💎']
@@ -2501,37 +2502,49 @@ def main():
             
             out.write(frame)
             
-            # --- Log di Avanzamento Magico (aggiornamento per frame) ---
+            # --- Log di Avanzamento Magico (aggiornamento fluido) ---
             elapsed = time.time() - start_time
             fps = (i + 1) / elapsed if elapsed > 0 else 0
             
-            # Calcolo ETA
+            # Calcolo ETA con smoothing
             remaining_frames = Config.TOTAL_FRAMES - (i + 1)
             eta_seconds = remaining_frames / fps if fps > 0 else 0
             eta_minutes, eta_sec = divmod(int(eta_seconds), 60)
             eta_str = f"{eta_minutes:02d}:{eta_sec:02d}"
 
-            # Barra di avanzamento
+            # Barra di avanzamento fluida con più dettagli
             progress = (i + 1) / Config.TOTAL_FRAMES
-            bar_length = 25
+            bar_length = 30  # Barra più lunga per maggiore dettaglio
             filled_length = int(bar_length * progress)
             
-            # --- NUOVO: Barra colorata dinamica ---
-            progress_color_map = [C_MAGENTA, C_BLUE, C_CYAN, C_GREEN, C_YELLOW]
-            color_index = int(progress * (len(progress_color_map) -1))
+            # --- Barra colorata dinamica con gradiente ---
+            progress_color_map = [C_MAGENTA, C_BLUE, C_CYAN, C_GREEN, C_YELLOW, C_RED]
+            color_index = min(int(progress * len(progress_color_map)), len(progress_color_map) - 1)
             bar_color = progress_color_map[color_index]
-            bar = f"{bar_color}{'█' * filled_length}{C_END}{'-' * (bar_length - filled_length)}"
             
-            # Spinner magico
-            spinner = SPINNER_CHARS[i % len(SPINNER_CHARS)]
+            # Barra con carattere di riempimento più preciso
+            partial_char = ['▏', '▎', '▍', '▌', '▋', '▊', '▉', '█']
+            partial_fill = (bar_length * progress) - filled_length
+            partial_index = int(partial_fill * len(partial_char))
+            partial_symbol = partial_char[min(partial_index, len(partial_char) - 1)] if partial_fill > 0 and filled_length < bar_length else ''
+            
+            bar = f"{bar_color}{'█' * filled_length}{partial_symbol}{C_END}{'░' * (bar_length - filled_length - (1 if partial_symbol else 0))}"
+            
+            # Spinner organico più fluido
+            spinner_organic = ['🌊', '🌀', '💫', '✨', '🔮', '💎', '⭐', '🌟']
+            spinner = spinner_organic[i % len(spinner_organic)]
+            
+            # Frame rate color coding
+            fps_color = C_GREEN if fps >= 15 else C_YELLOW if fps >= 8 else C_RED
 
             log_message = (
-                f"\r{spinner} {C_BOLD}{C_GREEN}Cristallizzazione...{C_END} "
-                f"{C_CYAN}[{bar}] {C_END}{progress:.1%} "
-                f"| {C_YELLOW}FPS: {fps:.2f}{C_END} "
-                f"| {C_MAGENTA}ETA: {eta_str}{C_END} "
+                f"\r{spinner} {C_BOLD}{C_GREEN}Natisone Trip{C_END} "
+                f"{C_CYAN}[{bar}]{C_END} {C_BOLD}{progress:.1%}{C_END} "
+                f"│ {fps_color}⚡{fps:.1f}fps{C_END} "
+                f"│ {C_MAGENTA}⏱️{eta_str}{C_END} "
+                f"│ {C_YELLOW}🎬{i+1}/{Config.TOTAL_FRAMES}{C_END}"
             )
-            print(log_message, end="")
+            print(log_message, end="", flush=True)  # flush=True per aggiornamento immediato
         
         print(f"\n{C_BOLD}{C_GREEN}🌿 Cristallizzazione ULTRA completata con effetti IPNOTICI!{C_END}")
         print(f"💥 Deformazioni organiche ESAGERATE ma ultra-fluide!")
