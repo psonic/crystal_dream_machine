@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
