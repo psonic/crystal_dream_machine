@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -170,7 +170,7 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 40  # Lunghezza scie sfondo (ridotta in test mode)
+    BG_TRACER_TRAIL_LENGTH = 30  # Lunghezza scie sfondo (ridotta in test mode)
     BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (100, 70, 100)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 10        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
