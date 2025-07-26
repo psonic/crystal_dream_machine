@@ -84,7 +84,7 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_ZOOM_FACTOR = 1.2         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
     BG_SLOWDOWN_FACTOR = 0.7     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
     BG_DARKEN_FACTOR = 0.6      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
     BG_CONTRAST_FACTOR = 1.8     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
@@ -133,7 +133,7 @@ class Config:
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.4      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 65         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 85         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
