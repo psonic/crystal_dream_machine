@@ -79,7 +79,7 @@ class Config:
     # --- Colore e Stile ---
     LOGO_COLOR = (255, 255, 255)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
     LOGO_ALPHA = 1.0             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
-    LOGO_ZOOM_FACTOR = 1.3       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
+    LOGO_ZOOM_FACTOR = 1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
     
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
@@ -129,11 +129,11 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 30             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.4      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 75         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MAX_RADIUS = 35         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
