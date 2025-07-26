@@ -180,7 +180,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'bright'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'exclusion'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
@@ -1750,9 +1750,6 @@ def process_background(bg_frame, config):
         # Applica lo zoom configurabile moltiplicando il fattore di scala
         zoom_factor = getattr(config, 'BG_ZOOM_FACTOR', 1.0)
         scale = scale * zoom_factor
-        
-        if zoom_factor != 1.0:
-            print(f"🔍 Zoom sfondo attivo: {zoom_factor}x (scala finale: {scale:.2f})")
         
         # Nuove dimensioni scalate (ora con zoom)
         new_w = int(w * scale)
