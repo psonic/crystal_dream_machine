@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -57,6 +57,7 @@ class Config:
     USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
+    SVG_LEFT_PADDING = 50        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
     TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
     TEXTURE_FALLBACK_PATH = 'input/texture.jpg'  # Texture di fallback
     
@@ -849,10 +850,13 @@ def get_svg_dimensions(svg_path):
         print(f"⚠️ Errore lettura dimensioni SVG: {e}")
         return 1920, 1080  # Fallback
 
-def extract_contours_from_svg(svg_path, width, height, padding):
+def extract_contours_from_svg(svg_path, width, height, padding, left_padding=0):
     """
     Estrae SOLO I CONTORNI/BORDI da un file SVG, senza riempimento.
     Utilizza rasterizzazione + edge detection per ottenere linee precise.
+    
+    Args:
+        left_padding: Padding aggiuntivo dal lato sinistro per SVG
     """
     try:
         print("🎨 Caricamento SVG Crystal Therapy dalle acque del Natisone...")
@@ -880,7 +884,7 @@ def extract_contours_from_svg(svg_path, width, height, padding):
             # Disegna solo i bordi del testo (non il riempimento)
             # Questo approccio è limitato ma più compatibile
             print("⚠️ Usando metodo semplificato - potrebbero includere riempimenti")
-            return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+            return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding)
             
         except:
             # Fallback al metodo cairosvg se PIL non funziona
@@ -958,11 +962,14 @@ def extract_contours_from_svg(svg_path, width, height, padding):
     except Exception as e:
         print(f"Errore durante l'estrazione dall'SVG: {e}")
         print("Tentativo fallback al metodo originale...")
-        return extract_contours_from_svg_fallback(svg_path, width, height, padding)
+        return extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding)
 
-def extract_contours_from_svg_fallback(svg_path, width, height, padding):
+def extract_contours_from_svg_fallback(svg_path, width, height, padding, left_padding=0):
     """
     Metodo per l'estrazione SVG con OPZIONE per SOLO CONTORNI senza riempimento.
+    
+    Args:
+        left_padding: Padding aggiuntivo dal lato sinistro per SVG
     """
     try:
         print("🔄 Usando estrazione migliorata per SOLI CONTORNI...")
@@ -1065,11 +1072,14 @@ def extract_contours_from_svg_fallback(svg_path, width, height, padding):
         target_h = height - (2 * padding)
         scale = min(target_w / svg_width, target_h / svg_height)
         
-        # Calcola offset per centrare
+        # Calcola offset per centrare con padding sinistro aggiuntivo
         scaled_w = svg_width * scale
         scaled_h = svg_height * scale
-        offset_x = (width - scaled_w) / 2
+        offset_x = (width - scaled_w) / 2 + left_padding  # Aggiungi padding sinistro
         offset_y = (height - scaled_h) / 2
+        
+        if left_padding > 0:
+            print(f"📐 SVG con padding sinistro: {left_padding}px (offset_x: {offset_x:.1f})")
         
         for i, contour in enumerate(contours):
             area = cv2.contourArea(contour)
@@ -2295,9 +2305,9 @@ def main():
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding)
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING)
         else:
-            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING)
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING)
     else:
         if Config.INSTAGRAM_STORIES_MODE:
             # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
