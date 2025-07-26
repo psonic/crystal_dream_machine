@@ -46,7 +46,7 @@ class Config:
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Compatibilità WhatsApp ---
@@ -70,8 +70,8 @@ class Config:
 
     # --- Parametri Video ---
     SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 5 if TEST_MODE else 15  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3 if TEST_MODE else 7  # Durata video in secondi
+    FPS = 5 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 3 if TEST_MODE else 20  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
 
     # --- Colore e Stile ---
@@ -119,7 +119,7 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 100             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.4      # Forza massima ridotta per deformazione più delicata
     LENS_MIN_RADIUS = 5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
