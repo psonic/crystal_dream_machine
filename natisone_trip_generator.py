@@ -71,9 +71,9 @@ class Config:
     TEXTURE_BLENDING_MODE = 'hard_light'  # Modalità blending texture
 
     # --- Parametri Video ---
-    SVG_PADDING = 5  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 5 if TEST_MODE else 25  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 3 if TEST_MODE else 10  # Durata video in secondi
+    SVG_PADDING = 20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+    FPS = 5 if TEST_MODE else 30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    DURATION_SECONDS = 3 if TEST_MODE else 20  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
 
     # --- Colore e Stile ---
