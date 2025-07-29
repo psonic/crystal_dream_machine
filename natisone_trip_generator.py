@@ -571,12 +571,12 @@ def apply_blending_preset(config):
             'BLENDING_MODE': 'overlay',
             'BLENDING_STRENGTH': 0.8,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 3,
+            'EDGE_BLUR_RADIUS': 1,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': False,
             'BLEND_TRANSPARENCY': 0.2,
-            'COLOR_BLENDING_STRENGTH': 0.4
+            'COLOR_BLENDING_STRENGTH': 0.1
         },
         'artistic': {
             'BLENDING_MODE': 'difference',
