@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -265,7 +265,11 @@ def get_timestamp_filename():
     now = datetime.datetime.now()
     magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
     magic_char = np.random.choice(magic_chars)
-    return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
+    
+    # Aggiungi "test" al nome se in modalità test
+    test_suffix = "_TEST" if Config.TEST_MODE else ""
+    
+    return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}{test_suffix}_{magic_char}.mp4"
 
 # --- Sistema di Smoothing per Effetto Rimbalzo Audio ---
 class AudioSmoothingState:
@@ -2562,7 +2566,10 @@ def main():
         else:
             final_output_filename = output_filename
             
-        print(f"Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
+        if Config.TEST_MODE:
+            print(f"🧪 TEST - Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
+        else:
+            print(f"🎬 PRODUZIONE - Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
 
         # --- GESTIONE VERSIONAMENTO ---
         try:
