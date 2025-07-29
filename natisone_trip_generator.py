@@ -647,7 +647,7 @@ def apply_blending_preset(config):
         'glow': {
             'BLENDING_MODE': 'color_dodge',
             'BLENDING_STRENGTH': 0.75,
-            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_DETECTION_ENABLED': False,
             'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
