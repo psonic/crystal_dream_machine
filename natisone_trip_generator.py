@@ -569,9 +569,9 @@ def apply_blending_preset(config):
     presets = {
         'cinematic': {
             'BLENDING_MODE': 'overlay',
-            'BLENDING_STRENGTH': 0.8,
+            'BLENDING_STRENGTH': 0.7,
             'EDGE_DETECTION_ENABLED': True,
-            'EDGE_BLUR_RADIUS': 3,
+            'EDGE_BLUR_RADIUS': 7,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
             'LUMINANCE_MATCHING': False,
