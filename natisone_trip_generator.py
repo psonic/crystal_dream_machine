@@ -581,11 +581,11 @@ def apply_blending_preset(config):
         'artistic': {
             'BLENDING_MODE': 'difference',
             'BLENDING_STRENGTH': 0.6,
-            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_DETECTION_ENABLED': False,
             'EDGE_BLUR_RADIUS': 1,
             'ADAPTIVE_BLENDING': False,
-            'COLOR_HARMONIZATION': True,
-            'LUMINANCE_MATCHING': True,
+            'COLOR_HARMONIZATION': False,
+            'LUMINANCE_MATCHING': False,
             'BLEND_TRANSPARENCY': 0.1,
             'COLOR_BLENDING_STRENGTH': 0.2
         },
