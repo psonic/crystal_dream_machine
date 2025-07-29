@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -63,12 +63,12 @@ class Config:
     
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
-    TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
+    TEXTURE_TARGET = 'logo'      # Dove applicare: 'logo', 'background', 'both'
     TEXTURE_ALPHA = 0.4          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
     TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'hard_light'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'color_dodge'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -84,10 +84,10 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.0         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-    BG_SLOWDOWN_FACTOR = 1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.7      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.1     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+    BG_ZOOM_FACTOR = 1.3         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_SLOWDOWN_FACTOR = 1.5     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.5      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_CONTRAST_FACTOR = 1.4     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
     # --- Sistema Audio Reattivo ---
@@ -129,11 +129,11 @@ class Config:
 
     # --- Deformazione a Lenti ---
     LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+    NUM_LENSES = 70             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
     LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
     LENS_MAX_STRENGTH = 1.5      # Forza massima ridotta per deformazione più delicata
-    LENS_MIN_RADIUS = 7         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 45         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+    LENS_MIN_RADIUS = 2         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+    LENS_MAX_RADIUS = 35         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
     LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
     
     # --- Parametri Movimento Lenti ---
@@ -162,8 +162,8 @@ class Config:
 
     # --- Traccianti Logo ---
     TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 35  # Lunghezza scie (ridotta in test mode per velocità)
-    TRACER_MAX_OPACITY = 0.08        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+    TRACER_TRAIL_LENGTH = 40  # Lunghezza scie (ridotta in test mode per velocità)
+    TRACER_MAX_OPACITY = 0.1        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
     TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
     TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
     TRACER_THRESHOLD2 = 200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
@@ -171,10 +171,10 @@ class Config:
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
     BG_TRACER_TRAIL_LENGTH = 40  # Lunghezza scie sfondo (ridotta in test mode)
-    BG_TRACER_MAX_OPACITY = 0.02     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+    BG_TRACER_MAX_OPACITY = 0.05     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (200, 170, 200)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+    BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
@@ -1915,10 +1915,7 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     glow_layer = np.zeros_like(final_frame)
 
     # Applica texture al logo (se configurato)
-    if config.TEXTURE_ENABLED and texture_image is not None and config.TEXTURE_TARGET in ['logo', 'both']:
-        # NUOVO: Sistema avanzato per texture sul logo
-        print(f"🎨 Applicando texture al logo con modalità {config.TEXTURE_BLENDING_MODE}")
-        
+    if config.TEXTURE_ENABLED and texture_image is not None and config.TEXTURE_TARGET in ['logo', 'both']:        
         # Crea base di colore solido
         solid_color_layer = np.zeros_like(final_frame)
         solid_color_layer[logo_mask > 0] = config.LOGO_COLOR
