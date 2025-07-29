@@ -44,9 +44,15 @@ except ImportError:
 class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    
+    # --- Modalità Preview Live ---
+    PREVIEW_MODE = True          # True = genera singolo frame live, False = rendering completo
+    PREVIEW_REFRESH_SECONDS = 5  # Ogni quanti secondi rigenerare il frame (range: 3-10)
+    PREVIEW_WINDOW_NAME = "🎭 Natisone Trip - Live Preview"  # Nome finestra preview
+    PREVIEW_AUTO_RELOAD_FILES = True  # Monitora sfondo.MOV e texture.jpg per cambiamenti
 
     # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+    INSTAGRAM_STORIES_MODE = False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                     # False = formato originale basato su dimensioni SVG
 
     # --- Compatibilità WhatsApp ---
@@ -54,7 +60,7 @@ class Config:
     CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
     
     # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
+    USE_SVG_SOURCE = False        # True = usa SVG, False = usa PDF
     SVG_PATH = 'input/logo.svg'  # Percorso file SVG
     PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
     SVG_LEFT_PADDING = 50        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
@@ -271,6 +277,195 @@ def get_timestamp_filename():
         return f"output/test/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_TEST_{magic_char}.mp4"
     else:
         return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
+
+# --- Modalità Preview Live ---
+def run_preview_mode():
+    """
+    🎭 Modalità Preview Live: Genera e mostra frame in tempo reale.
+    
+    Funzionalità:
+    - Mostra singolo frame live in finestra OpenCV
+    - Auto-refresh ogni N secondi con parametri casuali
+    - Hot-reload di sfondo.MOV e texture.jpg
+    - Tasto SPAZIO = avvia rendering completo + Git push
+    - Tasto ESC/Q = esce dalla preview
+    """
+    import time
+    import os
+    from pathlib import Path
+    
+    print(f"🎭 {Config.PREVIEW_WINDOW_NAME}")
+    print(f"⚡ Auto-refresh: ogni {Config.PREVIEW_REFRESH_SECONDS}s")
+    print(f"🎮 Controlli:")
+    print(f"   SPAZIO = Avvia rendering completo + Git push")
+    print(f"   ESC/Q = Esci dalla preview")
+    print(f"   Modifica sfondo.MOV e texture.jpg per vederli live!")
+    
+    # Inizializza monitoring file
+    bg_video_path = "input/sfondo.MOV"
+    texture_path = "input/texture.jpg"
+    bg_last_modified = 0
+    texture_last_modified = 0
+    
+    if os.path.exists(bg_video_path):
+        bg_last_modified = os.path.getmtime(bg_video_path)
+    if os.path.exists(texture_path):
+        texture_last_modified = os.path.getmtime(texture_path)
+    
+    last_refresh = time.time()
+    
+    while True:
+        current_time = time.time()
+        should_refresh = False
+        
+        # Check auto-refresh timer
+        if current_time - last_refresh >= Config.PREVIEW_REFRESH_SECONDS:
+            should_refresh = True
+            last_refresh = current_time
+            print(f"🔄 Auto-refresh: generando nuovo frame...")
+        
+        # Check file changes se abilitato
+        if Config.PREVIEW_AUTO_RELOAD_FILES:
+            if os.path.exists(bg_video_path):
+                current_bg_time = os.path.getmtime(bg_video_path)
+                if current_bg_time > bg_last_modified:
+                    bg_last_modified = current_bg_time
+                    should_refresh = True
+                    print(f"🎥 Rilevato cambio in sfondo.MOV, aggiornando...")
+            
+            if os.path.exists(texture_path):
+                current_texture_time = os.path.getmtime(texture_path)
+                if current_texture_time > texture_last_modified:
+                    texture_last_modified = current_texture_time
+                    should_refresh = True
+                    print(f"🎨 Rilevato cambio in texture.jpg, aggiornando...")
+        
+        if should_refresh:
+            try:
+                # Genera e mostra singolo frame
+                frame = generate_preview_frame()
+                if frame is not None:
+                    cv2.imshow(Config.PREVIEW_WINDOW_NAME, frame)
+                    print(f"✨ Frame aggiornato!")
+            except Exception as e:
+                print(f"❌ Errore generazione frame: {e}")
+        
+        # Check tasti
+        key = cv2.waitKey(100) & 0xFF
+        if key == 32:  # SPAZIO
+            print(f"🚀 Avviando rendering completo...")
+            cv2.destroyAllWindows()
+            # Disabilita preview mode e avvia rendering normale
+            Config.PREVIEW_MODE = False
+            return "START_FULL_RENDER"
+        elif key == 27 or key == ord('q'):  # ESC o Q
+            print(f"👋 Uscita dalla preview mode")
+            cv2.destroyAllWindows()
+            return "EXIT"
+        
+        time.sleep(0.1)  # Piccola pausa per non saturare CPU
+
+def generate_preview_frame():
+    """
+    Genera un singolo frame di preview con parametri randomizzati.
+    Usa la stessa logica del rendering principale ma per un solo frame.
+    """
+    try:
+        # --- INIZIALIZZAZIONE RAPIDA ---
+        print(f"🎭 Generando frame preview...")
+        
+        # Setup dimensioni (usa la logica del main)
+        svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
+        
+        if Config.INSTAGRAM_STORIES_MODE:
+            Config.WIDTH = 540 if Config.TEST_MODE else 1080
+            Config.HEIGHT = 960 if Config.TEST_MODE else 1920
+        else:
+            Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
+            Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
+        
+        # --- CARICA CONTORNI ---
+        if Config.USE_SVG_SOURCE:
+            if Config.INSTAGRAM_STORIES_MODE:
+                horizontal_margin = (Config.WIDTH - svg_width) // 2
+                right_shift = 10 if Config.TEST_MODE else 20
+                effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
+                contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
+            else:
+                contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
+        else:
+            # PDF logic
+            if Config.INSTAGRAM_STORIES_MODE:
+                horizontal_margin = (Config.WIDTH - svg_width) // 2
+                right_shift = 10 if Config.TEST_MODE else 20
+                effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
+                contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
+            else:
+                contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.LOGO_ZOOM_FACTOR)
+        
+        # --- CARICA TEXTURE ---
+        texture_image = None
+        if Config.TEXTURE_ENABLED:
+            texture_path = find_texture_file()
+            if texture_path and os.path.exists(texture_path):
+                texture_image = cv2.imread(texture_path)
+                if texture_image is not None:
+                    texture_image = cv2.resize(texture_image, (Config.WIDTH, Config.HEIGHT))
+        
+        # --- CARICA VIDEO SFONDO ---
+        bg_video = cv2.VideoCapture("input/sfondo.MOV")
+        if not bg_video.isOpened():
+            print("❌ Impossibile aprire sfondo.MOV")
+            return None
+        
+        total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+        # Usa frame casuale per varietà
+        random_frame_index = np.random.randint(0, min(total_frames-1, 100))
+        bg_video.set(cv2.CAP_PROP_POS_FRAMES, random_frame_index)
+        
+        ret, bg_frame = bg_video.read()
+        bg_video.release()
+        
+        if not ret:
+            print("❌ Impossibile leggere frame da sfondo.MOV")
+            return None
+        
+        # --- INIZIALIZZA LENTI ---
+        lenses = initialize_lenses(Config)
+        
+        # --- INIZIALIZZA HISTORY PER TRACCIANTI ---
+        tracer_history = []
+        bg_tracer_history = []
+        
+        # --- GENERA FRAME PREVIEW ---
+        preview_frame_index = np.random.randint(0, 50)  # Frame casuale per varietà
+        
+        frame_result = render_frame(
+            contours, hierarchy, 
+            Config.WIDTH, Config.HEIGHT,
+            preview_frame_index, 50,  # total_frames fittizio
+            Config, bg_frame, texture_image,
+            tracer_history, bg_tracer_history, lenses,
+            audio_data=None  # Nessun audio in preview
+        )
+        
+        if frame_result is not None:
+            # Ridimensiona per visualizzazione se troppo grande
+            display_frame = frame_result
+            if display_frame.shape[0] > 800:  # Se troppo alto
+                scale = 800 / display_frame.shape[0]
+                new_width = int(display_frame.shape[1] * scale)
+                display_frame = cv2.resize(display_frame, (new_width, 800))
+            
+            return display_frame
+        
+        return None
+        
+    except Exception as e:
+        print(f"❌ Errore in generate_preview_frame: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 # --- Sistema di Smoothing per Effetto Rimbalzo Audio ---
 class AudioSmoothingState:
@@ -2284,7 +2479,18 @@ def main():
             os.makedirs(test_dir)
             print(f"📁 Creata cartella: {test_dir}")
 
-    # 🎨 APPLICA PRESET BLENDING AUTOMATICO
+    # � MODALITÀ PREVIEW LIVE
+    if Config.PREVIEW_MODE:
+        result = run_preview_mode()
+        if result == "EXIT":
+            return
+        elif result == "START_FULL_RENDER":
+            print(f"🎬 Passando al rendering completo...")
+            # Continua con il rendering normale
+        else:
+            return
+
+    # �🎨 APPLICA PRESET BLENDING AUTOMATICO
     apply_blending_preset(Config)
 
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
