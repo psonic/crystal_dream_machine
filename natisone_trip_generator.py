@@ -68,7 +68,7 @@ class Config:
     TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'color_dodge'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'multiply'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
@@ -78,8 +78,8 @@ class Config:
 
     # --- Colore e Stile ---
     LOGO_COLOR = (255, 255, 255)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
-    LOGO_ALPHA = 1.0             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
-    LOGO_ZOOM_FACTOR = 1.1       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
+    LOGO_ALPHA = 0.7             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
+    LOGO_ZOOM_FACTOR = 1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
     
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
@@ -181,7 +181,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'cinematic'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'glow'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
