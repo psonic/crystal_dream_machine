@@ -84,9 +84,9 @@ class Config:
     # --- Video di Sfondo ---
     BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
     BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.3         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-    BG_SLOWDOWN_FACTOR = 1.5     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.5      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+    BG_ZOOM_FACTOR = 1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+    BG_SLOWDOWN_FACTOR = 1.2     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+    BG_DARKEN_FACTOR = 0.4      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
     BG_CONTRAST_FACTOR = 1.4     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
@@ -170,11 +170,11 @@ class Config:
     
     # --- Traccianti Sfondo ---
     BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 40  # Lunghezza scie sfondo (ridotta in test mode)
-    BG_TRACER_MAX_OPACITY = 0.05     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+    BG_TRACER_TRAIL_LENGTH = 30  # Lunghezza scie sfondo (ridotta in test mode)
+    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
     BG_TRACER_BASE_COLOR = (200, 170, 200)  # Colore scie sfondo (BGR: tonalità viola/magenta)
     BG_TRACER_THRESHOLD1 = 20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+    BG_TRACER_THRESHOLD2 = 100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
     
     # --- Blending Avanzato ---
     ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
@@ -570,7 +570,7 @@ def apply_blending_preset(config):
         'cinematic': {
             'BLENDING_MODE': 'overlay',
             'BLENDING_STRENGTH': 0.7,
-            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_DETECTION_ENABLED': False,
             'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
