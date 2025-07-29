@@ -64,15 +64,15 @@ class Config:
     # --- Sistema Texture Avanzato ---
     TEXTURE_ENABLED = True       # Attiva sistema texture
     TEXTURE_TARGET = 'background'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.6          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.6  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
+    TEXTURE_ALPHA = 0.3          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
+    TEXTURE_BACKGROUND_ALPHA = 0.3  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
     # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
     # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'overlay'  # Modalità blending texture
+    TEXTURE_BLENDING_MODE = 'screen'  # Modalità blending texture
 
     # --- Parametri Video ---
     SVG_PADDING = 20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 8 if TEST_MODE else 20  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
+    FPS = 1 if TEST_MODE else 20  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
     DURATION_SECONDS = 4 if TEST_MODE else 10  # Durata video in secondi
     TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
 
