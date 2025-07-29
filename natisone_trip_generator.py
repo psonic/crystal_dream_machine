@@ -181,7 +181,7 @@ class Config:
     
     # 🎨 SISTEMA PRESET AUTOMATICO
     # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'artistic'  # Usa 'manual' per configurazione manuale sotto
+    BLENDING_PRESET = 'cinematic'  # Usa 'manual' per configurazione manuale sotto
     
     # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
     # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
@@ -580,9 +580,9 @@ def apply_blending_preset(config):
         },
         'artistic': {
             'BLENDING_MODE': 'difference',
-            'BLENDING_STRENGTH': 0.6,
-            'EDGE_DETECTION_ENABLED': False,
-            'EDGE_BLUR_RADIUS': 1,
+            'BLENDING_STRENGTH': 0.9,
+            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_BLUR_RADIUS': 5,
             'ADAPTIVE_BLENDING': False,
             'COLOR_HARMONIZATION': False,
             'LUMINANCE_MATCHING': False,
