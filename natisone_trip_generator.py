@@ -43,7 +43,7 @@ except ImportError:
 
 class Config:
     # --- Modalità e Qualità ---
-    TEST_MODE = True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
     # --- Formato Video ---
     INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -266,10 +266,11 @@ def get_timestamp_filename():
     magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
     magic_char = np.random.choice(magic_chars)
     
-    # Aggiungi "test" al nome se in modalità test
-    test_suffix = "_TEST" if Config.TEST_MODE else ""
-    
-    return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}{test_suffix}_{magic_char}.mp4"
+    # File di test vanno nella sottocartella test/
+    if Config.TEST_MODE:
+        return f"output/test/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_TEST_{magic_char}.mp4"
+    else:
+        return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
 
 # --- Sistema di Smoothing per Effetto Rimbalzo Audio ---
 class AudioSmoothingState:
@@ -2276,6 +2277,13 @@ def main():
     # Mostra le opzioni di blending disponibili
     print_blending_options()
     
+    # Assicurati che la cartella test esista se siamo in TEST_MODE
+    if Config.TEST_MODE:
+        test_dir = "output/test"
+        if not os.path.exists(test_dir):
+            os.makedirs(test_dir)
+            print(f"📁 Creata cartella: {test_dir}")
+
     # 🎨 APPLICA PRESET BLENDING AUTOMATICO
     apply_blending_preset(Config)
 
