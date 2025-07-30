@@ -2310,8 +2310,50 @@ def load_config_from_file():
                         # Rimuove le virgolette se presenti
                         value = value.strip('"\'')
                         
-                        # Converti il valore nel tipo appropriato
-                        if hasattr(Config, key):
+                        # Converti il valore nel tipo appropriato e gestisci parametri speciali
+                        # Gestione speciale per parametri BGR (prima del controllo hasattr)
+                        if key == 'LOGO_COLOR_B':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[0] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'LOGO_COLOR_G':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[1] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'LOGO_COLOR_R':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[2] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_B':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[0] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_G':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[1] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_R':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[2] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_B':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[0] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_G':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[1] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_R':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[2] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'AUDIO_FILES':
+                            if ',' in value:
+                                Config.AUDIO_FILES = [item.strip() for item in value.split(',')]
+                            else:
+                                Config.AUDIO_FILES = [value]
+                        elif hasattr(Config, key):
                             current_value = getattr(Config, key)
                             
                             # Converti in base al tipo dell'attributo esistente
@@ -2344,52 +2386,8 @@ def load_config_from_file():
                             else:
                                 new_value = value
                             
-                            # Gestione speciale per alcuni parametri
-                            if key == 'LOGO_COLOR_B':
-                                current_color = list(Config.LOGO_COLOR)
-                                current_color[0] = int(value)
-                                Config.LOGO_COLOR = tuple(current_color)
-                            elif key == 'LOGO_COLOR_G':
-                                current_color = list(Config.LOGO_COLOR)
-                                current_color[1] = int(value)
-                                Config.LOGO_COLOR = tuple(current_color)
-                            elif key == 'LOGO_COLOR_R':
-                                current_color = list(Config.LOGO_COLOR)
-                                current_color[2] = int(value)
-                                Config.LOGO_COLOR = tuple(current_color)
-                            elif key == 'TRACER_BASE_COLOR_B':
-                                current_color = list(Config.TRACER_BASE_COLOR)
-                                current_color[0] = int(value)
-                                Config.TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'TRACER_BASE_COLOR_G':
-                                current_color = list(Config.TRACER_BASE_COLOR)
-                                current_color[1] = int(value)
-                                Config.TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'TRACER_BASE_COLOR_R':
-                                current_color = list(Config.TRACER_BASE_COLOR)
-                                current_color[2] = int(value)
-                                Config.TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'BG_TRACER_BASE_COLOR_B':
-                                current_color = list(Config.BG_TRACER_BASE_COLOR)
-                                current_color[0] = int(value)
-                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'BG_TRACER_BASE_COLOR_G':
-                                current_color = list(Config.BG_TRACER_BASE_COLOR)
-                                current_color[1] = int(value)
-                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'BG_TRACER_BASE_COLOR_R':
-                                current_color = list(Config.BG_TRACER_BASE_COLOR)
-                                current_color[2] = int(value)
-                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
-                            elif key == 'AUDIO_FILES':
-                                if ',' in value:
-                                    Config.AUDIO_FILES = [item.strip() for item in value.split(',')]
-                                else:
-                                    Config.AUDIO_FILES = [value]
-                            else:
-                                # Imposta il valore normalmente se l'attributo esiste
-                                if hasattr(Config, key):
-                                    setattr(Config, key, new_value)
+                            # Imposta il valore normalmente per parametri standard
+                            setattr(Config, key, new_value)
                         else:
                             print(f"⚠️  Parametro sconosciuto '{key}' alla riga {line_num}")
                     except Exception as e:
