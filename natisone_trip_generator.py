@@ -43,173 +43,6 @@ try:
 except ImportError:
     AUDIO_AVAILABLE = False
     print("⚠️ Librosa non disponibile. Per supporto audio: pip install librosa")
-    # --- Modalità e Qualità ---
-    TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
-
-    # --- Formato Video ---
-    INSTAGRAM_STORIES_MODE = True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
-                                    # False = formato originale basato su dimensioni SVG
-
-    # --- Compatibilità WhatsApp ---
-    WHATSAPP_COMPATIBLE = True   # Ottimizza per WhatsApp/social media
-    CREATE_WHATSAPP_VERSION = True  # Crea versione aggiuntiva con ffmpeg
-    
-    # --- Sorgente Logo e Texture ---
-    USE_SVG_SOURCE = True        # True = usa SVG, False = usa PDF
-    SVG_PATH = 'input/logo.svg'  # Percorso file SVG
-    PDF_PATH = 'input/logo.pdf'  # Percorso file PDF alternativo
-    SVG_LEFT_PADDING = 50        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
-    TEXTURE_AUTO_SEARCH = True   # Cerca automaticamente file texture.*
-    TEXTURE_FALLBACK_PATH = 'input/texture.jpg'  # Texture di fallback
-    
-    # --- Sistema Texture Avanzato ---
-    TEXTURE_ENABLED = True       # Attiva sistema texture
-    TEXTURE_TARGET = 'logo'      # Dove applicare: 'logo', 'background', 'both'
-    TEXTURE_ALPHA = 0.6          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
-    TEXTURE_BACKGROUND_ALPHA = 0.1  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
-    # Modalità texture disponibili: 'normal', 'overlay', 'multiply', 'screen', 'soft_light', 'hard_light', 
-    # 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    TEXTURE_BLENDING_MODE = 'lighten'  # Modalità blending texture
-
-    # --- Parametri Video ---
-    SVG_PADDING = 20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
-    FPS = 1 if TEST_MODE else 20  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
-    DURATION_SECONDS = 4 if TEST_MODE else 10  # Durata video in secondi
-    TOTAL_FRAMES = DURATION_SECONDS * FPS     # Frame totali calcolati   
-
-    # --- Colore e Stile ---
-    LOGO_COLOR = (255, 255, 255)    # Colore logo BGR (range: 0-255 per canale, (0,0,0)=nero, (255,255,255)=bianco)
-    LOGO_ALPHA = 0.7             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
-    LOGO_ZOOM_FACTOR = 1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
-    
-    # --- Video di Sfondo ---
-    BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'  # Percorso video di sfondo
-    BG_USE_ORIGINAL_SIZE = True  # Usa dimensioni originali video senza crop
-    BG_ZOOM_FACTOR = 1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-    BG_SLOWDOWN_FACTOR = 1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-    BG_DARKEN_FACTOR = 0.7      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-    BG_CONTRAST_FACTOR = 1.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
-    BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
-    
-    # --- Sistema Audio Reattivo ---
-    AUDIO_ENABLED = True         # Attiva reattività audio per lenti
-    AUDIO_FILES = ['input/audio1.aif', 'input/audio2.aif']  # Lista file audio per selezione casuale
-    AUDIO_RANDOM_SELECTION = True  # Seleziona casualmente un file dalla lista
-    AUDIO_RANDOM_START = True    # Inizia da punto casuale (max 2/3 del file)
-    AUDIO_REACTIVE_LENSES = True # Le lenti reagiscono all'audio
-    AUDIO_BASS_SENSITIVITY = 0.5 # Sensibilità alle frequenze basse (range: 0.1-1.0, 0.2=delicato, 0.5=forte)
-    AUDIO_MID_SENSITIVITY = 0.3  # Sensibilità alle frequenze medie (range: 0.1-0.8, 0.15=sottile, 0.4=intensa)
-    AUDIO_HIGH_SENSITIVITY = 0.25 # Sensibilità alle frequenze acute (range: 0.05-0.5, 0.1=leggero, 0.3=vivace)
-    AUDIO_SMOOTHING = 0.5        # Smoothing reattività audio (range: 0.3-0.95, 0.5=reattivo, 0.9=fluido)
-    AUDIO_BOOST_FACTOR = 4.0     # Amplificazione reattività (range: 1.0-10.0, 2=normale, 5=estrema)
-    
-    # --- Parametri Audio Lenti ---
-    AUDIO_SPEED_INFLUENCE = 1.0   # Quanto l'audio influenza velocità lenti (range: 0.5-3.0, 1=normale, 2=doppia)
-    AUDIO_STRENGTH_INFLUENCE = 2 # Quanto l'audio influenza forza lenti (range: 0.8-2.5, 1=normale, 2=intensa)
-    AUDIO_PULSATION_INFLUENCE = 1.3 # Quanto l'audio influenza pulsazione (range: 0.5-2.0, 1=normale, 1.8=estrema)
-    
-    # --- Effetto Glow ---
-    GLOW_ENABLED = True          # Attiva effetto bagliore intorno al logo
-    GLOW_KERNEL_SIZE = 50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
-    GLOW_INTENSITY = 0.4         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
-
-    # --- Deformazione Organica ---
-    # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
-    DEFORMATION_ENABLED = True  # Attiva movimento ondulatorio del logo
-    DEFORMATION_SPEED = 0.01   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-    DEFORMATION_SCALE = 0.002   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
-    DEFORMATION_INTENSITY = 10.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
-    
-    # --- Reattività Audio Deformazione Organica ---
-    DEFORMATION_AUDIO_REACTIVE = True  # Collega deformazione organica all'audio
-    DEFORMATION_BASS_INTENSITY = 0.22  # Quanto i bassi influenzano l'intensità (range: 0.1-0.5, 0.15=leggero, 0.3=forte)
-    DEFORMATION_BASS_SPEED = 0.03     # Quanto i bassi influenzano la velocità (range: 0.005-0.03, 0.01=lento, 0.02=veloce)
-    DEFORMATION_MID_SCALE = 0.002     # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.003, 0.001=sottile, 0.002=ampio)
-    DEFORMATION_SMOOTHING = 0.85       # Smoothing per effetto rimbalzo (range: 0.6-0.95, 0.7=veloce, 0.9=lento)
-    DEFORMATION_AUDIO_MULTIPLIER = 1.4 # Moltiplicatore globale audio deformazione (range: 0.5-2.0, 1=normale, 1.5=intenso)
-
-    # --- Deformazione a Lenti ---
-    LENS_DEFORMATION_ENABLED = True  # Attiva effetto lenti che distorcono il logo
-    NUM_LENSES = 70             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
-    LENS_MIN_STRENGTH = -1.2     # Forza minima ridotta per deformazione più delicata
-    LENS_MAX_STRENGTH = 1.5      # Forza massima ridotta per deformazione più delicata
-    LENS_MIN_RADIUS = 2         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-    LENS_MAX_RADIUS = 35         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-    LENS_SPEED_FACTOR = 0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
-    
-    # --- Parametri Movimento Lenti ---
-    LENS_PATH_SPEED_MULTIPLIER = 0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-    LENS_BASE_SPEED_MULTIPLIER = 0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
-    LENS_ROTATION_SPEED_MULTIPLIER = 0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
-    LENS_INERTIA = 0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-    LENS_ROTATION_SPEED_MIN = -0.02     # Velocità rotazione minima (range: -0.02 a 0)
-    LENS_ROTATION_SPEED_MAX = 0.02     # Velocità rotazione massima (range: 0 a 0.02)
-
-    # --- Movimento e Pulsazione Lenti ---
-    LENS_HORIZONTAL_BIAS = 2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
-    LENS_PULSATION_ENABLED = True        # Attiva pulsazione dimensioni lenti
-    LENS_PULSATION_SPEED = 0.0005         # Velocità pulsazione (range: 0.001-0.02, 0.003=lenta, 0.01=veloce)
-    LENS_PULSATION_AMPLITUDE = 0.2       # Ampiezza pulsazione dimensioni (range: 0.1-0.8, 0.2=leggera, 0.5=forte)
-    LENS_FORCE_PULSATION_ENABLED = True  # Attiva pulsazione anche della forza
-    LENS_FORCE_PULSATION_AMPLITUDE = 0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
-    
-    WORM_SHAPE_ENABLED = True  # Forma allungata delle lenti (tipo verme)
-    WORM_LENGTH = 1.8          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
-    WORM_COMPLEXITY = 5        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
-
-    # --- Smussamento Contorni ---
-    SMOOTHING_ENABLED = True      # Attiva bordi lisci del logo
-    SMOOTHING_FACTOR = 0.0001     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
-
-    # --- Traccianti Logo ---
-    TRACER_ENABLED = True            # Attiva scie colorate sui bordi del logo
-    TRACER_TRAIL_LENGTH = 25  # Lunghezza scie (ridotta in test mode per velocità)
-    TRACER_MAX_OPACITY = 0.05        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
-    TRACER_BASE_COLOR = (255, 200, 220)  # Colore base scie (BGR: 0-255 per ogni canale)
-    TRACER_THRESHOLD1 = 50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
-    TRACER_THRESHOLD2 = 200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
-    
-    # --- Traccianti Sfondo ---
-    BG_TRACER_ENABLED = True         # Attiva scie sui contorni dello sfondo
-    BG_TRACER_TRAIL_LENGTH = 25  # Lunghezza scie sfondo (ridotta in test mode)
-    BG_TRACER_MAX_OPACITY = 0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
-    BG_TRACER_BASE_COLOR = (200, 170, 200)  # Colore scie sfondo (BGR: tonalità viola/magenta)
-    BG_TRACER_THRESHOLD1 = 50        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-    BG_TRACER_THRESHOLD2 = 100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
-    
-    # --- Blending Avanzato ---
-    ADVANCED_BLENDING = True  # Attiva fusione avanzata logo-sfondo
-    
-    # 🎨 SISTEMA PRESET AUTOMATICO
-    # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-    BLENDING_PRESET = 'cinematic'  # Usa 'manual' per configurazione manuale sotto
-    
-    # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
-    # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
-    BLENDING_MODE = 'color_burn'     # Modalità fusione logo-sfondo
-    BLENDING_STRENGTH = 0.7          # Intensità fusione (range: 0.0-1.0, 0.3=leggera, 0.7=forte, 1.0=solo effetto)
-    EDGE_DETECTION_ENABLED = True    # Rileva bordi per fusione selettiva
-    EDGE_BLUR_RADIUS = 21            # Raggio sfumatura bordi (range: 5-50, 15=netti, 25=morbidi, 40=molto sfumati)
-    ADAPTIVE_BLENDING = False        # Adatta fusione ai colori dello sfondo
-    COLOR_HARMONIZATION = False      # Armonizza colori logo-sfondo
-    LUMINANCE_MATCHING = False       # Adatta luminosità logo allo sfondo
-    
-    # Parametri fusione classici
-    LOGO_BLEND_FACTOR = 0.6          # Bilanciamento logo/fuso (range: 0.0-1.0, 0.3=più logo, 0.8=più effetto)
-    EDGE_SOFTNESS = 80               # Morbidezza bordi (range: 20-150, 50=netti, 100=morbidi)
-    BLEND_TRANSPARENCY = 0.3         # Trasparenza globale (range: 0.0-0.8, 0.2=opaco, 0.5=trasparente)
-    COLOR_BLENDING_STRENGTH = 0.3    # Intensità mescolamento colori (range: 0.0-1.0, 0.2=leggero, 0.6=forte)
-    
-    # --- Debug e Qualità ---
-    DEBUG_MASK = False  # Mostra maschera di debug (per sviluppatori)
-    
-    # --- Variazione Dinamica ---
-    DYNAMIC_VARIATION_ENABLED = True  # Attiva variazioni automatiche nel tempo
-    VARIATION_AMPLITUDE = 0.8         # Ampiezza variazioni (range: 0.2-2.0, 0.5=leggere, 1.0=normali, 1.5=forti)
-    VARIATION_SPEED_SLOW = 0.01       # Velocità variazioni lente (range: 0.005-0.05, 0.01=molto lente, 0.03=moderate)
-    VARIATION_SPEED_MEDIUM = 0.025    # Velocità variazioni medie (range: 0.01-0.1, 0.02=normali, 0.05=veloci)
-    VARIATION_SPEED_FAST = 0.005      # Velocità variazioni veloci (range: 0.002-0.02, 0.005=rapide, 0.015=frenetiche)
-
 # --- FUNZIONI DI SUPPORTO ---
 
 def get_dynamic_parameters(frame_index, total_frames):
@@ -2407,6 +2240,7 @@ def load_config_from_file():
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
+    import os  # Assicuriamoci che os sia disponibile
     
     # --- Parsing degli argomenti da linea di comando ---
     parser = argparse.ArgumentParser(description='Crystal Therapy Video Generator')
@@ -2526,12 +2360,18 @@ def main():
         print("🌊 Avviando modalità Live Preview...")
         
         # Avvia la preview
-        should_render_video = run_preview_mode(
+        result = run_preview_mode(
             Config, render_frame, contours, hierarchy, Config.WIDTH, Config.HEIGHT,
             get_background_frame, load_texture_wrapper, initialize_lenses, load_audio_wrapper
         )
         
-        if should_render_video:
+        if result == 'RESTART_SCRIPT':
+            print("🔄 RESTART COMPLETO RICHIESTO - Rilanciando script...")
+            import sys
+            import os
+            # Rilancia lo script con gli stessi parametri
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+        elif result:
             print("🎬 Utente ha richiesto generazione video completo!")
             print("🚀 Passaggio a modalità produzione...")
             # Disabilita preview mode e continua con il rendering normale
