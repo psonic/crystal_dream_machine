@@ -2284,6 +2284,128 @@ def print_blending_options():
     
     print()
 
+def load_config_from_file():
+    """Carica i parametri dal file config se esiste"""
+    config_file = "config"
+    if not os.path.exists(config_file):
+        print("📄 File config non trovato, uso valori di default")
+        return
+    
+    print("📄 Caricamento parametri dal file config...")
+    
+    try:
+        with open(config_file, 'r') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    try:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        # Separa il valore dal commento
+                        if '#' in value:
+                            value = value.split('#')[0].strip()
+                        else:
+                            value = value.strip()
+                        
+                        # Rimuove le virgolette se presenti
+                        value = value.strip('"\'')
+                        
+                        # Converti il valore nel tipo appropriato
+                        if hasattr(Config, key):
+                            current_value = getattr(Config, key)
+                            
+                            # Converti in base al tipo dell'attributo esistente
+                            if isinstance(current_value, bool):
+                                new_value = value.lower() in ('true', '1', 'yes', 'on')
+                            elif isinstance(current_value, int):
+                                new_value = int(value)
+                            elif isinstance(current_value, float):
+                                new_value = float(value)
+                            elif isinstance(current_value, str):
+                                new_value = value
+                            elif isinstance(current_value, tuple):
+                                # Per i colori BGR
+                                if key.endswith('_COLOR_B') or key.endswith('_COLOR_G') or key.endswith('_COLOR_R'):
+                                    current_color = list(getattr(Config, key.rsplit('_', 1)[0]))
+                                    if key.endswith('_B'):
+                                        current_color[0] = int(value)
+                                    elif key.endswith('_G'):
+                                        current_color[1] = int(value)
+                                    elif key.endswith('_R'):
+                                        current_color[2] = int(value)
+                                    setattr(Config, key.rsplit('_', 1)[0], tuple(current_color))
+                                    continue
+                            elif isinstance(current_value, list):
+                                # Per liste di file audio
+                                if ',' in value:
+                                    new_value = [item.strip() for item in value.split(',')]
+                                else:
+                                    new_value = [value]
+                            else:
+                                new_value = value
+                            
+                            # Gestione speciale per alcuni parametri
+                            if key == 'LOGO_COLOR_B':
+                                current_color = list(Config.LOGO_COLOR)
+                                current_color[0] = int(value)
+                                Config.LOGO_COLOR = tuple(current_color)
+                            elif key == 'LOGO_COLOR_G':
+                                current_color = list(Config.LOGO_COLOR)
+                                current_color[1] = int(value)
+                                Config.LOGO_COLOR = tuple(current_color)
+                            elif key == 'LOGO_COLOR_R':
+                                current_color = list(Config.LOGO_COLOR)
+                                current_color[2] = int(value)
+                                Config.LOGO_COLOR = tuple(current_color)
+                            elif key == 'TRACER_BASE_COLOR_B':
+                                current_color = list(Config.TRACER_BASE_COLOR)
+                                current_color[0] = int(value)
+                                Config.TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'TRACER_BASE_COLOR_G':
+                                current_color = list(Config.TRACER_BASE_COLOR)
+                                current_color[1] = int(value)
+                                Config.TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'TRACER_BASE_COLOR_R':
+                                current_color = list(Config.TRACER_BASE_COLOR)
+                                current_color[2] = int(value)
+                                Config.TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'BG_TRACER_BASE_COLOR_B':
+                                current_color = list(Config.BG_TRACER_BASE_COLOR)
+                                current_color[0] = int(value)
+                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'BG_TRACER_BASE_COLOR_G':
+                                current_color = list(Config.BG_TRACER_BASE_COLOR)
+                                current_color[1] = int(value)
+                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'BG_TRACER_BASE_COLOR_R':
+                                current_color = list(Config.BG_TRACER_BASE_COLOR)
+                                current_color[2] = int(value)
+                                Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                            elif key == 'AUDIO_FILES':
+                                if ',' in value:
+                                    Config.AUDIO_FILES = [item.strip() for item in value.split(',')]
+                                else:
+                                    Config.AUDIO_FILES = [value]
+                            else:
+                                # Imposta il valore normalmente
+                                setattr(Config, key, new_value)
+                        else:
+                            print(f"⚠️  Parametro sconosciuto '{key}' alla riga {line_num}")
+                    except Exception as e:
+                        print(f"⚠️  Errore nel parsing della riga {line_num}: {line} ({e})")
+        
+        # Ricalcola i valori dipendenti
+        if Config.TEST_MODE:
+            Config.FPS = 1
+            Config.DURATION_SECONDS = 4
+        Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+        
+        print("✅ Configurazione caricata dal file config")
+    
+    except Exception as e:
+        print(f"⚠️  Errore nel caricamento del file config: {e}")
+        print("📄 Uso valori di default")
+
 def main():
     """Funzione principale per generare l'animazione del logo."""
     
@@ -2295,7 +2417,10 @@ def main():
                        help='Modalità test rapida (5 secondi)')
     args = parser.parse_args()
     
-    # Applica le opzioni dalla linea di comando
+    # --- Carica configurazione dal file config ---
+    load_config_from_file()
+    
+    # Applica le opzioni dalla linea di comando (override del config file)
     if args.test:
         Config.TEST_MODE = True
         Config.FPS = 1

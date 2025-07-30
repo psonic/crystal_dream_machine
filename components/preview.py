@@ -55,6 +55,10 @@ class LivePreview:
         self.should_render_video = False
         self.force_refresh = False  # Per forzare il refresh quando si cambiano parametri
         
+        # File di configurazione live
+        self.live_params_file = "config"
+        self.last_params_mtime = 0
+        
         # Monitoring file per hot-reload
         self.bg_video_path = config.BACKGROUND_VIDEO_PATH
         self.texture_path = None
@@ -72,22 +76,16 @@ class LivePreview:
         # Trova texture iniziale
         self._find_texture_file()
         
-        # Backup parametri originali per reset
-        self._backup_original_params()
+        # Carica parametri iniziali dal file
+        if os.path.exists(self.live_params_file):
+            self.last_params_mtime = os.path.getmtime(self.live_params_file)
+            self._load_live_params()
         
         print("🌊 Live Preview inizializzata!")
         print("   📺 Finestra: Crystal Therapy - Live Preview")
         print("   🔄 Auto-refresh: ogni 1 secondo")
+        print("   📝 MODIFICA PARAMETRI: Edita il file 'config' e salvalo!")
         print("   🎬 SPAZIO: genera video completo + Git push")
-        print("   🎚️ CONTROLLI PARAMETRI:")
-        print("      Q/A: Deformation Intensity (±2.0)")
-        print("      W/S: Glow Intensity (±0.1)")
-        print("      E/D: Lens Speed (±0.02)")
-        print("      R/F: Background Zoom (±0.1)")
-        print("      T/G: Logo Zoom (±0.1)")
-        print("      Y/H: Tracer Opacity (±0.01)")
-        print("      U/J: Blending Strength (±0.1)")
-        print("   🔄 CTRL+R: Reset parametri")
         print("   ❌ ESC: esci dalla preview")
         
     def _find_texture_file(self):
@@ -105,106 +103,148 @@ class LivePreview:
         if os.path.exists(self.config.TEXTURE_FALLBACK_PATH):
             self.texture_path = self.config.TEXTURE_FALLBACK_PATH
     
-    def _backup_original_params(self):
-        """Salva i parametri originali per il reset"""
-        self.original_params = {
-            'DEFORMATION_INTENSITY': self.config.DEFORMATION_INTENSITY,
-            'GLOW_INTENSITY': self.config.GLOW_INTENSITY,
-            'LENS_SPEED_FACTOR': self.config.LENS_SPEED_FACTOR,
-            'BG_ZOOM_FACTOR': self.config.BG_ZOOM_FACTOR,
-            'LOGO_ZOOM_FACTOR': self.config.LOGO_ZOOM_FACTOR,
-            'TRACER_MAX_OPACITY': self.config.TRACER_MAX_OPACITY,
-            'BLENDING_STRENGTH': self.config.BLENDING_STRENGTH,
-        }
-        
-    def _reset_params(self):
-        """Ripristina i parametri originali"""
-        for param, value in self.original_params.items():
-            setattr(self.config, param, value)
-        self.force_refresh = True
-        print("🔄 Parametri ripristinati ai valori originali")
-        
-    def _handle_parameter_controls(self, key):
-        """Gestisce i controlli per modificare i parametri in tempo reale"""
-        changed = False
-        
-        # Deformation Intensity (Q/A)
-        if key == ord('q') or key == ord('Q'):
-            self.config.DEFORMATION_INTENSITY = max(0.5, self.config.DEFORMATION_INTENSITY + 2.0)
-            print(f"🌊 Deformation Intensity: {self.config.DEFORMATION_INTENSITY:.1f}")
-            changed = True
-        elif key == ord('a') or key == ord('A'):
-            self.config.DEFORMATION_INTENSITY = max(0.5, self.config.DEFORMATION_INTENSITY - 2.0)
-            print(f"🌊 Deformation Intensity: {self.config.DEFORMATION_INTENSITY:.1f}")
-            changed = True
+    def _load_live_params(self):
+        """Carica i parametri dal file config"""
+        if not os.path.exists(self.live_params_file):
+            return False
             
-        # Glow Intensity (W/S)
-        elif key == ord('w') or key == ord('W'):
-            self.config.GLOW_INTENSITY = min(1.0, self.config.GLOW_INTENSITY + 0.1)
-            print(f"✨ Glow Intensity: {self.config.GLOW_INTENSITY:.2f}")
-            changed = True
-        elif key == ord('s') or key == ord('S'):
-            self.config.GLOW_INTENSITY = max(0.0, self.config.GLOW_INTENSITY - 0.1)
-            print(f"✨ Glow Intensity: {self.config.GLOW_INTENSITY:.2f}")
-            changed = True
+        try:
+            params_changed = False
+            with open(self.live_params_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Conversione dei valori
+                        if key == 'DEFORMATION_INTENSITY':
+                            new_val = float(value)
+                            if new_val != self.config.DEFORMATION_INTENSITY:
+                                self.config.DEFORMATION_INTENSITY = new_val
+                                params_changed = True
+                                
+                        elif key == 'DEFORMATION_SPEED':
+                            new_val = float(value)
+                            if new_val != self.config.DEFORMATION_SPEED:
+                                self.config.DEFORMATION_SPEED = new_val
+                                params_changed = True
+                                
+                        elif key == 'DEFORMATION_SCALE':
+                            new_val = float(value)
+                            if new_val != self.config.DEFORMATION_SCALE:
+                                self.config.DEFORMATION_SCALE = new_val
+                                params_changed = True
+                                
+                        elif key == 'GLOW_INTENSITY':
+                            new_val = float(value)
+                            if new_val != self.config.GLOW_INTENSITY:
+                                self.config.GLOW_INTENSITY = new_val
+                                params_changed = True
+                                
+                        elif key == 'GLOW_KERNEL_SIZE':
+                            new_val = int(value)
+                            if new_val != self.config.GLOW_KERNEL_SIZE:
+                                self.config.GLOW_KERNEL_SIZE = new_val
+                                params_changed = True
+                                
+                        elif key == 'LENS_SPEED_FACTOR':
+                            new_val = float(value)
+                            if new_val != self.config.LENS_SPEED_FACTOR:
+                                self.config.LENS_SPEED_FACTOR = new_val
+                                params_changed = True
+                                
+                        elif key == 'NUM_LENSES':
+                            new_val = int(value)
+                            if new_val != self.config.NUM_LENSES:
+                                self.config.NUM_LENSES = new_val
+                                params_changed = True
+                                print("⚠️ NUM_LENSES cambiato - Ricaricamento lenti necessario")
+                                
+                        elif key == 'LOGO_ZOOM_FACTOR':
+                            new_val = float(value)
+                            if new_val != self.config.LOGO_ZOOM_FACTOR:
+                                self.config.LOGO_ZOOM_FACTOR = new_val
+                                params_changed = True
+                                
+                        elif key == 'BG_ZOOM_FACTOR':
+                            new_val = float(value)
+                            if new_val != self.config.BG_ZOOM_FACTOR:
+                                self.config.BG_ZOOM_FACTOR = new_val
+                                params_changed = True
+                                
+                        elif key == 'TRACER_MAX_OPACITY':
+                            new_val = float(value)
+                            if new_val != self.config.TRACER_MAX_OPACITY:
+                                self.config.TRACER_MAX_OPACITY = new_val
+                                params_changed = True
+                                
+                        elif key == 'BG_TRACER_MAX_OPACITY':
+                            new_val = float(value)
+                            if new_val != self.config.BG_TRACER_MAX_OPACITY:
+                                self.config.BG_TRACER_MAX_OPACITY = new_val
+                                params_changed = True
+                                
+                        elif key == 'BLENDING_STRENGTH':
+                            new_val = float(value)
+                            if new_val != self.config.BLENDING_STRENGTH:
+                                self.config.BLENDING_STRENGTH = new_val
+                                params_changed = True
+                                
+                        elif key == 'BLEND_TRANSPARENCY':
+                            new_val = float(value)
+                            if new_val != self.config.BLEND_TRANSPARENCY:
+                                self.config.BLEND_TRANSPARENCY = new_val
+                                params_changed = True
+                                
+                        elif key in ['LOGO_COLOR_B', 'LOGO_COLOR_G', 'LOGO_COLOR_R']:
+                            new_val = int(value)
+                            current_color = list(self.config.LOGO_COLOR)
+                            if key == 'LOGO_COLOR_B':
+                                current_color[0] = new_val
+                            elif key == 'LOGO_COLOR_G':
+                                current_color[1] = new_val
+                            elif key == 'LOGO_COLOR_R':
+                                current_color[2] = new_val
+                            
+                            new_color = tuple(current_color)
+                            if new_color != self.config.LOGO_COLOR:
+                                self.config.LOGO_COLOR = new_color
+                                params_changed = True
+                                
+                        elif key == 'TEXTURE_ALPHA':
+                            new_val = float(value)
+                            if new_val != self.config.TEXTURE_ALPHA:
+                                self.config.TEXTURE_ALPHA = new_val
+                                params_changed = True
+                                
+                        elif key == 'TEXTURE_BACKGROUND_ALPHA':
+                            new_val = float(value)
+                            if new_val != self.config.TEXTURE_BACKGROUND_ALPHA:
+                                self.config.TEXTURE_BACKGROUND_ALPHA = new_val
+                                params_changed = True
             
-        # Lens Speed (E/D)
-        elif key == ord('e') or key == ord('E'):
-            self.config.LENS_SPEED_FACTOR = min(0.5, self.config.LENS_SPEED_FACTOR + 0.02)
-            print(f"🔮 Lens Speed: {self.config.LENS_SPEED_FACTOR:.3f}")
-            changed = True
-        elif key == ord('d') or key == ord('D'):
-            self.config.LENS_SPEED_FACTOR = max(0.005, self.config.LENS_SPEED_FACTOR - 0.02)
-            print(f"🔮 Lens Speed: {self.config.LENS_SPEED_FACTOR:.3f}")
-            changed = True
-            
-        # Background Zoom (R/F)
-        elif key == ord('r') or key == ord('R'):
-            self.config.BG_ZOOM_FACTOR = min(3.0, self.config.BG_ZOOM_FACTOR + 0.1)
-            print(f"🎬 Background Zoom: {self.config.BG_ZOOM_FACTOR:.2f}")
-            changed = True
-        elif key == ord('f') or key == ord('F'):
-            self.config.BG_ZOOM_FACTOR = max(0.5, self.config.BG_ZOOM_FACTOR - 0.1)
-            print(f"🎬 Background Zoom: {self.config.BG_ZOOM_FACTOR:.2f}")
-            changed = True
-            
-        # Logo Zoom (T/G)
-        elif key == ord('t') or key == ord('T'):
-            self.config.LOGO_ZOOM_FACTOR = min(3.0, self.config.LOGO_ZOOM_FACTOR + 0.1)
-            print(f"📐 Logo Zoom: {self.config.LOGO_ZOOM_FACTOR:.2f}")
-            changed = True
-        elif key == ord('g') or key == ord('G'):
-            self.config.LOGO_ZOOM_FACTOR = max(0.3, self.config.LOGO_ZOOM_FACTOR - 0.1)
-            print(f"📐 Logo Zoom: {self.config.LOGO_ZOOM_FACTOR:.2f}")
-            changed = True
-            
-        # Tracer Opacity (Y/H)
-        elif key == ord('y') or key == ord('Y'):
-            self.config.TRACER_MAX_OPACITY = min(0.2, self.config.TRACER_MAX_OPACITY + 0.01)
-            print(f"🌈 Tracer Opacity: {self.config.TRACER_MAX_OPACITY:.3f}")
-            changed = True
-        elif key == ord('h') or key == ord('H'):
-            self.config.TRACER_MAX_OPACITY = max(0.0, self.config.TRACER_MAX_OPACITY - 0.01)
-            print(f"🌈 Tracer Opacity: {self.config.TRACER_MAX_OPACITY:.3f}")
-            changed = True
-            
-        # Blending Strength (U/J)
-        elif key == ord('u') or key == ord('U'):
-            self.config.BLENDING_STRENGTH = min(1.0, self.config.BLENDING_STRENGTH + 0.1)
-            print(f"🎨 Blending Strength: {self.config.BLENDING_STRENGTH:.2f}")
-            changed = True
-        elif key == ord('j') or key == ord('J'):
-            self.config.BLENDING_STRENGTH = max(0.0, self.config.BLENDING_STRENGTH - 0.1)
-            print(f"🎨 Blending Strength: {self.config.BLENDING_STRENGTH:.2f}")
-            changed = True
-        
-        if changed:
-            self.force_refresh = True
-            # Se cambiano zoom factors che influenzano i contorni, potremmo dover ricaricare
-            if key in [ord('t'), ord('T'), ord('g'), ord('G')]:
-                print("⚠️ Cambio zoom logo - Ricaricamento contorni necessario al prossimo rendering completo")
+            if params_changed:
+                print("📝 Parametri aggiornati dal file config")
                 
-        return changed
+            return params_changed
+            
+        except Exception as e:
+            print(f"⚠️ Errore nel caricamento parametri live: {e}")
+            return False
+    
+    def _check_params_file_changes(self):
+        """Controlla se il file dei parametri è stato modificato"""
+        if not os.path.exists(self.live_params_file):
+            return False
+            
+        mtime = os.path.getmtime(self.live_params_file)
+        if mtime != self.last_params_mtime:
+            self.last_params_mtime = mtime
+            return self._load_live_params()
+        
+        return False
         
     def _check_file_changes(self):
         """Controlla se i file sono stati modificati"""
@@ -350,10 +390,11 @@ class LivePreview:
         # Parametri correnti (colonna sinistra)
         y_offset = 110
         param_texts = [
-            f"Deform: {self.config.DEFORMATION_INTENSITY:.1f} (Q/A)",
-            f"Glow: {self.config.GLOW_INTENSITY:.2f} (W/S)", 
-            f"Lens: {self.config.LENS_SPEED_FACTOR:.3f} (E/D)",
-            f"BG Zoom: {self.config.BG_ZOOM_FACTOR:.2f} (R/F)",
+            f"Deform Int: {self.config.DEFORMATION_INTENSITY:.1f}",
+            f"Glow: {self.config.GLOW_INTENSITY:.2f}", 
+            f"Lens Speed: {self.config.LENS_SPEED_FACTOR:.3f}",
+            f"BG Zoom: {self.config.BG_ZOOM_FACTOR:.2f}",
+            f"Logo Zoom: {self.config.LOGO_ZOOM_FACTOR:.2f}",
         ]
         
         for i, text in enumerate(param_texts):
@@ -362,10 +403,11 @@ class LivePreview:
         
         # Parametri correnti (colonna destra)
         param_texts_2 = [
-            f"Logo: {self.config.LOGO_ZOOM_FACTOR:.2f} (T/G)",
-            f"Tracer: {self.config.TRACER_MAX_OPACITY:.3f} (Y/H)",
-            f"Blend: {self.config.BLENDING_STRENGTH:.2f} (U/J)",
-            f"CTRL+R: Reset"
+            f"Tracer: {self.config.TRACER_MAX_OPACITY:.3f}",
+            f"BG Tracer: {self.config.BG_TRACER_MAX_OPACITY:.3f}",
+            f"Blend: {self.config.BLENDING_STRENGTH:.2f}",
+            f"Texture: {self.config.TEXTURE_ALPHA:.2f}",
+            f"Color: {self.config.LOGO_COLOR}",
         ]
         
         for i, text in enumerate(param_texts_2):
@@ -395,7 +437,7 @@ class LivePreview:
         
         print("✅ Live Preview attiva!")
         print("   📺 Guarda la finestra per vedere l'anteprima")
-        print("   🔄 Il frame si aggiornerà automaticamente ogni 5 secondi")
+        print("   🔄 Il frame si aggiornerà automaticamente ogni secondo")
         
         try:
             while self.is_running:
@@ -412,6 +454,10 @@ class LivePreview:
                     # Controlla modifiche ai file
                     if self._check_file_changes():
                         self._reload_resources()
+                    
+                    # Controlla modifiche al file parametri
+                    if self._check_params_file_changes():
+                        self.force_refresh = True
                     
                     self.last_refresh_time = current_time
                 
@@ -435,12 +481,6 @@ class LivePreview:
                     print("🎬 Richiesta generazione video completo...")
                     self.should_render_video = True
                     break
-                elif key == 18:  # CTRL+R
-                    self._reset_params()
-                elif key != 255:  # Qualsiasi altro tasto
-                    # Gestisci controlli parametri
-                    if self._handle_parameter_controls(key):
-                        pass  # Il metodo già gestisce il feedback
                 
         except KeyboardInterrupt:
             print("\n⚠️ Interrotto dall'utente")
