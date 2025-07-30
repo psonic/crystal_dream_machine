@@ -7,12 +7,17 @@ import multiprocessing
 from functools import partial
 import time
 import os
+import argparse
 from collections import deque
 import xml.etree.ElementTree as ET
 from svgpathtools import svg2paths2
 import re
 import subprocess
 import sys
+
+# Import dei nuovi moduli
+from components.config import Config
+from components.preview import run_preview_mode
 
 # Import condizionale per PDF
 try:
@@ -38,10 +43,6 @@ try:
 except ImportError:
     AUDIO_AVAILABLE = False
     print("⚠️ Librosa non disponibile. Per supporto audio: pip install librosa")
-
-# --- CONFIGURAZIONE GLOBALE ---
-
-class Config:
     # --- Modalità e Qualità ---
     TEST_MODE = False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
@@ -2209,6 +2210,28 @@ def find_texture_file():
     print(f"⚠️ Nessuna texture trovata, il logo non sarà texturizzato")
     return None
 
+def get_background_frame(bg_video, frame_index):
+    """Funzione helper per ottenere un frame di sfondo"""
+    if bg_video and bg_video.isOpened():
+        # Calcola il frame considerando il rallentamento
+        bg_frame_index = int(frame_index / Config.BG_SLOWDOWN_FACTOR)
+        bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
+        ret, bg_frame = bg_video.read()
+        
+        if ret:
+            return bg_frame
+    
+    # Fallback: frame nero
+    return np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
+
+def load_texture_wrapper(texture_path, width, height):
+    """Wrapper per la funzione load_texture"""
+    return load_texture(texture_path, width, height)
+
+def load_audio_wrapper(audio_files, duration_seconds, fps, random_selection, random_start):
+    """Wrapper per la funzione load_audio_analysis"""
+    return load_audio_analysis(audio_files, duration_seconds, fps, random_selection, random_start)
+
 def print_blending_options():
     """
     Stampa tutte le opzioni di blending disponibili con descrizioni
@@ -2263,6 +2286,26 @@ def print_blending_options():
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
+    
+    # --- Parsing degli argomenti da linea di comando ---
+    parser = argparse.ArgumentParser(description='Crystal Therapy Video Generator')
+    parser.add_argument('--preview', action='store_true', 
+                       help='Avvia modalità Live Preview')
+    parser.add_argument('--test', action='store_true',
+                       help='Modalità test rapida (5 secondi)')
+    args = parser.parse_args()
+    
+    # Applica le opzioni dalla linea di comando
+    if args.test:
+        Config.TEST_MODE = True
+        Config.FPS = 1
+        Config.DURATION_SECONDS = 4
+        Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+    
+    if args.preview:
+        Config.PREVIEW_MODE = True
+        print("🌊 Modalità LIVE PREVIEW attivata!")
+    
     # --- Codici ANSI per colori e stili nel terminale ---
     C_CYAN = '\033[96m'
     C_GREEN = '\033[92m'
@@ -2353,6 +2396,25 @@ def main():
         return
 
     print("Estrazione contorni riuscita.")
+
+    # --- MODALITÀ LIVE PREVIEW ---
+    if Config.PREVIEW_MODE:
+        print("🌊 Avviando modalità Live Preview...")
+        
+        # Avvia la preview
+        should_render_video = run_preview_mode(
+            Config, render_frame, contours, hierarchy, Config.WIDTH, Config.HEIGHT,
+            get_background_frame, load_texture_wrapper, initialize_lenses, load_audio_wrapper
+        )
+        
+        if should_render_video:
+            print("🎬 Utente ha richiesto generazione video completo!")
+            print("🚀 Passaggio a modalità produzione...")
+            # Disabilita preview mode e continua con il rendering normale
+            Config.PREVIEW_MODE = False
+        else:
+            print("👋 Uscita dalla Live Preview")
+            return
 
     # --- Caricamento Texture (se abilitata) ---
     texture_image = None
