@@ -2241,6 +2241,7 @@ def load_config_from_file():
 def main():
     """Funzione principale per generare l'animazione del logo."""
     import os  # Assicuriamoci che os sia disponibile
+    import sys  # Assicuriamoci che sys sia disponibile
     
     # --- Parsing degli argomenti da linea di comando ---
     parser = argparse.ArgumentParser(description='Crystal Therapy Video Generator')
