@@ -48,7 +48,7 @@ BACKGROUND_VIDEO_PATH="input/sfondo.MOV"  # Percorso video di sfondo
 BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
 BG_ZOOM_FACTOR=1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
 BG_SLOWDOWN_FACTOR=1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-BG_DARKEN_FACTOR=0.7      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+BG_DARKEN_FACTOR=0.3      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
 BG_CONTRAST_FACTOR=1.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
 BG_RANDOM_START=True       # Inizia da punto casuale del video (max 2/3 della durata)
 
@@ -72,7 +72,7 @@ AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-
 # --- Effetto Glow ---
 GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
 GLOW_KERNEL_SIZE=50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
-GLOW_INTENSITY=0.4         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
+GLOW_INTENSITY=0.2         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
 # --- Deformazione Organica ---
 # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
@@ -91,11 +91,11 @@ DEFORMATION_AUDIO_MULTIPLIER=1.4 # Moltiplicatore globale audio deformazione (ra
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
-NUM_LENSES=70             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+NUM_LENSES=75             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
 LENS_MIN_STRENGTH=-1.2     # Forza minima ridotta per deformazione più delicata
 LENS_MAX_STRENGTH=1.5      # Forza massima ridotta per deformazione più delicata
 LENS_MIN_RADIUS=2         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-LENS_MAX_RADIUS=35         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+LENS_MAX_RADIUS=55         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
 LENS_SPEED_FACTOR=0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
 
 # --- Parametri Movimento Lenti ---
@@ -139,7 +139,7 @@ BG_TRACER_MAX_OPACITY=0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=so
 BG_TRACER_BASE_COLOR_B=200  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
 BG_TRACER_BASE_COLOR_G=170  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
 BG_TRACER_BASE_COLOR_R=200  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
-BG_TRACER_THRESHOLD1=50        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+BG_TRACER_THRESHOLD1=20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
 BG_TRACER_THRESHOLD2=100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 
 # --- Blending Avanzato ---

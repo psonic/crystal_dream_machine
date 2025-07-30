@@ -51,7 +51,7 @@ class LivePreview:
         self.current_frame = None
         self.frame_counter = 0
         self.last_refresh_time = 0
-        self.refresh_interval = 1.0  # 1 secondo per aggiornamenti più fluidi
+        self.refresh_interval = 3.0  # 3 secondi per refresh più frequente
         self.should_render_video = False
         self.force_refresh = False  # Per forzare il refresh quando si cambiano parametri
         
@@ -83,7 +83,7 @@ class LivePreview:
         
         print("🌊 Live Preview inizializzata!")
         print("   📺 Finestra: Crystal Therapy - Live Preview")
-        print("   🔄 Auto-refresh: ogni 1 secondo")
+        print("   🔄 Auto-refresh: ogni 3 secondi")
         print("   📝 MODIFICA PARAMETRI: Edita il file 'config' e salvalo!")
         print("   🎬 SPAZIO: genera video completo + Git push")
         print("   ❌ ESC: esci dalla preview")
@@ -110,13 +110,22 @@ class LivePreview:
             
         try:
             params_changed = False
+            lenses_need_reload = False
             with open(self.live_params_file, 'r') as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith('#') and '=' in line:
                         key, value = line.split('=', 1)
                         key = key.strip()
-                        value = value.strip()
+                        
+                        # Separa il valore dal commento (stesso parsing del main)
+                        if '#' in value:
+                            value = value.split('#')[0].strip()
+                        else:
+                            value = value.strip()
+                        
+                        # Rimuove le virgolette se presenti
+                        value = value.strip('"\'')
                         
                         # Conversione dei valori
                         if key == 'DEFORMATION_INTENSITY':
@@ -160,6 +169,7 @@ class LivePreview:
                             if new_val != self.config.NUM_LENSES:
                                 self.config.NUM_LENSES = new_val
                                 params_changed = True
+                                lenses_need_reload = True
                                 print("⚠️ NUM_LENSES cambiato - Ricaricamento lenti necessario")
                                 
                         elif key == 'LOGO_ZOOM_FACTOR':
@@ -228,6 +238,12 @@ class LivePreview:
             if params_changed:
                 print("📝 Parametri aggiornati dal file config")
                 
+            # Ricarica lenti se necessario
+            if lenses_need_reload and self.config.LENS_DEFORMATION_ENABLED:
+                print("🔄 Ricaricamento lenti in corso...")
+                self.lenses = self.initialize_lenses_func(self.config)
+                print(f"✅ Lenti ricaricate: {len(self.lenses)} lenti attive")
+                
             return params_changed
             
         except Exception as e:
@@ -235,13 +251,15 @@ class LivePreview:
             return False
     
     def _check_params_file_changes(self):
-        """Controlla se il file dei parametri è stato modificato"""
+        """Controlla se il file dei parametri è stato modificato o forza la rilettura ogni refresh"""
         if not os.path.exists(self.live_params_file):
             return False
             
         mtime = os.path.getmtime(self.live_params_file)
-        if mtime != self.last_params_mtime:
+        # Forza sempre la rilettura ogni refresh per essere sicuri
+        if mtime != self.last_params_mtime or True:  # Sempre True per forzare rilettura
             self.last_params_mtime = mtime
+            print("🔄 Rilettura forzata del file config...")
             return self._load_live_params()
         
         return False
@@ -446,7 +464,7 @@ class LivePreview:
                 # Controlla se è ora di fare refresh
                 if (current_time - self.last_refresh_time >= self.refresh_interval) or self.force_refresh:
                     if not self.force_refresh:
-                        print("🔄 Auto-refresh frame...")
+                        print("🔄 Auto-refresh frame + controllo config...")
                     else:
                         print("🎚️ Refresh forzato per cambio parametri...")
                         self.force_refresh = False
