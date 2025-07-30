@@ -2387,8 +2387,9 @@ def load_config_from_file():
                                 else:
                                     Config.AUDIO_FILES = [value]
                             else:
-                                # Imposta il valore normalmente
-                                setattr(Config, key, new_value)
+                                # Imposta il valore normalmente se l'attributo esiste
+                                if hasattr(Config, key):
+                                    setattr(Config, key, new_value)
                         else:
                             print(f"⚠️  Parametro sconosciuto '{key}' alla riga {line_num}")
                     except Exception as e:
