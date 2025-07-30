@@ -3,8 +3,7 @@
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
-PREVIEW_MODE=False  # NUOVO: Modalità Live Preview per sviluppo
+TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
 # --- Formato Video ---
 INSTAGRAM_STORIES_MODE=True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -32,7 +31,7 @@ TEXTURE_BACKGROUND_ALPHA=0.1  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sot
 TEXTURE_BLENDING_MODE="lighten"  # Modalità blending texture
 
 # --- Parametri Video ---
-SVG_PADDING=20  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+SVG_PADDING=0  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=20  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
 DURATION_SECONDS=10  # Durata video in secondi
 
@@ -40,16 +39,16 @@ DURATION_SECONDS=10  # Durata video in secondi
 LOGO_COLOR_B=255    # Colore logo BGR Blue (range: 0-255)
 LOGO_COLOR_G=255    # Colore logo BGR Green (range: 0-255)
 LOGO_COLOR_R=255    # Colore logo BGR Red (range: 0-255)
-LOGO_ALPHA=0.7             # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
+LOGO_ALPHA=0.8            # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
 LOGO_ZOOM_FACTOR=1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
 
 # --- Video di Sfondo ---
 BACKGROUND_VIDEO_PATH="input/sfondo.MOV"  # Percorso video di sfondo
 BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
-BG_ZOOM_FACTOR=1.4         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+BG_ZOOM_FACTOR=1.0         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
 BG_SLOWDOWN_FACTOR=1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-BG_DARKEN_FACTOR=0.3      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-BG_CONTRAST_FACTOR=1.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+BG_DARKEN_FACTOR=0.5      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+BG_CONTRAST_FACTOR=2.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
 BG_RANDOM_START=True       # Inizia da punto casuale del video (max 2/3 della durata)
 
 # --- Sistema Audio Reattivo ---
@@ -72,7 +71,7 @@ AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-
 # --- Effetto Glow ---
 GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
 GLOW_KERNEL_SIZE=50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
-GLOW_INTENSITY=0.2         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
+GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
 # --- Deformazione Organica ---
 # Questo effetto fa "respirare" il logo creando ondulazioni fluide che lo deformano nel tempo
@@ -91,7 +90,7 @@ DEFORMATION_AUDIO_MULTIPLIER=1.4 # Moltiplicatore globale audio deformazione (ra
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
-NUM_LENSES=75             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+NUM_LENSES=40             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
 LENS_MIN_STRENGTH=-1.2     # Forza minima ridotta per deformazione più delicata
 LENS_MAX_STRENGTH=1.5      # Forza massima ridotta per deformazione più delicata
 LENS_MIN_RADIUS=2         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
@@ -124,7 +123,7 @@ SMOOTHING_FACTOR=0.0001     # Intensità smussamento (range: 0.00001-0.01, 0.000
 
 # --- Traccianti Logo ---
 TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
-TRACER_TRAIL_LENGTH=25  # Lunghezza scie (ridotta in test mode per velocità)
+TRACER_TRAIL_LENGTH=45  # Lunghezza scie (ridotta in test mode per velocità)
 TRACER_MAX_OPACITY=0.05        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
 TRACER_BASE_COLOR_B=255  # Colore base scie Blue (BGR: 0-255)
 TRACER_BASE_COLOR_G=200  # Colore base scie Green (BGR: 0-255)
@@ -134,20 +133,20 @@ TRACER_THRESHOLD2=200          # Soglia alta rilevamento bordi (range: 100-500, 
 
 # --- Traccianti Sfondo ---
 BG_TRACER_ENABLED=True         # Attiva scie sui contorni dello sfondo
-BG_TRACER_TRAIL_LENGTH=25  # Lunghezza scie sfondo (ridotta in test mode)
-BG_TRACER_MAX_OPACITY=0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+BG_TRACER_TRAIL_LENGTH=45  # Lunghezza scie sfondo (ridotta in test mode)
+BG_TRACER_MAX_OPACITY=0.01     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
 BG_TRACER_BASE_COLOR_B=200  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
 BG_TRACER_BASE_COLOR_G=170  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
 BG_TRACER_BASE_COLOR_R=200  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
 BG_TRACER_THRESHOLD1=20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-BG_TRACER_THRESHOLD2=100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+BG_TRACER_THRESHOLD2=60       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 
 # --- Blending Avanzato ---
 ADVANCED_BLENDING=True  # Attiva fusione avanzata logo-sfondo
 
 # 🎨 SISTEMA PRESET AUTOMATICO
 # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-BLENDING_PRESET="cinematic"  # Usa 'manual' per configurazione manuale sotto
+BLENDING_PRESET="bright"  # Usa 'manual' per configurazione manuale sotto
 
 # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
 # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'

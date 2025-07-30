@@ -48,6 +48,7 @@ class LivePreview:
         
         # Stato interno
         self.is_running = False
+        self.restart_requested = False
         self.current_frame = None
         self.frame_counter = 0
         self.last_refresh_time = 0
@@ -111,6 +112,17 @@ class LivePreview:
         try:
             params_changed = False
             lenses_need_reload = False
+            restart_needed = False
+            
+            # Parametri che richiedono restart completo
+            restart_params = {
+                'NUM_LENSES', 'SVG_PATH', 'PDF_PATH', 'USE_SVG_SOURCE',
+                'BACKGROUND_VIDEO_PATH', 'AUDIO_FILES', 'FPS', 'DURATION_SECONDS',
+                'INSTAGRAM_STORIES_MODE', 'LENS_DEFORMATION_ENABLED', 'LOGO_ZOOM_FACTOR',
+                'SVG_LEFT_PADDING', 'LOGO_COLOR_B', 'LOGO_COLOR_G', 'LOGO_COLOR_R',
+                'BLENDING_PRESET', 'ADVANCED_BLENDING', 'BLENDING_MODE'
+            }
+            
             with open(self.live_params_file, 'r') as f:
                 for line in f:
                     line = line.strip()
@@ -127,7 +139,31 @@ class LivePreview:
                         # Rimuove le virgolette se presenti
                         value = value.strip('"\'')
                         
-                        # Conversione dei valori
+                        # Controllo generico per parametri che richiedono restart
+                        if key in restart_params:
+                            # Ottieni il valore attuale dal config
+                            current_val = getattr(self.config, key, None)
+                            
+                            # Converti il nuovo valore al tipo appropriato
+                            if key in ['USE_SVG_SOURCE', 'INSTAGRAM_STORIES_MODE', 'LENS_DEFORMATION_ENABLED', 'ADVANCED_BLENDING']:
+                                new_val = value.lower() in ('true', '1', 'yes', 'on')
+                            elif key in ['FPS', 'DURATION_SECONDS', 'NUM_LENSES', 'SVG_LEFT_PADDING', 
+                                       'LOGO_COLOR_B', 'LOGO_COLOR_G', 'LOGO_COLOR_R']:
+                                new_val = int(value)
+                            elif key in ['LOGO_ZOOM_FACTOR']:
+                                new_val = float(value)
+                            else:
+                                new_val = value  # String values
+                            
+                            # Controlla se il valore è cambiato
+                            if new_val != current_val:
+                                setattr(self.config, key, new_val)
+                                params_changed = True
+                                restart_needed = True
+                                print(f"⚠️ {key} cambiato da {current_val} a {new_val} - Restart necessario")
+                                continue  # Salta la gestione manuale sotto
+                        
+                        # Conversione dei valori per parametri NON critici
                         if key == 'DEFORMATION_INTENSITY':
                             new_val = float(value)
                             if new_val != self.config.DEFORMATION_INTENSITY:
@@ -162,20 +198,6 @@ class LivePreview:
                             new_val = float(value)
                             if new_val != self.config.LENS_SPEED_FACTOR:
                                 self.config.LENS_SPEED_FACTOR = new_val
-                                params_changed = True
-                                
-                        elif key == 'NUM_LENSES':
-                            new_val = int(value)
-                            if new_val != self.config.NUM_LENSES:
-                                self.config.NUM_LENSES = new_val
-                                params_changed = True
-                                lenses_need_reload = True
-                                print("⚠️ NUM_LENSES cambiato - Ricaricamento lenti necessario")
-                                
-                        elif key == 'LOGO_ZOOM_FACTOR':
-                            new_val = float(value)
-                            if new_val != self.config.LOGO_ZOOM_FACTOR:
-                                self.config.LOGO_ZOOM_FACTOR = new_val
                                 params_changed = True
                                 
                         elif key == 'BG_ZOOM_FACTOR':
@@ -234,11 +256,29 @@ class LivePreview:
                             if new_val != self.config.TEXTURE_BACKGROUND_ALPHA:
                                 self.config.TEXTURE_BACKGROUND_ALPHA = new_val
                                 params_changed = True
+                                
+                        elif key == 'BG_DARKEN_FACTOR':
+                            new_val = float(value)
+                            if new_val != self.config.BG_DARKEN_FACTOR:
+                                self.config.BG_DARKEN_FACTOR = new_val
+                                params_changed = True
+                                
+                        elif key == 'BG_CONTRAST_FACTOR':
+                            new_val = float(value)
+                            if new_val != self.config.BG_CONTRAST_FACTOR:
+                                self.config.BG_CONTRAST_FACTOR = new_val
+                                params_changed = True
             
             if params_changed:
                 print("📝 Parametri aggiornati dal file config")
                 
-            # Ricarica lenti se necessario
+            # Controlla se serve restart completo
+            if restart_needed:
+                print("🔄 RESTART NECESSARIO - Parametri critici modificati!")
+                print("   Riavviando Live Preview con nuove impostazioni...")
+                return 'RESTART'
+                
+            # Ricarica lenti se necessario (solo per parametri non critici)
             if lenses_need_reload and self.config.LENS_DEFORMATION_ENABLED:
                 print("🔄 Ricaricamento lenti in corso...")
                 self.lenses = self.initialize_lenses_func(self.config)
@@ -260,7 +300,16 @@ class LivePreview:
         if mtime != self.last_params_mtime or True:  # Sempre True per forzare rilettura
             self.last_params_mtime = mtime
             print("🔄 Rilettura forzata del file config...")
-            return self._load_live_params()
+            result = self._load_live_params()
+            
+            # Se è richiesto un restart, interrompi la preview
+            if result == 'RESTART':
+                print("🚀 Esecuzione restart preview...")
+                self.restart_requested = True
+                self.is_running = False  # Ferma il loop principale
+                return 'RESTART'
+                
+            return result
         
         return False
         
@@ -474,7 +523,11 @@ class LivePreview:
                         self._reload_resources()
                     
                     # Controlla modifiche al file parametri
-                    if self._check_params_file_changes():
+                    params_result = self._check_params_file_changes()
+                    if params_result == 'RESTART':
+                        print("🔄 RESTART richiesto - Uscendo dal loop preview...")
+                        break
+                    elif params_result:
                         self.force_refresh = True
                     
                     self.last_refresh_time = current_time
@@ -523,17 +576,27 @@ def run_preview_mode(config, render_frame_func, contours, hierarchy, width, heig
                     get_background_func, get_texture_func, initialize_lenses_func, 
                     load_audio_func=None):
     """
-    Avvia la modalità Live Preview
+    Avvia la modalità Live Preview con restart automatico completo
     
     Returns:
         bool: True se l'utente ha richiesto di generare il video completo
+        str: 'RESTART_SCRIPT' se è richiesto restart completo dello script
     """
+    print("🌊 Avviando modalità Live Preview...")
     preview = LivePreview(
         config, render_frame_func, contours, hierarchy, width, height,
         get_background_func, get_texture_func, initialize_lenses_func, load_audio_func
     )
     
     try:
-        return preview.run()
+        result = preview.run()
+        
+        # Se è richiesto restart completo dello script
+        if preview.restart_requested:
+            print("🔄 RESTART COMPLETO RICHIESTO - Uscendo per rilancio script...")
+            return 'RESTART_SCRIPT'
+        else:
+            return result
+            
     finally:
         preview.cleanup()
