@@ -1616,8 +1616,25 @@ def process_background(bg_frame, config):
         final_bg = scaled_bg[start_y:start_y + target_height, start_x:start_x + target_width]
         
     else:
-        # Metodo originale con crop
-        cropped_bg = bg_frame[config.BG_CROP_Y_START : config.BG_CROP_Y_END, :]
+        # Metodo crop personalizzato per video verticali
+        h, w, _ = bg_frame.shape
+        
+        # Calcola le dimensioni del crop basandosi sui ratio
+        crop_width = int(w * config.BG_CROP_WIDTH_RATIO)
+        crop_height = int(h * config.BG_CROP_HEIGHT_RATIO)
+        
+        # Calcola le coordinate di inizio
+        crop_x_start = int(config.BG_CROP_X_START * (w - crop_width))
+        crop_y_start = int(config.BG_CROP_Y_START * (h - crop_height))
+        
+        # Calcola le coordinate di fine
+        crop_x_end = crop_x_start + crop_width
+        crop_y_end = crop_y_start + crop_height
+        
+        # Esegue il crop
+        cropped_bg = bg_frame[crop_y_start:crop_y_end, crop_x_start:crop_x_end]
+        
+        # Ridimensiona alla dimensione target
         final_bg = cv2.resize(cropped_bg, (config.WIDTH, config.HEIGHT))
     
     # 2. Scurisce e contrasta
