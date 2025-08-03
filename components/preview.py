@@ -68,6 +68,7 @@ class LivePreview:
         
         # Stato rendering
         self.bg_video = None
+        self.bg_start_frame = 0  # Frame di inizio casuale per il video di sfondo
         self.texture_image = None
         self.lenses = []
         self.tracer_history = deque(maxlen=config.TRACER_TRAIL_LENGTH)
@@ -343,6 +344,21 @@ class LivePreview:
                 self.bg_video.release()
             self.bg_video = cv2.VideoCapture(self.bg_video_path)
             
+            # 🎲 Ricalcola frame di inizio casuale per il nuovo video
+            self.bg_start_frame = 0
+            if self.bg_video.isOpened() and self.config.BG_RANDOM_START:
+                bg_total_frames = int(self.bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+                bg_fps = self.bg_video.get(cv2.CAP_PROP_FPS)
+                
+                if bg_total_frames > self.config.TOTAL_FRAMES:
+                    frames_needed = int(self.config.TOTAL_FRAMES / self.config.BG_SLOWDOWN_FACTOR) + 1
+                    max_start_frame = max(0, int(bg_total_frames * 2/3) - frames_needed)
+                    if max_start_frame > 0:
+                        import numpy as np
+                        self.bg_start_frame = np.random.randint(0, max_start_frame)
+                        start_time = self.bg_start_frame / bg_fps
+                        print(f"🎲 Preview: Nuovo inizio casuale da frame {self.bg_start_frame} ({start_time:.1f}s)")
+            
             # Ricarica texture
             if self.texture_path:
                 self.texture_image = self.get_texture_func(self.texture_path, self.width, self.height)
@@ -366,6 +382,29 @@ class LivePreview:
         """Inizializza lo stato per il rendering"""
         # Carica video di sfondo
         self.bg_video = cv2.VideoCapture(self.bg_video_path)
+        
+        # 🎲 Calcola frame di inizio casuale per il video di sfondo (come nel main script)
+        self.bg_start_frame = 0
+        if self.bg_video.isOpened() and self.config.BG_RANDOM_START:
+            bg_total_frames = int(self.bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+            bg_fps = self.bg_video.get(cv2.CAP_PROP_FPS)
+            
+            if bg_total_frames > self.config.TOTAL_FRAMES:
+                # Calcola quanti frame servono considerando il rallentamento
+                frames_needed = int(self.config.TOTAL_FRAMES / self.config.BG_SLOWDOWN_FACTOR) + 1
+                # Assicurati di avere abbastanza frame rimanenti
+                max_start_frame = max(0, int(bg_total_frames * 2/3) - frames_needed)
+                if max_start_frame > 0:
+                    import numpy as np
+                    self.bg_start_frame = np.random.randint(0, max_start_frame)
+                    start_time = self.bg_start_frame / bg_fps
+                    print(f"🎲 Preview: Inizio casuale da frame {self.bg_start_frame} ({start_time:.1f}s)")
+                else:
+                    print("🎬 Preview: Video troppo corto per random start")
+            else:
+                print("🔄 Preview: Inizio dal primo frame (video corto)")
+        else:
+            print("🔄 Preview: Inizio dal primo frame (random start disabilitato)")
         
         # Carica texture
         if self.texture_path:
@@ -394,8 +433,8 @@ class LivePreview:
     def _generate_preview_frame(self):
         """Genera un singolo frame per la preview"""
         try:
-            # Ottieni frame di sfondo
-            bg_frame = self.get_background_func(self.bg_video, self.frame_counter)
+            # Ottieni frame di sfondo con offset casuale
+            bg_frame = self.get_background_func(self.bg_video, self.frame_counter, self.bg_start_frame)
             
             # Renderizza il frame
             frame_result = self.render_frame_func(
