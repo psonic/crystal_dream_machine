@@ -3,10 +3,10 @@
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
 # --- Formato Video ---
-INSTAGRAM_STORIES_MODE=False    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
+INSTAGRAM_STORIES_MODE=True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                # False = formato originale basato su dimensioni SVG
 
 # --- Compatibilità WhatsApp ---
@@ -40,14 +40,14 @@ LOGO_COLOR_B=255    # Colore logo BGR Blue (range: 0-255)
 LOGO_COLOR_G=255    # Colore logo BGR Green (range: 0-255)
 LOGO_COLOR_R=255    # Colore logo BGR Red (range: 0-255)
 LOGO_ALPHA=0.8            # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 1.0=opaco)
-LOGO_ZOOM_FACTOR=1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
+LOGO_ZOOM_FACTOR=1.1       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
 
 # --- Video di Sfondo ---
-BACKGROUND_VIDEO_PATH="input/sfondo.MOV"  # Percorso video di sfondo
+BACKGROUND_VIDEO_PATH="input/fumo2.MOV"  # Percorso video di sfondo
 BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
 BG_ZOOM_FACTOR=1.0         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
 BG_SLOWDOWN_FACTOR=1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-BG_DARKEN_FACTOR=0.2      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+BG_DARKEN_FACTOR=0.7      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
 BG_CONTRAST_FACTOR=2.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
 BG_RANDOM_START=True       # Inizia da punto casuale del video (max 2/3 della durata)
 
@@ -70,7 +70,7 @@ AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-
 
 # --- Effetto Glow ---
 GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
-GLOW_KERNEL_SIZE=50  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
+GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
 GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
 # --- Deformazione Organica ---
@@ -90,7 +90,7 @@ DEFORMATION_AUDIO_MULTIPLIER=1.4 # Moltiplicatore globale audio deformazione (ra
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
-NUM_LENSES=80             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+NUM_LENSES=50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
 LENS_MIN_STRENGTH=-1.2     # Forza minima ridotta per deformazione più delicata
 LENS_MAX_STRENGTH=1.5      # Forza massima ridotta per deformazione più delicata
 LENS_MIN_RADIUS=5         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
@@ -146,7 +146,7 @@ ADVANCED_BLENDING=True  # Attiva fusione avanzata logo-sfondo
 
 # 🎨 SISTEMA PRESET AUTOMATICO
 # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-BLENDING_PRESET="bright"  # Usa 'manual' per configurazione manuale sotto
+BLENDING_PRESET="cinematic"  # Usa 'manual' per configurazione manuale sotto
 
 # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
 # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
@@ -159,10 +159,10 @@ COLOR_HARMONIZATION=False      # Armonizza colori logo-sfondo
 LUMINANCE_MATCHING=False       # Adatta luminosità logo allo sfondo
 
 # Parametri fusione classici
-LOGO_BLEND_FACTOR=0.6          # Bilanciamento logo/fuso (range: 0.0-1.0, 0.3=più logo, 0.8=più effetto)
+LOGO_BLEND_FACTOR=0.8          # Bilanciamento logo/fuso (range: 0.0-1.0, 0.3=più logo, 0.8=più effetto)
 EDGE_SOFTNESS=80               # Morbidezza bordi (range: 20-150, 50=netti, 100=morbidi)
-BLEND_TRANSPARENCY=0.3         # Trasparenza globale (range: 0.0-0.8, 0.2=opaco, 0.5=trasparente)
-COLOR_BLENDING_STRENGTH=0.3    # Intensità mescolamento colori (range: 0.0-1.0, 0.2=leggero, 0.6=forte)
+BLEND_TRANSPARENCY=0.5         # Trasparenza globale (range: 0.0-0.8, 0.2=opaco, 0.5=trasparente)
+COLOR_BLENDING_STRENGTH=0.6    # Intensità mescolamento colori (range: 0.0-1.0, 0.2=leggero, 0.6=forte)
 
 # --- Debug e Qualità ---
 DEBUG_MASK=False  # Mostra maschera di debug (per sviluppatori)
