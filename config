@@ -3,7 +3,7 @@
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
 # --- Formato Video ---
 INSTAGRAM_STORIES_MODE=True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
@@ -48,11 +48,11 @@ BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
 BG_ZOOM_FACTOR=1.1         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
 BG_SLOWDOWN_FACTOR=1.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
 BG_DARKEN_FACTOR=0.5      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-BG_CONTRAST_FACTOR=1.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+BG_CONTRAST_FACTOR=2.5     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
 BG_RANDOM_START=True       # Inizia da punto casuale del video (max 2/3 della durata)
 
 # --- Parametri Crop Video Verticale ---
-BG_CROP_Y_START=0.25       # Punto di inizio crop verticale (0.25=un po' sopra il centro)
+BG_CROP_Y_START=0.0       # Punto di inizio crop verticale (0.25=un po' sopra il centro)
 BG_CROP_X_START=0.0        # Punto di inizio crop orizzontale (0.0=left, tutto il width)
 BG_CROP_WIDTH_RATIO=1.0    # Larghezza crop come ratio (1.0=tutto)
 BG_CROP_HEIGHT_RATIO=0.5   # Altezza crop come ratio (0.5=metà altezza per formato orizzontale)
