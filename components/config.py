@@ -50,6 +50,12 @@ class Config:
     BG_CONTRAST_FACTOR = 1.0     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
     BG_RANDOM_START = True       # Inizia da punto casuale del video (max 2/3 della durata)
     
+    # --- Parametri Crop Video Verticale ---
+    BG_CROP_Y_START = 0.0        # Punto di inizio crop verticale (0.0=top, 0.5=centro, 1.0=bottom)
+    BG_CROP_X_START = 0.0        # Punto di inizio crop orizzontale (0.0=left, 0.5=centro, 1.0=right)
+    BG_CROP_WIDTH_RATIO = 1.0    # Larghezza crop come ratio (1.0=tutto, 0.5=metà)
+    BG_CROP_HEIGHT_RATIO = 1.0   # Altezza crop come ratio (1.0=tutto, 0.5=metà)
+    
     # --- Sistema Audio Reattivo ---
     AUDIO_ENABLED = True         # Attiva reattività audio per lenti
     AUDIO_FILES = ['input/audio1.aif', 'input/audio2.aif']  # Lista file audio per selezione casuale
