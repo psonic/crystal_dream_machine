@@ -2043,11 +2043,11 @@ def find_texture_file():
     print(f"⚠️ Nessuna texture trovata, il logo non sarà texturizzato")
     return None
 
-def get_background_frame(bg_video, frame_index):
-    """Funzione helper per ottenere un frame di sfondo"""
+def get_background_frame(bg_video, frame_index, bg_start_frame=0):
+    """Funzione helper per ottenere un frame di sfondo con offset casuale"""
     if bg_video and bg_video.isOpened():
-        # Calcola il frame considerando il rallentamento
-        bg_frame_index = int(frame_index / Config.BG_SLOWDOWN_FACTOR)
+        # Calcola il frame considerando il rallentamento e l'offset casuale
+        bg_frame_index = int(frame_index / Config.BG_SLOWDOWN_FACTOR) + bg_start_frame
         bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
         ret, bg_frame = bg_video.read()
         
