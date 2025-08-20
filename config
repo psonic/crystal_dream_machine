@@ -100,12 +100,12 @@ LENS_MIN_STRENGTH=-0.6     # Forza minima ridotta per deformazione più delicata
 LENS_MAX_STRENGTH=0.6      # Forza massima ridotta per deformazione più delicata
 LENS_MIN_RADIUS=10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
 LENS_MAX_RADIUS=100         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
-LENS_SPEED_FACTOR=0.07    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
+LENS_SPEED_FACTOR=0.01    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
 
 # --- Parametri Movimento Lenti ---
 LENS_PATH_SPEED_MULTIPLIER=8    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-LENS_BASE_SPEED_MULTIPLIER=0.5    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
-LENS_ROTATION_SPEED_MULTIPLIER=5  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
+LENS_BASE_SPEED_MULTIPLIER=0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+LENS_ROTATION_SPEED_MULTIPLIER=1  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
 LENS_INERTIA=0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
 LENS_ROTATION_SPEED_MIN=-0.1     # Velocità rotazione minima (range: -0.02 a 0)
 LENS_ROTATION_SPEED_MAX=0.1     # Velocità rotazione massima (range: 0 a 0.02)
