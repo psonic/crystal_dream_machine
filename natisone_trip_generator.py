@@ -16,7 +16,8 @@ import subprocess
 import sys
 
 # Import dei nuovi moduli
-from components.config import Config
+# Configurazione caricata dinamicamente dal file config
+Config = type('Config', (), {})()
 from components.preview import run_preview_mode
 
 # Import condizionale per PDF
@@ -2134,8 +2135,162 @@ def print_blending_options():
     
     print()
 
+def setup_config_defaults():
+    """Imposta i valori di default per la configurazione"""
+    # Modalità e Qualità
+    Config.TEST_MODE = False
+    Config.PREVIEW_MODE = False
+    
+    # Formato Video
+    Config.INSTAGRAM_STORIES_MODE = False
+    Config.INSTAGRAM_POST_MODE = False
+    
+    # Compatibilità WhatsApp
+    Config.WHATSAPP_COMPATIBLE = True
+    Config.CREATE_WHATSAPP_VERSION = True
+    
+    # Sorgente Logo e Texture
+    Config.USE_SVG_SOURCE = True
+    Config.SVG_PATH = 'input/logo.svg'
+    Config.PDF_PATH = 'input/logo.pdf'
+    Config.SVG_LEFT_PADDING = 50
+    Config.TEXTURE_AUTO_SEARCH = True
+    Config.TEXTURE_FALLBACK_PATH = 'input/texture.jpg'
+    
+    # Sistema Texture Avanzato
+    Config.TEXTURE_ENABLED = True
+    Config.TEXTURE_TARGET = 'logo'
+    Config.TEXTURE_ALPHA = 0.6
+    Config.TEXTURE_BACKGROUND_ALPHA = 0.1
+    Config.TEXTURE_BLENDING_MODE = 'lighten'
+    
+    # Parametri Video
+    Config.SVG_PADDING = 20
+    Config.FPS = 20
+    Config.DURATION_SECONDS = 10
+    Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+    
+    # Colore e Stile
+    Config.LOGO_COLOR = (255, 255, 255)
+    Config.LOGO_ALPHA = 0.7
+    Config.LOGO_ZOOM_FACTOR = 1.0
+    
+    # Video di Sfondo
+    Config.BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
+    Config.BG_USE_ORIGINAL_SIZE = True
+    Config.BG_ZOOM_FACTOR = 1.4
+    Config.BG_SLOWDOWN_FACTOR = 1.0
+    Config.BG_DARKEN_FACTOR = 0.7
+    Config.BG_CONTRAST_FACTOR = 1.0
+    Config.BG_RANDOM_START = True
+    
+    # Parametri Crop Video Verticale
+    Config.BG_CROP_Y_START = 0.0
+    Config.BG_CROP_X_START = 0.0
+    Config.BG_CROP_WIDTH_RATIO = 1.0
+    Config.BG_CROP_HEIGHT_RATIO = 1.0
+    
+    # Sistema Audio Reattivo
+    Config.AUDIO_ENABLED = True
+    Config.AUDIO_FILES = ['input/audio1.aif', 'input/audio2.aif']
+    Config.AUDIO_RANDOM_SELECTION = True
+    Config.AUDIO_RANDOM_START = True
+    Config.AUDIO_REACTIVE_LENSES = True
+    Config.AUDIO_BASS_SENSITIVITY = 0.5
+    Config.AUDIO_MID_SENSITIVITY = 0.3
+    Config.AUDIO_HIGH_SENSITIVITY = 0.25
+    Config.AUDIO_SMOOTHING = 0.5
+    Config.AUDIO_BOOST_FACTOR = 4.0
+    
+    # Parametri Audio Lenti
+    Config.AUDIO_SPEED_INFLUENCE = 1.0
+    Config.AUDIO_STRENGTH_INFLUENCE = 2
+    Config.AUDIO_PULSATION_INFLUENCE = 1.3
+    
+    # Effetto Glow
+    Config.GLOW_ENABLED = True
+    Config.GLOW_KERNEL_SIZE = 30
+    Config.GLOW_INTENSITY = 0.5
+    
+    # Altri parametri con valori di default
+    Config.DEFORMATION_ENABLED = True
+    Config.DEFORMATION_SPEED = 0.01
+    Config.DEFORMATION_SCALE = 0.002
+    Config.DEFORMATION_INTENSITY = 10.0
+    Config.DEFORMATION_AUDIO_REACTIVE = True
+    Config.DEFORMATION_BASS_INTENSITY = 0.22
+    Config.DEFORMATION_BASS_SPEED = 0.03
+    Config.DEFORMATION_MID_SCALE = 0.002
+    Config.DEFORMATION_SMOOTHING = 0.85
+    Config.DEFORMATION_AUDIO_MULTIPLIER = 1.4
+    
+    Config.LENS_DEFORMATION_ENABLED = True
+    Config.NUM_LENSES = 50
+    Config.LENS_MIN_STRENGTH = -1.2
+    Config.LENS_MAX_STRENGTH = 1.5
+    Config.LENS_MIN_RADIUS = 5
+    Config.LENS_MAX_RADIUS = 35
+    Config.LENS_SPEED_FACTOR = 0.1
+    Config.LENS_PATH_SPEED_MULTIPLIER = 0.1
+    Config.LENS_BASE_SPEED_MULTIPLIER = 0.1
+    Config.LENS_ROTATION_SPEED_MULTIPLIER = 0.01
+    Config.LENS_INERTIA = 0.95
+    Config.LENS_ROTATION_SPEED_MIN = -0.02
+    Config.LENS_ROTATION_SPEED_MAX = 0.02
+    Config.LENS_HORIZONTAL_BIAS = 2
+    Config.LENS_PULSATION_ENABLED = True
+    Config.LENS_PULSATION_SPEED = 0.0005
+    Config.LENS_PULSATION_AMPLITUDE = 0.2
+    Config.LENS_FORCE_PULSATION_ENABLED = True
+    Config.LENS_FORCE_PULSATION_AMPLITUDE = 0.2
+    Config.WORM_SHAPE_ENABLED = True
+    Config.WORM_LENGTH = 1.8
+    Config.WORM_COMPLEXITY = 5
+    
+    Config.SMOOTHING_ENABLED = True
+    Config.SMOOTHING_FACTOR = 0.0001
+    
+    Config.TRACER_ENABLED = True
+    Config.TRACER_TRAIL_LENGTH = 45
+    Config.TRACER_MAX_OPACITY = 0.01
+    Config.TRACER_BASE_COLOR = (255, 200, 220)
+    Config.TRACER_THRESHOLD1 = 50
+    Config.TRACER_THRESHOLD2 = 200
+    
+    Config.BG_TRACER_ENABLED = True
+    Config.BG_TRACER_TRAIL_LENGTH = 45
+    Config.BG_TRACER_MAX_OPACITY = 0.01
+    Config.BG_TRACER_BASE_COLOR = (200, 170, 200)
+    Config.BG_TRACER_THRESHOLD1 = 20
+    Config.BG_TRACER_THRESHOLD2 = 100
+    
+    Config.ADVANCED_BLENDING = True
+    Config.BLENDING_PRESET = "cinematic"
+    Config.BLENDING_MODE = "color_burn"
+    Config.BLENDING_STRENGTH = 0.7
+    Config.EDGE_DETECTION_ENABLED = True
+    Config.EDGE_BLUR_RADIUS = 21
+    Config.ADAPTIVE_BLENDING = False
+    Config.COLOR_HARMONIZATION = False
+    Config.LUMINANCE_MATCHING = False
+    Config.LOGO_BLEND_FACTOR = 0.8
+    Config.EDGE_SOFTNESS = 80
+    Config.BLEND_TRANSPARENCY = 0.5
+    Config.COLOR_BLENDING_STRENGTH = 0.6
+    
+    Config.DEBUG_MASK = False
+    
+    Config.DYNAMIC_VARIATION_ENABLED = True
+    Config.VARIATION_AMPLITUDE = 0.8
+    Config.VARIATION_SPEED_SLOW = 0.01
+    Config.VARIATION_SPEED_MEDIUM = 0.025
+    Config.VARIATION_SPEED_FAST = 0.005
+
 def load_config_from_file():
     """Carica i parametri dal file config se esiste"""
+    # Prima imposta i valori di default
+    setup_config_defaults()
+    
     config_file = "config"
     if not os.path.exists(config_file):
         print("📄 File config non trovato, uso valori di default")
@@ -2320,6 +2475,17 @@ def main():
             Config.WIDTH = 1080
             Config.HEIGHT = 1920
         format_info = "Instagram Stories (9:16)"
+    # 📱 FORMATO INSTAGRAM POST (1:1)
+    elif Config.INSTAGRAM_POST_MODE:
+        if Config.TEST_MODE:
+            # Versione ridotta per test: 540x540 (metà di 1080x1080)
+            Config.WIDTH = 540
+            Config.HEIGHT = 540
+        else:
+            # Formato Instagram Post standard: 1080x1080
+            Config.WIDTH = 1080
+            Config.HEIGHT = 1080
+        format_info = "Instagram Post (1:1)"
     else:
         # Formato tradizionale basato su dimensioni SVG
         Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
@@ -2331,7 +2497,9 @@ def main():
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
     if Config.INSTAGRAM_STORIES_MODE and not Config.TEST_MODE:
         print(f"📱 INSTAGRAM STORIES: Formato verticale ottimizzato per mobile")
-    if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE:
+    elif Config.INSTAGRAM_POST_MODE and not Config.TEST_MODE:
+        print(f"📱 INSTAGRAM POST: Formato quadrato ottimizzato per feed")
+    if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE and not Config.INSTAGRAM_POST_MODE:
         print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
         print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
@@ -2353,6 +2521,12 @@ def main():
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
+        elif Config.INSTAGRAM_POST_MODE:
+            # Per Instagram Post, centra il logo nel formato quadrato
+            horizontal_margin = (Config.WIDTH - svg_width) // 2
+            vertical_margin = (Config.HEIGHT - svg_height) // 2
+            effective_padding = max(Config.SVG_PADDING, min(horizontal_margin, vertical_margin))
+            contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
         else:
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
     else:
@@ -2362,6 +2536,12 @@ def main():
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
+            contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
+        elif Config.INSTAGRAM_POST_MODE:
+            # Per Instagram Post, centra il logo nel formato quadrato
+            horizontal_margin = (Config.WIDTH - svg_width) // 2
+            vertical_margin = (Config.HEIGHT - svg_height) // 2
+            effective_padding = max(Config.SVG_PADDING, min(horizontal_margin, vertical_margin))
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
         else:
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.LOGO_ZOOM_FACTOR)

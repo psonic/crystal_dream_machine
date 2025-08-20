@@ -1,13 +1,13 @@
-# CRYSTAL THERAPY - CONFIGURAZIONE GLOBALE
 # Modifica questi valori e salvali per vedere i cambiamenti in tempo reale!
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
 # --- Formato Video ---
 INSTAGRAM_STORIES_MODE=True    # True = formato verticale 9:16 (1080x1920) per Instagram Stories
                                # False = formato originale basato su dimensioni SVG
+INSTAGRAM_POST_MODE=True      # True = formato quadrato 1:1 (1080x1080) per post Instagram
 
 # --- Compatibilità WhatsApp ---
 WHATSAPP_COMPATIBLE=True   # Ottimizza per WhatsApp/social media
