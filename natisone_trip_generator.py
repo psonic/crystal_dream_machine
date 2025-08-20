@@ -2142,8 +2142,7 @@ def setup_config_defaults():
     Config.PREVIEW_MODE = False
     
     # Formato Video
-    Config.INSTAGRAM_STORIES_MODE = False
-    Config.INSTAGRAM_POST_MODE = False
+    Config.VIDEO_FORMAT = "INPUT_VIDEO_SIZE"  # "IG_STORY", "IG_POST", "INPUT_VIDEO_SIZE"
     
     # Compatibilità WhatsApp
     Config.WHATSAPP_COMPATIBLE = True
@@ -2464,8 +2463,8 @@ def main():
     # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
     svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
 
-    # 📱 FORMATO INSTAGRAM STORIES (9:16)
-    if Config.INSTAGRAM_STORIES_MODE:
+    # 📱 GESTIONE FORMATO VIDEO
+    if Config.VIDEO_FORMAT == "IG_STORY":
         if Config.TEST_MODE:
             # Versione ridotta per test: 540x960 (metà di 1080x1920)
             Config.WIDTH = 540
@@ -2475,8 +2474,7 @@ def main():
             Config.WIDTH = 1080
             Config.HEIGHT = 1920
         format_info = "Instagram Stories (9:16)"
-    # 📱 FORMATO INSTAGRAM POST (1:1)
-    elif Config.INSTAGRAM_POST_MODE:
+    elif Config.VIDEO_FORMAT == "IG_POST":
         if Config.TEST_MODE:
             # Versione ridotta per test: 540x540 (metà di 1080x1080)
             Config.WIDTH = 540
@@ -2486,20 +2484,20 @@ def main():
             Config.WIDTH = 1080
             Config.HEIGHT = 1080
         format_info = "Instagram Post (1:1)"
-    else:
+    else:  # INPUT_VIDEO_SIZE
         # Formato tradizionale basato su dimensioni SVG
         Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
         Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
-        format_info = "SVG-based"
+        format_info = "Input Video Size"
     
     print(f"{C_BOLD}{C_CYAN}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{C_END}")
     print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
     print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
-    if Config.INSTAGRAM_STORIES_MODE and not Config.TEST_MODE:
+    if Config.VIDEO_FORMAT == "IG_STORY" and not Config.TEST_MODE:
         print(f"📱 INSTAGRAM STORIES: Formato verticale ottimizzato per mobile")
-    elif Config.INSTAGRAM_POST_MODE and not Config.TEST_MODE:
+    elif Config.VIDEO_FORMAT == "IG_POST" and not Config.TEST_MODE:
         print(f"📱 INSTAGRAM POST: Formato quadrato ottimizzato per feed")
-    if Config.SVG_PADDING and not Config.INSTAGRAM_STORIES_MODE and not Config.INSTAGRAM_POST_MODE:
+    if Config.SVG_PADDING and Config.VIDEO_FORMAT == "INPUT_VIDEO_SIZE":
         print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
         print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
@@ -2514,30 +2512,30 @@ def main():
     
     # Carica contorni da SVG o PDF
     if Config.USE_SVG_SOURCE:
-        if Config.INSTAGRAM_STORIES_MODE:
+        if Config.VIDEO_FORMAT == "IG_STORY":
             # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
-        elif Config.INSTAGRAM_POST_MODE:
+        elif Config.VIDEO_FORMAT == "IG_POST":
             # Per Instagram Post, centra il logo nel formato quadrato
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             vertical_margin = (Config.HEIGHT - svg_height) // 2
             effective_padding = max(Config.SVG_PADDING, min(horizontal_margin, vertical_margin))
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
-        else:
+        else:  # INPUT_VIDEO_SIZE
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, Config.SVG_PADDING, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
     else:
-        if Config.INSTAGRAM_STORIES_MODE:
+        if Config.VIDEO_FORMAT == "IG_STORY":
             # Per Instagram Stories, centra il logo nel formato verticale con spostamento a destra
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             # Riduci un po' il margine sinistro per spostare il logo leggermente a destra
             right_shift = 10 if Config.TEST_MODE else 20
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
-        elif Config.INSTAGRAM_POST_MODE:
+        elif Config.VIDEO_FORMAT == "IG_POST":
             # Per Instagram Post, centra il logo nel formato quadrato
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             vertical_margin = (Config.HEIGHT - svg_height) // 2
