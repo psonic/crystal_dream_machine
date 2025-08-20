@@ -2806,7 +2806,7 @@ def main():
             print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
             source_script_path = os.path.abspath(__file__)
             # Assicurati che il percorso di version_manager.py sia corretto
-            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'version_manager.py')
+            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'components', 'version_manager.py')
             
             if os.path.exists(version_manager_path):
                 result = subprocess.run(
