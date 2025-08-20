@@ -2574,10 +2574,28 @@ def main():
             Config.PREVIEW_MODE = False
         elif result == 'TEST_MODE':
             print("⚡ Utente ha richiesto generazione video TEST mode!")
-            print("🚀 Passaggio a modalità test...")
-            # Disabilita preview mode e forza test mode
+            print("🚀 Passaggio a modalità test temporanea...")
+            # Disabilita preview mode e applica temporaneamente test mode
             Config.PREVIEW_MODE = False
+            # Salva i valori originali per ripristinarli dopo
+            original_test_mode = Config.TEST_MODE
+            original_duration = Config.DURATION_SECONDS
+            original_fps = Config.FPS
+            # Applica temporaneamente le impostazioni di test
             Config.TEST_MODE = True
+            Config.DURATION_SECONDS = 5  # Durata test
+            Config.FPS = 20  # FPS test
+            print(f"   📝 TEST_MODE temporaneo: durata {Config.DURATION_SECONDS}s, fps {Config.FPS}")
+            
+            # Dopo il rendering, ripristina i valori originali
+            def restore_original_settings():
+                Config.TEST_MODE = original_test_mode
+                Config.DURATION_SECONDS = original_duration 
+                Config.FPS = original_fps
+                print("   🔄 Impostazioni originali ripristinate")
+            
+            # Memorizza la funzione di ripristino per dopo il rendering
+            Config._restore_settings = restore_original_settings
         else:
             print("👋 Uscita dalla Live Preview")
             return
@@ -2834,6 +2852,11 @@ def main():
 
         except Exception as e:
             print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
+    
+    # Ripristina le impostazioni originali se erano state modificate per TEST_MODE temporaneo
+    if hasattr(Config, '_restore_settings') and Config._restore_settings:
+        Config._restore_settings()
+        delattr(Config, '_restore_settings')
 
 if __name__ == "__main__":
     main()
