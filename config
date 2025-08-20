@@ -30,7 +30,7 @@ TEXTURE_BACKGROUND_ALPHA=0.1  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sot
 TEXTURE_BLENDING_MODE="lighten"  # Modalità blending texture
 
 # --- Parametri Video ---
-SVG_PADDING=10  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+SVG_PADDING=50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=20  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
 DURATION_SECONDS=10  # Durata video in secondi
 
