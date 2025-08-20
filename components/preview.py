@@ -7,6 +7,7 @@ Funzionalità:
 - Auto-refresh ogni 5 secondi
 - Hot-reload di sfondo.MOV e texture.jpg quando modificati
 - Premere SPAZIO per generare il video completo e fare Git push
+- Premere T per generare video in test mode e fare Git push
 - Premere ESC per uscire dalla preview
 """
 
@@ -54,6 +55,7 @@ class LivePreview:
         self.last_refresh_time = 0
         self.refresh_interval = 3.0  # 3 secondi per refresh più frequente
         self.should_render_video = False
+        self.should_render_test = False  # Nuovo: per test mode
         self.force_refresh = False  # Per forzare il refresh quando si cambiano parametri
         
         # File di configurazione live
@@ -88,6 +90,7 @@ class LivePreview:
         print("   🔄 Auto-refresh: ogni 3 secondi")
         print("   📝 MODIFICA PARAMETRI: Edita il file 'config' e salvalo!")
         print("   🎬 SPAZIO: genera video completo + Git push")
+        print("   ⚡ T: genera video TEST mode + Git push")
         print("   ❌ ESC: esci dalla preview")
         
     def _find_texture_file(self):
@@ -521,8 +524,10 @@ class LivePreview:
                        font, 0.4, (255, 200, 100), 1)
         
         # Controlli
-        cv2.putText(overlay, "SPAZIO: Genera Video + Git Push", (10, self.height - 40), 
+        cv2.putText(overlay, "SPAZIO: Genera Video + Git Push", (10, self.height - 60), 
                    font, 0.5, (255, 100, 255), 1)
+        cv2.putText(overlay, "T: Genera TEST mode + Git Push", (10, self.height - 40), 
+                   font, 0.5, (100, 255, 100), 1)
         cv2.putText(overlay, "ESC: Esci", (10, self.height - 20), 
                    font, 0.5, (100, 100, 255), 1)
         
@@ -591,6 +596,10 @@ class LivePreview:
                     print("🎬 Richiesta generazione video completo...")
                     self.should_render_video = True
                     break
+                elif key == ord('t') or key == ord('T'):  # T o t
+                    print("⚡ Richiesta generazione video TEST mode...")
+                    self.should_render_test = True
+                    break
                 
         except KeyboardInterrupt:
             print("\n⚠️ Interrotto dall'utente")
@@ -601,8 +610,14 @@ class LivePreview:
             if self.bg_video:
                 self.bg_video.release()
             self.is_running = False
-            
-        return self.should_render_video
+        
+        # Restituisce il tipo di rendering richiesto
+        if self.should_render_test:
+            return 'TEST_MODE'
+        elif self.should_render_video:
+            return 'FULL_VIDEO'
+        else:
+            return False
     
     def cleanup(self):
         """Pulizia delle risorse"""
@@ -618,8 +633,10 @@ def run_preview_mode(config, render_frame_func, contours, hierarchy, width, heig
     Avvia la modalità Live Preview con restart automatico completo
     
     Returns:
-        bool: True se l'utente ha richiesto di generare il video completo
-        str: 'RESTART_SCRIPT' se è richiesto restart completo dello script
+        str: 'FULL_VIDEO' se l'utente ha richiesto video completo
+             'TEST_MODE' se l'utente ha richiesto video in test mode
+             'RESTART_SCRIPT' se è richiesto restart completo dello script
+        bool: False se l'utente è uscito senza richiedere rendering
     """
     print("🌊 Avviando modalità Live Preview...")
     preview = LivePreview(

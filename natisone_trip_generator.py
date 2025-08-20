@@ -2567,11 +2567,17 @@ def main():
             import os
             # Rilancia lo script con gli stessi parametri
             os.execv(sys.executable, [sys.executable] + sys.argv)
-        elif result:
+        elif result == 'FULL_VIDEO':
             print("🎬 Utente ha richiesto generazione video completo!")
             print("🚀 Passaggio a modalità produzione...")
             # Disabilita preview mode e continua con il rendering normale
             Config.PREVIEW_MODE = False
+        elif result == 'TEST_MODE':
+            print("⚡ Utente ha richiesto generazione video TEST mode!")
+            print("🚀 Passaggio a modalità test...")
+            # Disabilita preview mode e forza test mode
+            Config.PREVIEW_MODE = False
+            Config.TEST_MODE = True
         else:
             print("👋 Uscita dalla Live Preview")
             return
