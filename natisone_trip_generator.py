@@ -35,6 +35,17 @@ from components.svg_pdf import (
     PDF_AVAILABLE,
     SVG_PATHTOOLS_AVAILABLE
 )
+from components.lenses import (
+    generate_cinematic_path,
+    initialize_lenses,
+    apply_lens_deformation
+)
+from components.deformations import (
+    apply_organic_deformation,
+    get_organic_deformation_params,
+    apply_deformation_wrapper,
+    NOISE_AVAILABLE
+)
 
 # CAIROSVG verrà importato solo se necessario (gestito nel componente svg_pdf)
 CAIROSVG_AVAILABLE = None
@@ -59,14 +70,14 @@ def get_dynamic_parameters(frame_index, total_frames):
     if Config.DYNAMIC_VARIATION_ENABLED:
         base_seed = frame_index * 0.001
         
-        # Variazioni lente per deformazioni organiche
-        deform_var_x = np.sin(base_seed * Config.VARIATION_SPEED_SLOW + 1.0) * Config.VARIATION_AMPLITUDE
-        deform_var_y = np.cos(base_seed * Config.VARIATION_SPEED_SLOW + 2.5) * Config.VARIATION_AMPLITUDE
-        deform_var_z = np.sin(base_seed * Config.VARIATION_SPEED_SLOW + 4.0) * Config.VARIATION_AMPLITUDE
+        # Usa il nuovo componente deformazioni per parametri dinamici
+        # (compatibilità mantenuta con i nomi della Config)
+        enable_variation = Config.DYNAMIC_VARIATION_ENABLED
+        deformation_params = get_organic_deformation_params(Config, enable_variation)
         
-        params['deformation_speed'] = Config.DEFORMATION_SPEED * (1.0 + deform_var_x)
-        params['deformation_scale'] = Config.DEFORMATION_SCALE * (1.0 + deform_var_y)
-        params['deformation_intensity'] = Config.DEFORMATION_INTENSITY * (1.0 + deform_var_z)
+        params['deformation_speed'] = deformation_params['speed']
+        params['deformation_scale'] = deformation_params['scale']
+        params['deformation_intensity'] = deformation_params['intensity']
         
         # Variazioni medie per lenti
         lens_var_x = np.sin(base_seed * Config.VARIATION_SPEED_MEDIUM + 3.0) * Config.VARIATION_AMPLITUDE
@@ -83,9 +94,10 @@ def get_dynamic_parameters(frame_index, total_frames):
         params['bg_tracer_opacity_multiplier'] = 1.0 + tracer_var_y
     else:
         # Usa valori fissi se le variazioni sono disabilitate
-        params['deformation_speed'] = Config.DEFORMATION_SPEED
-        params['deformation_scale'] = Config.DEFORMATION_SCALE
-        params['deformation_intensity'] = Config.DEFORMATION_INTENSITY
+        deformation_params = get_organic_deformation_params(Config, False)
+        params['deformation_speed'] = deformation_params['speed']
+        params['deformation_scale'] = deformation_params['scale']
+        params['deformation_intensity'] = deformation_params['intensity']
         params['lens_speed_factor'] = Config.LENS_SPEED_FACTOR
         params['lens_strength_multiplier'] = 1.0
         params['tracer_opacity_multiplier'] = 1.0
@@ -373,309 +385,6 @@ def apply_texture_blending(base_image, texture_image, alpha, blending_mode='over
     return np.clip(result * 255, 0, 255).astype(np.uint8)
 
 # Rimuovo la vettorizzazione che rallentava invece di velocizzare
-
-def generate_cinematic_path(width, height, path_type, total_frames):
-    """
-    Genera un percorso cinematografico predefinito che attraversa tutta l'area con BIAS ORIZZONTALE.
-    Percorsi ottimizzati per seguire la forma orizzontale della scritta.
-    """
-    center_x, center_y = width // 2, height // 2
-    points = []
-    
-    # BIAS ORIZZONTALE ULTRA-POTENZIATA: Aumentiamo drasticamente i movimenti orizzontali
-    horizontal_scale = 0.8  # AUMENTATO: movimento orizzontale ultra-amplificato per seguire la scritta
-    vertical_scale = 0.2   # RIDOTTO: movimento verticale minimizzato per rimanere sulla scritta
-    
-    if path_type == 'figure_eight':
-        # Otto orizzontale che segue la forma della scritta
-        for i in range(total_frames):
-            t = (i / total_frames) * 4 * np.pi  # Due cicli completi
-            x = center_x + (width * horizontal_scale) * np.sin(t)  # Movimento orizzontale ampio
-            y = center_y + (height * vertical_scale) * np.sin(2 * t)  # Movimento verticale contenuto
-            points.append([x, y])
-    
-    elif path_type == 'spiral':
-        # Spirale orizzontale appiattita per seguire la scritta
-        for i in range(total_frames):
-            t = (i / total_frames) * 6 * np.pi  # Tre giri completi
-            radius_x = (width * horizontal_scale) * (0.3 + 0.7 * np.sin(t * 0.3))
-            radius_y = (height * vertical_scale) * (0.3 + 0.7 * np.sin(t * 0.3))
-            x = center_x + radius_x * np.cos(t)
-            y = center_y + radius_y * np.sin(t)
-            points.append([x, y])
-    
-    elif path_type == 'wave':
-        # Onda che segue principalmente la direzione orizzontale della scritta
-        for i in range(total_frames):
-            progress = i / total_frames
-            x = width * 0.05 + (width * 0.9) * progress  # Movimento orizzontale completo
-            wave_offset = np.sin(progress * 8 * np.pi) * height * vertical_scale  # Ondulazione verticale contenuta
-            y = center_y + wave_offset
-            points.append([x, y])
-    
-    elif path_type == 'circular':
-        # Ellisse orizzontale che abbraccia la scritta
-        for i in range(total_frames):
-            t = (i / total_frames) * 2 * np.pi
-            radius_x = width * horizontal_scale   # Ellisse allungata orizzontalmente
-            radius_y = height * vertical_scale    # Compressa verticalmente
-            x = center_x + radius_x * np.cos(t)
-            y = center_y + radius_y * np.sin(t)
-            points.append([x, y])
-    
-    elif path_type == 'cross':
-        # Croce con enfasi sui movimenti orizzontali
-        quarter = total_frames // 4
-        for i in range(total_frames):
-            if i < quarter:  # Sinistra -> Centro (movimento orizzontale)
-                x = width * 0.05 + (width * horizontal_scale) * (i / quarter)
-                y = center_y
-            elif i < 2 * quarter:  # Centro -> Destra (movimento orizzontale)
-                x = center_x + (width * horizontal_scale) * ((i - quarter) / quarter)
-                y = center_y
-            elif i < 3 * quarter:  # Centro -> Alto (movimento verticale ridotto)
-                x = center_x
-                y = center_y - (height * vertical_scale) * ((i - 2 * quarter) / quarter)
-            else:  # Alto -> Basso (movimento verticale ridotto)
-                x = center_x
-                y = center_y - height * vertical_scale + (height * vertical_scale * 2) * ((i - 3 * quarter) / quarter)
-            points.append([x, y])
-    
-    elif path_type == 'horizontal_sweep':
-        # NUOVO: Spazzata orizzontale ULTRA-POTENZIATA che segue perfettamente la scritta
-        for i in range(total_frames):
-            progress = i / total_frames
-            # Movimento principale sinistra-destra con ampio range
-            base_x = width * 0.05 + (width * 0.9) * (0.5 + 0.5 * np.sin(progress * 2 * np.pi))
-            # Aggiunta variazione sinusoidale per movimento più complesso
-            x = base_x + width * 0.1 * np.sin(progress * 8 * np.pi)
-            # Variazione verticale molto ridotta ma con pattern interessante
-            y = center_y + height * 0.08 * np.sin(progress * 12 * np.pi) * np.cos(progress * 4 * np.pi)
-            points.append([x, y])
-    
-    elif path_type == 'horizontal_zigzag':
-        # NUOVO: Zigzag orizzontale lungo la scritta
-        for i in range(total_frames):
-            progress = i / total_frames
-            # Movimento a zigzag orizzontale
-            x = width * 0.1 + (width * 0.8) * progress
-            # Zigzag verticale contenuto
-            y = center_y + height * 0.15 * np.sin(progress * 16 * np.pi)
-            points.append([x, y])
-    
-    elif path_type == 'horizontal_wave_complex':
-        # NUOVO: Onda orizzontale complessa multi-frequenza
-        for i in range(total_frames):
-            progress = i / total_frames
-            # Movimento orizzontale principale con onde multiple
-            x = width * 0.05 + (width * 0.9) * progress + width * 0.05 * np.sin(progress * 20 * np.pi)
-            # Combinazione di onde verticali diverse per movimento più "vivo"
-            wave1 = np.sin(progress * 6 * np.pi) * height * 0.1
-            wave2 = np.sin(progress * 15 * np.pi) * height * 0.05
-            wave3 = np.cos(progress * 25 * np.pi) * height * 0.03
-            y = center_y + wave1 + wave2 + wave3
-            points.append([x, y])
-    
-    return np.array(points)
-
-def apply_lens_deformation(mask, lenses, frame_index, config, dynamic_params=None, audio_factors=None):
-    """
-    Applica una deformazione basata su "lenti" che seguono percorsi cinematografici predefiniti.
-    Sistema completamente rivisto per movimenti ampi, fluidi e cinematografici con reattività audio.
-    """
-    h, w = mask.shape
-    
-    # Ottieni moltiplicatori dinamici se disponibili
-    lens_strength_mult = dynamic_params.get('lens_strength_multiplier', 1.0) if dynamic_params else 1.0
-    
-    # Integra i fattori audio-reattivi se disponibili
-    if audio_factors:
-        lens_strength_mult *= audio_factors['strength_factor']
-    
-    map_x_grid, map_y_grid = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
-    final_map_x = np.copy(map_x_grid)
-    final_map_y = np.copy(map_y_grid)
-
-    for lens in lenses:
-        dx = map_x_grid - lens['pos'][0]
-        dy = map_y_grid - lens['pos'][1]
-
-        if config.WORM_SHAPE_ENABLED:
-            # Deformazione a "verme": distorciamo lo spazio di calcolo della distanza
-            angle = lens['angle']
-            dx_rot = dx * np.cos(angle) - dy * np.sin(angle)
-            dy_rot = dx * np.sin(angle) + dy * np.cos(angle)
-            
-            # Allunghiamo la forma su un asse per creare il "corpo" del verme
-            dx_scaled = dx_rot / config.WORM_LENGTH
-            
-            # CORREZIONE ANTI-SFARFALLIO: Sostituisco noise casuale con pattern sinusoidale predicibile
-            # Il noise casuale causava lo sfarfallio, ora uso movimento fluido e prevedibile
-            wave_time = frame_index * 0.03 + lens['pulsation_offset']  # Velocità fissa controllata
-            sinusoidal_curve = np.sin(dx_rot * 0.01 + wave_time) * 30  # Ampiezza ridotta da 50 a 30
-            dy_scaled = dy_rot + sinusoidal_curve
-            
-            distance = np.sqrt(dx_scaled**2 + dy_scaled**2)
-        else:
-            distance = np.sqrt(dx**2 + dy**2)
-
-        normalized_distance = distance / (lens['radius'] + 1e-6)
-        lens_mask = normalized_distance < 1.0
-        
-        # Applica moltiplicatore dinamico alla forza della lente
-        dynamic_strength = lens['strength'] * lens_strength_mult
-        displacement = (1.0 - normalized_distance[lens_mask]) * dynamic_strength
-        
-        # Applica lo spostamento lungo la linea dal pixel al centro della lente
-        final_map_x[lens_mask] += dx[lens_mask] * displacement
-        final_map_y[lens_mask] += dy[lens_mask] * displacement
-
-    # SISTEMA AGGIORNATO: Movimento cinematografico + PULSAZIONE DINAMICA ULTRA-POTENZIATA
-    for lens in lenses:
-        # === PULSAZIONE DINAMICA ULTRA-MIGLIORATA ===
-        if config.LENS_PULSATION_ENABLED:
-            # Calcola pulsazione con fase unica per ogni lente e frequenze multiple
-            pulsation_time = frame_index * config.LENS_PULSATION_SPEED + lens['pulsation_offset']
-            
-            # Integra fattore audio nella velocità di pulsazione
-            if audio_factors:
-                pulsation_time *= audio_factors['pulsation_factor']
-            
-            # CORREZIONE ANTI-SFARFALLIO: Pulsazione semplificata per ridurre caos
-            # Rimuovo le pulsazioni secondarie e terziarie che creano sfarfallio
-            base_pulsation = np.sin(pulsation_time)
-            # secondary_pulsation = 0.3 * np.sin(pulsation_time * 2.7)  # RIMOSSA
-            # tertiary_pulsation = 0.15 * np.cos(pulsation_time * 4.1)  # RIMOSSA
-            
-            total_pulsation = base_pulsation  # Solo pulsazione base per fluidità
-            
-            # Modula l'ampiezza della pulsazione con l'audio
-            pulsation_amplitude = config.LENS_PULSATION_AMPLITUDE
-            if audio_factors:
-                pulsation_amplitude *= audio_factors['pulsation_factor']
-            
-            pulsation_factor = 1.0 + pulsation_amplitude * total_pulsation * 0.5  # Ridotta ampiezza
-            lens['radius'] = lens['base_radius'] * pulsation_factor
-            
-            # CORREZIONE: Pulsazione forza molto semplificata
-            if config.LENS_FORCE_PULSATION_ENABLED:
-                force_pulsation = np.sin(pulsation_time * 1.2)  # Frequenza ridotta da 1.8
-                force_pulsation_amplitude = config.LENS_FORCE_PULSATION_AMPLITUDE
-                if audio_factors:
-                    force_pulsation_amplitude *= audio_factors['strength_factor']
-                force_factor = 1.0 + force_pulsation_amplitude * force_pulsation * 0.3  # Ampiezza ridotta
-                lens['strength'] = lens['base_strength'] * force_factor
-        
-        # === MOVIMENTO LUNGO PERCORSI CINEMATOGRAFICI ULTRA-VELOCE ===
-        # Velocità configurabile tramite parametri della Config, modulata dall'audio
-        movement_speed_multiplier = config.LENS_PATH_SPEED_MULTIPLIER
-        if audio_factors:
-            movement_speed_multiplier *= audio_factors['speed_factor']
-            
-        path_progress = ((frame_index + lens['path_offset']) * movement_speed_multiplier) % len(lens['path'])
-        current_target = lens['path'][int(path_progress)]
-        
-        # Interpolazione ultra-fluida tra i punti del percorso
-        next_index = (int(path_progress) + 1) % len(lens['path'])
-        next_target = lens['path'][next_index]
-        interpolation_factor = path_progress - int(path_progress)
-        
-        # Interpolazione con curva smooth per movimento più naturale
-        smooth_factor = 3 * interpolation_factor**2 - 2 * interpolation_factor**3  # Smoothstep
-        smooth_target = current_target + (next_target - current_target) * smooth_factor
-        
-        # Movimento ultra-aggressivo e reattivo verso il target
-        direction = smooth_target - lens['pos']
-        distance_to_target = np.linalg.norm(direction)
-        
-        if distance_to_target > 0:
-            # CORREZIONE ANTI-SFARFALLIO: Velocità costante invece di adattiva per movimento fluido
-            # La velocità adattiva causava accelerazioni brusche che generavano sfarfallio
-            base_speed = config.LENS_SPEED_FACTOR * config.LENS_BASE_SPEED_MULTIPLIER
-            
-            # Modula la velocità con i fattori audio
-            if audio_factors:
-                base_speed *= audio_factors['speed_factor']
-            
-            # adaptive_speed = base_speed * (1.0 + 0.5 * min(distance_to_target / 40, 1.5))  # RIMOSSA
-            desired_velocity = (direction / distance_to_target) * base_speed  # Velocità costante
-            
-            # Inerzia più alta per movimento ultra-fluido
-            enhanced_inertia = min(0.99, config.LENS_INERTIA + 0.01)  # Aumentata di 1%
-            lens['velocity'] = lens['velocity'] * enhanced_inertia + desired_velocity * (1 - enhanced_inertia)
-        
-        # Aggiorna posizione e angolo con velocità configurabile
-        lens['pos'] += lens['velocity']
-        lens['angle'] += lens['rotation_speed'] * config.LENS_ROTATION_SPEED_MULTIPLIER
-        
-        # Assicurati che rimanga nei limiti con margini morbidi
-        margin = config.LENS_MIN_RADIUS
-        lens['pos'][0] = np.clip(lens['pos'][0], margin, w - margin)
-        lens['pos'][1] = np.clip(lens['pos'][1], margin, h - margin)
-
-    deformed_mask = cv2.remap(mask, final_map_x, final_map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-    return deformed_mask
-
-
-def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
-    """Applica una deformazione organica super fluida usando calcolo a griglia con parametri dinamici."""
-    h, w = mask.shape
-    
-    # Usa parametri dinamici se forniti, altrimenti quelli statici
-    if dynamic_params:
-        speed = dynamic_params.get('deformation_speed', params['speed'])
-        scale = dynamic_params.get('deformation_scale', params['scale'])
-        intensity = dynamic_params.get('deformation_intensity', params['intensity'])
-    else:
-        speed = params['speed']
-        scale = params['scale']
-        intensity = params['intensity']
-    
-    time_component = frame_index * speed
-    
-    # Creo una griglia ridotta per calcolare il noise più velocemente
-    # poi interpolo per ottenere un movimento fluido
-    grid_size = 6  # Griglia più fitta per curve più morbide, ma ancora ottimizzata
-    h_grid = h // grid_size + 1
-    w_grid = w // grid_size + 1
-    
-    # Griglie per il noise
-    noise_x = np.zeros((h_grid, w_grid), dtype=np.float32)
-    noise_y = np.zeros((h_grid, w_grid), dtype=np.float32)
-    
-    # Calcolo il noise solo sui punti della griglia
-    for y in range(h_grid):
-        for x in range(w_grid):
-            real_x = x * grid_size
-            real_y = y * grid_size
-            
-            noise_x[y, x] = pnoise2(
-                real_x * scale, 
-                real_y * scale + time_component, 
-                octaves=4, persistence=0.5, lacunarity=2.0
-            )
-            noise_y[y, x] = pnoise2(
-                real_x * scale + time_component, 
-                real_y * scale, 
-                octaves=4, persistence=0.5, lacunarity=2.0
-            )
-    
-    # Interpolo il noise per ottenere valori fluidi per tutti i pixel
-    noise_x_full = cv2.resize(noise_x, (w, h), interpolation=cv2.INTER_CUBIC)
-    noise_y_full = cv2.resize(noise_y, (w, h), interpolation=cv2.INTER_CUBIC)
-    
-    # Applico l'intensità dinamica
-    displacement_x = noise_x_full * intensity
-    displacement_y = noise_y_full * intensity
-    
-    # Creo le mappe di rimappatura
-    x_indices, y_indices = np.meshgrid(np.arange(w), np.arange(h))
-    map_x = (x_indices + displacement_x).astype(np.float32)
-    map_y = (y_indices + displacement_y).astype(np.float32)
-    
-    deformed_mask = cv2.remap(mask, map_x, map_y, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-    
-    return deformed_mask
 
 def process_background(bg_frame, config):
     """
@@ -1063,76 +772,6 @@ def extract_logo_tracers(logo_mask, config):
     
     return logo_edges
 
-def initialize_lenses(config):
-    """Inizializza una lista di lenti con percorsi cinematografici predefiniti per movimenti ampi e fluidi."""
-    lenses = []
-    
-    # Tipi di percorsi cinematografici - ULTRA-BIAS ORIZZONTALE per seguire la scritta
-    horizontal_paths = ['horizontal_sweep', 'horizontal_zigzag', 'horizontal_wave_complex', 'wave']  # Percorsi orizzontali privilegiati
-    mixed_paths = ['figure_eight', 'spiral', 'circular', 'cross']  # Percorsi misti
-    
-    # BIAS ORIZZONTALE: 70% delle lenti usa percorsi orizzontali
-    horizontal_lens_count = int(config.NUM_LENSES * 0.7)
-    mixed_lens_count = config.NUM_LENSES - horizontal_lens_count
-    
-    # Lista combinata con bias orizzontale
-    path_assignments = []
-    # Assegna percorsi orizzontali alla maggior parte delle lenti
-    for i in range(horizontal_lens_count):
-        path_assignments.append(horizontal_paths[i % len(horizontal_paths)])
-    # Aggiungi alcuni percorsi misti per varietà
-    for i in range(mixed_lens_count):
-        path_assignments.append(mixed_paths[i % len(mixed_paths)])
-    
-    # Mescola per evitare che tutte le lenti orizzontali siano consecutive
-    np.random.shuffle(path_assignments)
-    
-    # Durata del video in frame (per calcolare i percorsi)
-    total_frames = int(config.DURATION_SECONDS * config.FPS)
-    
-    for i in range(config.NUM_LENSES):
-        # Usa il tipo di percorso assegnato con bias orizzontale
-        path_type = path_assignments[i]
-        
-        # Genera il percorso cinematografico completo
-        path = generate_cinematic_path(config.WIDTH, config.HEIGHT, path_type, total_frames)
-        
-        # Posizione iniziale casuala lungo il percorso
-        path_offset = np.random.randint(0, len(path))
-        initial_pos = path[path_offset]
-        
-        # NUOVA: Base radius variabile per pulsazioni più interessanti
-        base_radius = np.random.uniform(config.LENS_MIN_RADIUS, config.LENS_MAX_RADIUS)
-        current_radius = base_radius  # Inizia con il raggio base
-        
-        # NUOVA: Forza base che verrà modulata dalla pulsazione
-        base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
-        
-        lens = {
-            'pos': np.array(initial_pos, dtype=np.float32),
-            'velocity': np.array([0.0, 0.0]),  # Inizia ferma, si muove verso il percorso
-            'radius': current_radius,
-            'base_radius': base_radius,  # Raggio base per pulsazione
-            'strength': base_strength,
-            'base_strength': base_strength,  # NUOVO: forza base per pulsazione
-            'angle': np.random.uniform(0, 2 * np.pi),
-            'rotation_speed': np.random.uniform(-0.008, 0.008),  # Rotazione leggermente più veloce
-            'pulsation_offset': np.random.uniform(0, 2 * np.pi),  # Offset fase per pulsazione asincrona
-            'path': path,  # Percorso cinematografico completo
-            'path_offset': path_offset,  # Offset iniziale nel percorso
-            'path_type': path_type  # Tipo di percorso per debug
-        }
-        lenses.append(lens)
-    
-    print(f"🔮 Inizializzate {config.NUM_LENSES} lenti ULTRA-CINEMATOGRAFICHE:")
-    print(f"   📏 {horizontal_lens_count} lenti con percorsi ORIZZONTALI (bias 70%)")
-    print(f"   🌀 {mixed_lens_count} lenti con percorsi MISTI per varietà")
-    for i, lens in enumerate(lenses):
-        movement_type = "ORIZZONTALE" if lens['path_type'] in horizontal_paths else "MISTO"
-        print(f"     Lente {i+1}: {lens['path_type']} ({movement_type})")
-    
-    return lenses
-
 def find_texture_file():
     """
     Cerca automaticamente un file texture con priorità: texture.tif > texture.png > texture.jpg
@@ -1371,6 +1010,7 @@ def setup_config_defaults():
     Config.DEBUG_MASK = False
     
     Config.DYNAMIC_VARIATION_ENABLED = True
+    Config.RANDOM_DEFORMATION_PARAMS = True  # Nuovo attributo per il componente deformazioni
     Config.VARIATION_AMPLITUDE = 0.8
     Config.VARIATION_SPEED_SLOW = 0.01
     Config.VARIATION_SPEED_MEDIUM = 0.025
