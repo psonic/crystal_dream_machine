@@ -6,6 +6,15 @@ Gestisce le deformazioni organiche e reattive all'audio usando noise di Perlin.
 import numpy as np
 import cv2
 
+# Importa il sistema shader avanzato
+try:
+    from .shaders import apply_shader_deformation, edge_aware_blur, adaptive_interpolation
+    SHADER_AVAILABLE = True
+    print("🎨 Sistema Shader disponibile - Qualità avanzata attivata!")
+except ImportError:
+    SHADER_AVAILABLE = False
+    print("⚠️ Sistema Shader non disponibile - Usando metodi standard")
+
 # Import condizionale per noise
 NOISE_AVAILABLE = False
 pnoise2 = None
@@ -20,8 +29,72 @@ except ImportError:
     print("   Per abilitare le deformazioni: pip install noise")
 
 
-def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
-    """Applica una deformazione organica che stira e allunga la scritta in modo drammatico."""
+def apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params=None):
+    """Applica la vecchia deformazione organica con piccole ondulazioni sottili."""
+    if not NOISE_AVAILABLE:
+        print("⚠️ Deformazione organica saltata: modulo noise non disponibile")
+        return mask
+    
+    h, w = mask.shape
+    
+    # Usa parametri dinamici se forniti, altrimenti quelli statici
+    if dynamic_params:
+        speed = dynamic_params.get('deformation_speed', params['speed'])
+        scale = dynamic_params.get('deformation_scale', params['scale'])
+        intensity = dynamic_params.get('deformation_intensity', params['intensity'])
+    else:
+        speed = params['speed']
+        scale = params['scale']
+        intensity = params['intensity']
+    
+    time_component = frame_index * speed
+    
+    # VECCHIO APPROCCIO: Piccole ondulazioni usando griglia ottimizzata
+    grid_size = 6  # Griglia più fitta per curve più morbide, ma ancora ottimizzata
+    h_grid = h // grid_size + 1
+    w_grid = w // grid_size + 1
+    
+    # Griglie per il noise
+    noise_x = np.zeros((h_grid, w_grid), dtype=np.float32)
+    noise_y = np.zeros((h_grid, w_grid), dtype=np.float32)
+    
+    # Calcolo il noise solo sui punti della griglia
+    for y in range(h_grid):
+        for x in range(w_grid):
+            real_x = x * grid_size
+            real_y = y * grid_size
+            
+            noise_x[y, x] = pnoise2(
+                real_x * scale, 
+                real_y * scale + time_component, 
+                octaves=4, persistence=0.5, lacunarity=2.0
+            )
+            noise_y[y, x] = pnoise2(
+                real_x * scale + time_component, 
+                real_y * scale, 
+                octaves=4, persistence=0.5, lacunarity=2.0
+            )
+    
+    # Interpolo il noise per ottenere valori fluidi per tutti i pixel
+    noise_x_full = cv2.resize(noise_x, (w, h), interpolation=cv2.INTER_CUBIC)
+    noise_y_full = cv2.resize(noise_y, (w, h), interpolation=cv2.INTER_CUBIC)
+    
+    # Applico l'intensità dinamica
+    displacement_x = noise_x_full * intensity
+    displacement_y = noise_y_full * intensity
+    
+    # Creo le mappe di rimappatura
+    x_indices, y_indices = np.meshgrid(np.arange(w), np.arange(h))
+    map_x = (x_indices + displacement_x).astype(np.float32)
+    map_y = (y_indices + displacement_y).astype(np.float32)
+    
+    deformed_mask = cv2.remap(mask, map_x, map_y, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    
+    return deformed_mask
+
+
+def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params=None):
+    """Applica la nuova deformazione organica con stretching drammatico."""
     if not NOISE_AVAILABLE:
         print("⚠️ Deformazione organica saltata: modulo noise non disponibile")
         return mask
@@ -114,15 +187,88 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
     map_x = np.clip(map_x, 0, w-1).astype(np.float32)
     map_y = np.clip(map_y, 0, h-1).astype(np.float32)
     
-    # Applica la deformazione
-    deformed_mask = cv2.remap(mask, map_x, map_y, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    # MIGLIORAMENTO ANTI-ALIASING: Sistema Shader Avanzato
+    config = params.get('config')
+    
+    # Controlla se l'anti-aliasing è abilitato nella configurazione
+    if config and hasattr(config, 'STRETCH_ANTIALIASING_ENABLED') and config.STRETCH_ANTIALIASING_ENABLED:
+        
+        # Determina livello qualità shader
+        quality_level = "medium"  # default
+        if hasattr(config, 'STRETCH_SHADER_QUALITY'):
+            quality_level = config.STRETCH_SHADER_QUALITY
+        
+        # Usa sistema shader se disponibile
+        if SHADER_AVAILABLE and quality_level in ["high", "ultra"]:
+            print(f"🎨 Usando shader qualità {quality_level}")
+            deformed_mask = apply_shader_deformation(mask, map_x, map_y, 
+                                                   quality_level=quality_level)
+        else:
+            # Multi-pass standard migliorato
+            # Pass 1: LANCZOS4 per dettagli fini (migliore per text/edge)
+            deformed_mask_pass1 = cv2.remap(mask, map_x, map_y, 
+                                           interpolation=cv2.INTER_LANCZOS4, 
+                                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            
+            # Pass 2: CUBIC per smoothness
+            deformed_mask_pass2 = cv2.remap(mask, map_x, map_y, 
+                                           interpolation=cv2.INTER_CUBIC, 
+                                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            
+            # Blend dei due passaggi per il meglio di entrambi
+            blend_ratio = getattr(config, 'STRETCH_MULTIPASS_BLENDING', 0.7)
+            deformed_mask = cv2.addWeighted(deformed_mask_pass1, blend_ratio, 
+                                           deformed_mask_pass2, 1.0 - blend_ratio, 0)
+            
+            # MIGLIORAMENTO FINALE: Leggero blur selettivo per eliminare artefatti
+            blur_threshold = getattr(config, 'STRETCH_BLUR_THRESHOLD', 10)
+            blur_strength = getattr(config, 'STRETCH_BLUR_STRENGTH', 0.5)
+            
+            total_deformation_intensity = np.mean(np.abs(map_x - x_indices)) + np.mean(np.abs(map_y - y_indices))
+            if total_deformation_intensity > blur_threshold:
+                # Usa edge-aware blur se disponibile, altrimenti Gaussian standard
+                if SHADER_AVAILABLE:
+                    deformed_mask = edge_aware_blur(deformed_mask, intensity=blur_strength)
+                else:
+                    kernel_size = 3
+                    deformed_mask = cv2.GaussianBlur(deformed_mask, (kernel_size, kernel_size), blur_strength)
+    else:
+        # Metodo standard senza anti-aliasing
+        deformed_mask = cv2.remap(mask, map_x, map_y, 
+                                 interpolation=cv2.INTER_CUBIC, 
+                                 borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     
     return deformed_mask
 
 
+def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
+    """
+    Funzione principale che sceglie quale deformazione applicare basandosi sulla configurazione.
+    """
+    # Determina quale deformazione applicare
+    organic_enabled = params.get('organic_enabled', False)
+    stretch_enabled = params.get('stretch_enabled', False)
+    
+    if organic_enabled and stretch_enabled:
+        # Se entrambi sono attivi, combina gli effetti (50% ognuno)
+        mask_organic = apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params)
+        mask_stretch = apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params)
+        # Media pesata dei due effetti
+        return cv2.addWeighted(mask_organic, 0.5, mask_stretch, 0.5, 0).astype(np.uint8)
+    elif organic_enabled:
+        # Solo deformazione organica classica
+        return apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params)
+    elif stretch_enabled:
+        # Solo deformazione stretch
+        return apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params)
+    else:
+        # Nessuno attivo, restituisci maschera non modificata
+        return mask
+
+
 def get_organic_deformation_params(config, enable_random_variation=True):
     """
-    🌊 Genera i parametri per la deformazione organica.
+    🌊 Genera i parametri per la deformazione organica con i nuovi parametri organici/stretch.
     
     Args:
         config: Configurazione con parametri base
@@ -133,20 +279,36 @@ def get_organic_deformation_params(config, enable_random_variation=True):
     """
     params = {}
     
+    # Determina quale tipo di deformazione usare per i parametri base
+    base_speed = 0.015
+    base_scale = 0.0008  
+    base_intensity = 25.0
+    
+    # Usa parametri organic se abilitato
+    if hasattr(config, 'ORGANIC_DEFORMATION_ENABLED') and config.ORGANIC_DEFORMATION_ENABLED:
+        base_speed = config.ORGANIC_SPEED
+        base_scale = config.ORGANIC_SCALE
+        base_intensity = config.ORGANIC_INTENSITY
+    # Altrimenti usa parametri stretch se abilitato
+    elif hasattr(config, 'STRETCH_DEFORMATION_ENABLED') and config.STRETCH_DEFORMATION_ENABLED:
+        base_speed = config.STRETCH_SPEED
+        base_scale = config.STRETCH_SCALE
+        base_intensity = config.STRETCH_INTENSITY
+    
     if enable_random_variation and hasattr(config, 'RANDOM_DEFORMATION_PARAMS') and config.RANDOM_DEFORMATION_PARAMS:
         # Genera parametri con variazione casuale
         deform_var_x = np.random.uniform(-0.3, 0.3)
         deform_var_y = np.random.uniform(-0.3, 0.3) 
         deform_var_z = np.random.uniform(-0.3, 0.3)
         
-        params['deformation_speed'] = config.DEFORMATION_SPEED * (1.0 + deform_var_x)
-        params['deformation_scale'] = config.DEFORMATION_SCALE * (1.0 + deform_var_y)
-        params['deformation_intensity'] = config.DEFORMATION_INTENSITY * (1.0 + deform_var_z)
+        params['deformation_speed'] = base_speed * (1.0 + deform_var_x)
+        params['deformation_scale'] = base_scale * (1.0 + deform_var_y)
+        params['deformation_intensity'] = base_intensity * (1.0 + deform_var_z)
     else:
         # Usa parametri statici dalla configurazione
-        params['deformation_speed'] = config.DEFORMATION_SPEED
-        params['deformation_scale'] = config.DEFORMATION_SCALE
-        params['deformation_intensity'] = config.DEFORMATION_INTENSITY
+        params['deformation_speed'] = base_speed
+        params['deformation_scale'] = base_scale
+        params['deformation_intensity'] = base_intensity
     
     # Converte i nomi per compatibilità con apply_organic_deformation
     return {
@@ -159,6 +321,7 @@ def get_organic_deformation_params(config, enable_random_variation=True):
 def validate_deformation_config(config):
     """
     🔧 Valida e imposta valori di default per la configurazione delle deformazioni.
+    Ora supporta sia parametri organici che stretch.
     
     Args:
         config: Oggetto configurazione da validare
@@ -166,23 +329,44 @@ def validate_deformation_config(config):
     Returns:
         bool: True se la configurazione è valida
     """
-    required_attrs = [
-        'DEFORMATION_SPEED',
-        'DEFORMATION_SCALE', 
-        'DEFORMATION_INTENSITY'
-    ]
+    # Controlla almeno uno dei due sistemi di deformazione
+    has_organic = (hasattr(config, 'ORGANIC_DEFORMATION_ENABLED') and 
+                   hasattr(config, 'ORGANIC_SPEED') and 
+                   hasattr(config, 'ORGANIC_SCALE') and 
+                   hasattr(config, 'ORGANIC_INTENSITY'))
     
-    missing_attrs = []
-    for attr in required_attrs:
-        if not hasattr(config, attr):
-            missing_attrs.append(attr)
+    has_stretch = (hasattr(config, 'STRETCH_DEFORMATION_ENABLED') and 
+                   hasattr(config, 'STRETCH_SPEED') and 
+                   hasattr(config, 'STRETCH_SCALE') and 
+                   hasattr(config, 'STRETCH_INTENSITY'))
     
-    if missing_attrs:
-        print(f"⚠️ Attributi di configurazione deformazione mancanti: {missing_attrs}")
+    if not has_organic and not has_stretch:
+        print("⚠️ Nessun sistema di deformazione configurato correttamente")
         return False
     
-    # Valida i valori
-    if config.DEFORMATION_SPEED <= 0:
+    # Valida i valori organici se presenti
+    if has_organic and config.ORGANIC_DEFORMATION_ENABLED:
+        if config.ORGANIC_SPEED <= 0:
+            print(f"⚠️ ORGANIC_SPEED deve essere > 0, trovato: {config.ORGANIC_SPEED}")
+            return False
+        if config.ORGANIC_SCALE <= 0:
+            print(f"⚠️ ORGANIC_SCALE deve essere > 0, trovato: {config.ORGANIC_SCALE}")
+            return False
+        if config.ORGANIC_INTENSITY <= 0:
+            print(f"⚠️ ORGANIC_INTENSITY deve essere > 0, trovato: {config.ORGANIC_INTENSITY}")
+            return False
+    
+    # Valida i valori stretch se presenti
+    if has_stretch and config.STRETCH_DEFORMATION_ENABLED:
+        if config.STRETCH_SPEED <= 0:
+            print(f"⚠️ STRETCH_SPEED deve essere > 0, trovato: {config.STRETCH_SPEED}")
+            return False
+        if config.STRETCH_SCALE <= 0:
+            print(f"⚠️ STRETCH_SCALE deve essere > 0, trovato: {config.STRETCH_SCALE}")
+            return False
+        if config.STRETCH_INTENSITY <= 0:
+            print(f"⚠️ STRETCH_INTENSITY deve essere > 0, trovato: {config.STRETCH_INTENSITY}")
+            return False
         print("⚠️ DEFORMATION_SPEED deve essere maggiore di 0")
         return False
         

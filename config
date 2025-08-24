@@ -29,7 +29,7 @@ TEXTURE_BACKGROUND_ALPHA=0.5  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sot
 TEXTURE_BLENDING_MODE="multiply"  # Modalità blending texture
 
 # --- Parametri Video ---
-SVG_PADDING=100  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+SVG_PADDING=200  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=10  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido)
 DURATION_SECONDS=6  # Durata video in secondi
 
@@ -78,20 +78,43 @@ GLOW_ENABLED=False          # Attiva effetto bagliore intorno al logo
 GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
 GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
-# --- Deformazione Organica ---
-# NUOVO: Stretching organico drammatico che allunga/comprime la scritta
-DEFORMATION_ENABLED=True  # Attiva movimento ondulatorio del logo
-DEFORMATION_SPEED=0.015   # Velocità cambio onde (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
-DEFORMATION_SCALE=0.0008   # Frequenza onde (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
-DEFORMATION_INTENSITY=25.0  # Forza deformazione (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+# --- Deformazione Organica (ondulazioni classiche) ---
+ORGANIC_DEFORMATION_ENABLED=False  # Attiva deformazione organica classica con ondulazioni sottili
+ORGANIC_SPEED=0.005              # Velocità cambio onde organiche (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
+ORGANIC_SCALE=0.0008             # Frequenza onde organiche (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
+ORGANIC_INTENSITY=25.0           # Forza deformazione organica (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
+ORGANIC_AUDIO_REACTIVE=False     # Collega deformazione organica all'audio
+ORGANIC_BASS_INTENSITY=0.22      # Quanto i bassi influenzano l'intensità organica (range: 0.1-0.5)
+ORGANIC_BASS_SPEED=0.03          # Quanto i bassi influenzano la velocità organica (range: 0.005-0.03)
+ORGANIC_MID_SCALE=0.002          # Quanto i medi influenzano la scala organica (range: 0.0005-0.003)
+ORGANIC_SMOOTHING=0.95           # Smoothing per effetto rimbalzo organico (range: 0.6-0.95)
+ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione organica (range: 0.5-2.0)
 
-# --- Reattività Audio Deformazione Organica ---
-DEFORMATION_AUDIO_REACTIVE=False  # Collega deformazione organica all'audio
-DEFORMATION_BASS_INTENSITY=0.22  # Quanto i bassi influenzano l'intensità (range: 0.1-0.5, 0.15=leggero, 0.3=forte)
-DEFORMATION_BASS_SPEED=0.03     # Quanto i bassi influenzano la velocità (range: 0.005-0.03, 0.01=lento, 0.02=veloce)
-DEFORMATION_MID_SCALE=0.002     # Quanto i medi influenzano la scala/frequenza (range: 0.0005-0.003, 0.001=sottile, 0.002=ampio)
-DEFORMATION_SMOOTHING=0.95       # Smoothing per effetto rimbalzo (range: 0.6-0.95, 0.7=veloce, 0.9=lento)
-DEFORMATION_AUDIO_MULTIPLIER=1.7 # Moltiplicatore globale audio deformazione (range: 0.5-2.0, 1=normale, 1.5=intenso)
+# --- Deformazione Stretch (stiramento drammatico) ---
+STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
+STRETCH_SPEED=0.002              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SCALE=0.0005             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
+STRETCH_INTENSITY=18.0           # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
+STRETCH_HORIZONTAL_FACTOR=0.2    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
+STRETCH_VERTICAL_FACTOR=0.6      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
+STRETCH_FINE_DETAIL=0.01          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
+STRETCH_AUDIO_REACTIVE=False     # Collega deformazione stretch all'audio
+STRETCH_BASS_INTENSITY=0.25      # Quanto i bassi influenzano l'intensità stretch (range: 0.1-0.6)
+STRETCH_BASS_SPEED=0.025         # Quanto i bassi influenzano la velocità stretch (range: 0.005-0.04)
+STRETCH_MID_SCALE=0.0025         # Quanto i medi influenzano la scala stretch (range: 0.001-0.005)
+STRETCH_SMOOTHING=0.9            # Smoothing per effetto rimbalzo stretch (range: 0.6-0.95)
+STRETCH_AUDIO_MULTIPLIER=1.5     # Moltiplicatore globale audio deformazione stretch (range: 0.5-2.5)
+
+# --- Qualità Anti-Aliasing Stretch ---
+STRETCH_ANTIALIASING_ENABLED=True  # Attiva anti-aliasing avanzato per stretch
+STRETCH_MULTIPASS_BLENDING=0.7     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
+STRETCH_BLUR_THRESHOLD=10          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
+STRETCH_BLUR_STRENGTH=0.5          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
+
+# --- Sistema Shader Avanzato ---
+STRETCH_SHADER_QUALITY=high        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
+STRETCH_EDGE_PRESERVATION=True     # Preserva i bordi durante il blur (usa bilateral filter)
+STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=False  # Attiva effetto lenti che distorcono il logo

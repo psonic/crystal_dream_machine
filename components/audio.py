@@ -204,6 +204,7 @@ def get_audio_reactive_factors(audio_data, frame_idx, config):
 def get_organic_deformation_factors(audio_data, frame_idx, config):
     """
     🎵 Calcola i parametri dinamici per la deformazione organica basati sull'audio con effetto rimbalzo.
+    Supporta sia deformazione organica che stretch con parametri specifici.
     
     Args:
         audio_data: Dati audio preprocessati
@@ -215,7 +216,15 @@ def get_organic_deformation_factors(audio_data, frame_idx, config):
     """
     global _audio_smoothing_state
     
-    if not audio_data or not config.AUDIO_ENABLED or not config.DEFORMATION_AUDIO_REACTIVE:
+    # Controlla se l'audio è abilitato e se almeno una deformazione è audio-reattiva
+    audio_reactive = (
+        config.AUDIO_ENABLED and (
+            (hasattr(config, 'ORGANIC_AUDIO_REACTIVE') and config.ORGANIC_AUDIO_REACTIVE) or
+            (hasattr(config, 'STRETCH_AUDIO_REACTIVE') and config.STRETCH_AUDIO_REACTIVE)
+        )
+    )
+    
+    if not audio_data or not audio_reactive:
         return None
     
     # Assicurati che l'indice del frame sia valido
@@ -229,13 +238,40 @@ def get_organic_deformation_factors(audio_data, frame_idx, config):
     mid = audio_data['mid'][audio_frame_idx]
     high = audio_data['high'][audio_frame_idx]
     
+    # Determina quale tipo di deformazione è attiva per i parametri base
+    base_intensity = 25.0
+    base_speed = 0.015
+    base_scale = 0.0008
+    bass_intensity_factor = 0.22
+    bass_speed_factor = 0.03
+    mid_scale_factor = 0.002
+    smoothing = 0.95
+    
+    # Usa parametri organic se abilitato
+    if hasattr(config, 'ORGANIC_DEFORMATION_ENABLED') and config.ORGANIC_DEFORMATION_ENABLED:
+        base_intensity = config.ORGANIC_INTENSITY
+        base_speed = config.ORGANIC_SPEED
+        base_scale = config.ORGANIC_SCALE
+        bass_intensity_factor = config.ORGANIC_BASS_INTENSITY
+        bass_speed_factor = config.ORGANIC_BASS_SPEED
+        mid_scale_factor = config.ORGANIC_MID_SCALE
+        smoothing = config.ORGANIC_SMOOTHING
+    # Altrimenti usa parametri stretch se abilitato
+    elif hasattr(config, 'STRETCH_DEFORMATION_ENABLED') and config.STRETCH_DEFORMATION_ENABLED:
+        base_intensity = config.STRETCH_INTENSITY
+        base_speed = config.STRETCH_SPEED
+        base_scale = config.STRETCH_SCALE
+        bass_intensity_factor = config.STRETCH_BASS_INTENSITY
+        bass_speed_factor = config.STRETCH_BASS_SPEED
+        mid_scale_factor = config.STRETCH_MID_SCALE
+        smoothing = config.STRETCH_SMOOTHING
+    
     # Calcola i parametri dinamici raw (in modo delicato)
-    raw_intensity = config.DEFORMATION_INTENSITY + (bass * config.DEFORMATION_BASS_INTENSITY)
-    raw_speed = config.DEFORMATION_SPEED + (bass * config.DEFORMATION_BASS_SPEED)
-    raw_scale = config.DEFORMATION_SCALE + (mid * config.DEFORMATION_MID_SCALE)
+    raw_intensity = base_intensity + (bass * bass_intensity_factor)
+    raw_speed = base_speed + (bass * bass_speed_factor)
+    raw_scale = base_scale + (mid * mid_scale_factor)
     
     # Applica smoothing con effetto rimbalzo per movimento più fluido
-    smoothing = config.DEFORMATION_SMOOTHING
     
     # Inizializza valori precedenti se necessario
     if _audio_smoothing_state.prev_intensity is None:
@@ -261,14 +297,14 @@ def get_organic_deformation_factors(audio_data, frame_idx, config):
     
     # Applica limiti per mantenere valori ragionevoli (con range leggermente più ampio)
     dynamic_params['deformation_intensity'] = np.clip(dynamic_params['deformation_intensity'], 
-                                                    config.DEFORMATION_INTENSITY * 0.6, 
-                                                    config.DEFORMATION_INTENSITY * 1.4)
+                                                    base_intensity * 0.6, 
+                                                    base_intensity * 1.4)
     dynamic_params['deformation_speed'] = np.clip(dynamic_params['deformation_speed'], 
-                                                config.DEFORMATION_SPEED * 0.7, 
-                                                config.DEFORMATION_SPEED * 1.5)
+                                                base_speed * 0.7, 
+                                                base_speed * 1.5)
     dynamic_params['deformation_scale'] = np.clip(dynamic_params['deformation_scale'], 
-                                                config.DEFORMATION_SCALE * 0.8, 
-                                                config.DEFORMATION_SCALE * 1.3)
+                                                base_scale * 0.8, 
+                                                base_scale * 1.3)
     
     return dynamic_params
 

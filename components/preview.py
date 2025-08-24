@@ -506,8 +506,16 @@ class LivePreview:
         
         # Parametri correnti (colonna sinistra)
         y_offset = 110
+        
+        # Determina quale tipo di deformazione è attiva per mostrare i parametri corretti
+        deform_intensity = "N/A"
+        if hasattr(self.config, 'ORGANIC_DEFORMATION_ENABLED') and self.config.ORGANIC_DEFORMATION_ENABLED:
+            deform_intensity = f"Organic: {self.config.ORGANIC_INTENSITY:.1f}"
+        elif hasattr(self.config, 'STRETCH_DEFORMATION_ENABLED') and self.config.STRETCH_DEFORMATION_ENABLED:
+            deform_intensity = f"Stretch: {self.config.STRETCH_INTENSITY:.1f}"
+        
         param_texts = [
-            f"Deform Int: {self.config.DEFORMATION_INTENSITY:.1f}",
+            deform_intensity,
             f"Glow: {self.config.GLOW_INTENSITY:.2f}", 
             f"Lens Speed: {self.config.LENS_SPEED_FACTOR:.3f}",
             f"BG Zoom: {self.config.BG_ZOOM_FACTOR:.2f}",
