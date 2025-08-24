@@ -41,7 +41,7 @@ LOGO_ALPHA=0.8            # Opacità logo (range: 0.0-1.0, 0.5=semitrasparente, 
 LOGO_ZOOM_FACTOR=1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingrandito, 2=doppio, 0.8=ridotto)
 
 # --- Video di Sfondo ---
-BACKGROUND_ENABLED=False    # Attiva/disattiva video di sfondo (False = sfondo nero)
+BACKGROUND_ENABLED=True    # Attiva/disattiva video di sfondo (False = sfondo nero)
 BACKGROUND_VIDEO_PATH="input/sfondo.MOV"  # Percorso video di sfondo
 BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
 BG_ZOOM_FACTOR=1.1         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
