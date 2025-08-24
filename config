@@ -90,7 +90,7 @@ ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione org
 
 # --- Deformazione Stretch (stiramento drammatico) ---
 STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
-STRETCH_SPEED=0.001              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SPEED=0.1              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
 STRETCH_SCALE=0.001             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
 STRETCH_INTENSITY=15.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
 STRETCH_HORIZONTAL_FACTOR=0.6    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
