@@ -110,13 +110,20 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     # --- 3. Creazione Maschera del Logo ---
     logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
 
-    # --- 4. Applica Deformazione Organica (per movimento di base CON AUDIO REATTIVO) ---
-    if config.DEFORMATION_ENABLED:
-        # Parametri base per il "respiro" costante
+    # --- 4. Applica Deformazioni ---
+    # Applica deformazione organica classica se abilitata
+    if config.ORGANIC_DEFORMATION_ENABLED or config.STRETCH_DEFORMATION_ENABLED:
+        # Parametri base per entrambi i tipi di deformazione
         deformation_params = {
-            'speed': config.DEFORMATION_SPEED,
-            'scale': config.DEFORMATION_SCALE,
-            'intensity': config.DEFORMATION_INTENSITY
+            # Parametri generali (per compatibilità)
+            'speed': getattr(config, 'ORGANIC_SPEED', getattr(config, 'STRETCH_SPEED', 0.015)),
+            'scale': getattr(config, 'ORGANIC_SCALE', getattr(config, 'STRETCH_SCALE', 0.0008)),
+            'intensity': getattr(config, 'ORGANIC_INTENSITY', getattr(config, 'STRETCH_INTENSITY', 25.0)),
+            # Flags per tipo di deformazione
+            'organic_enabled': config.ORGANIC_DEFORMATION_ENABLED,
+            'stretch_enabled': config.STRETCH_DEFORMATION_ENABLED,
+            # Parametri anti-aliasing per stretch
+            'config': config  # Passa l'intera configurazione per accedere ai parametri AA
         }
         
         # Calcola parametri dinamici basati sull'audio per movimento delicato
@@ -295,16 +302,42 @@ def setup_config_defaults():
     Config.GLOW_INTENSITY = 0.5
     
     # Altri parametri con valori di default
-    Config.DEFORMATION_ENABLED = True
-    Config.DEFORMATION_SPEED = 0.01
-    Config.DEFORMATION_SCALE = 0.002
-    Config.DEFORMATION_INTENSITY = 10.0
-    Config.DEFORMATION_AUDIO_REACTIVE = True
-    Config.DEFORMATION_BASS_INTENSITY = 0.22
-    Config.DEFORMATION_BASS_SPEED = 0.03
-    Config.DEFORMATION_MID_SCALE = 0.002
-    Config.DEFORMATION_SMOOTHING = 0.85
-    Config.DEFORMATION_AUDIO_MULTIPLIER = 1.4
+    
+    # Deformazione Organica (ondulazioni classiche)
+    Config.ORGANIC_DEFORMATION_ENABLED = False
+    Config.ORGANIC_SPEED = 0.015
+    Config.ORGANIC_SCALE = 0.0008
+    Config.ORGANIC_INTENSITY = 25.0
+    Config.ORGANIC_AUDIO_REACTIVE = False
+    Config.ORGANIC_BASS_INTENSITY = 0.22
+    Config.ORGANIC_BASS_SPEED = 0.03
+    Config.ORGANIC_MID_SCALE = 0.002
+    Config.ORGANIC_SMOOTHING = 0.95
+    Config.ORGANIC_AUDIO_MULTIPLIER = 1.7
+    
+    # Deformazione Stretch (stiramento drammatico)
+    Config.STRETCH_DEFORMATION_ENABLED = True
+    Config.STRETCH_SPEED = 0.012
+    Config.STRETCH_SCALE = 0.0015
+    Config.STRETCH_INTENSITY = 18.0
+    Config.STRETCH_HORIZONTAL_FACTOR = 0.8
+    Config.STRETCH_VERTICAL_FACTOR = 0.6
+    Config.STRETCH_FINE_DETAIL = 0.2
+    Config.STRETCH_AUDIO_REACTIVE = False
+    Config.STRETCH_BASS_INTENSITY = 0.25
+    Config.STRETCH_BASS_SPEED = 0.025
+    Config.STRETCH_MID_SCALE = 0.0025
+    Config.STRETCH_SMOOTHING = 0.9
+    Config.STRETCH_AUDIO_MULTIPLIER = 1.5
+    
+    # Anti-aliasing per deformazione stretch
+    Config.STRETCH_ANTIALIASING_ENABLED = True
+    Config.STRETCH_MULTIPASS_BLENDING = 0.7
+    Config.STRETCH_BLUR_THRESHOLD = 10
+    Config.STRETCH_BLUR_STRENGTH = 0.5
+    Config.STRETCH_SHADER_QUALITY = "high"
+    Config.STRETCH_EDGE_PRESERVATION = True
+    Config.STRETCH_TEMPORAL_STABILIZATION = 0.1
     
     Config.LENS_DEFORMATION_ENABLED = True
     Config.NUM_LENSES = 50
@@ -510,7 +543,7 @@ def setup_video_parameters(args):
     # Applica le opzioni dalla linea di comando (override del config file)
     if args.test:
         Config.TEST_MODE = True
-        Config.FPS = 10  # FPS ragionevoli per test invece di 1
+        Config.FPS = 5  # FPS bassi per test veloce
         Config.DURATION_SECONDS = 4
         Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
     
@@ -777,7 +810,7 @@ def main():
             # Applica temporaneamente le impostazioni di test
             Config.TEST_MODE = True
             Config.DURATION_SECONDS = 5  # Durata test
-            Config.FPS = 20  # FPS test
+            Config.FPS = 5  # FPS bassi per test veloce
             print(f"   📝 TEST_MODE temporaneo: durata {Config.DURATION_SECONDS}s, fps {Config.FPS}")
             
             # Dopo il rendering, ripristina i valori originali
