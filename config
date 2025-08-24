@@ -3,7 +3,7 @@
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 
 # --- Formato Video ---
 VIDEO_FORMAT="IG_POST"         # Formato video: "IG_STORY" (9:16), "IG_POST" (4:5), "INPUT_VIDEO_SIZE" (dimensioni originali SVG)
