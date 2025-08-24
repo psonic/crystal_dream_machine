@@ -121,8 +121,8 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     wave_y = np.zeros((h, w), dtype=np.float32)
     
     # Generiamo le onde con campionamento ogni 10 pixel per performance
-    for y in range(0, h, 10):
-        for x in range(0, w, 10):
+    for y in range(0, h, 1):
+        for x in range(0, w, 1):
             # Onda X per stretching orizzontale
             wave_val_x = pnoise2(
                 x * scale + time_component,
@@ -300,7 +300,7 @@ def apply_organic_deformation(mask, frame_index, config, dynamic_params=None):
     return result_mask
 
 
-def get_organic_deformation_params(config, enable_random_variation=True):
+def get_organic_deformation_params(config, enable_random_variation=False):
     """
     🌊 Genera i parametri per la deformazione organica classica (ondulazioni).
     
@@ -338,7 +338,7 @@ def get_organic_deformation_params(config, enable_random_variation=True):
     }
 
 
-def get_stretch_deformation_params(config, enable_random_variation=True):
+def get_stretch_deformation_params(config, enable_random_variation=False):
     """
     🎪 Genera i parametri per la deformazione stretch (stretching organico).
     
@@ -350,9 +350,9 @@ def get_stretch_deformation_params(config, enable_random_variation=True):
         dict: Parametri per la deformazione stretch
     """
     # Parametri base per deformazione stretch
-    base_speed = config.STRETCH_SPEED if hasattr(config, 'STRETCH_SPEED') else 0.1
+    base_speed = 0.0001
     base_scale = config.STRETCH_SCALE if hasattr(config, 'STRETCH_SCALE') else 0.002
-    base_intensity = config.STRETCH_INTENSITY if hasattr(config, 'STRETCH_INTENSITY') else 50.0
+    base_intensity = config.STRETCH_INTENSITY if hasattr(config, 'STRETCH_INTENSITY') else 20.0
     
     if enable_random_variation and hasattr(config, 'RANDOM_DEFORMATION_PARAMS') and config.RANDOM_DEFORMATION_PARAMS:
         # Genera parametri con variazione casuale
@@ -368,11 +368,13 @@ def get_stretch_deformation_params(config, enable_random_variation=True):
         speed = base_speed
         scale = base_scale
         intensity = base_intensity
-    
+
+    print(f"speed: {speed}, scale: {scale}, intensity: {intensity}")
+
     return {
-        'speed': speed,
-        'scale': scale,
-        'intensity': intensity
+        'speed': 0.01,
+        'scale': 0.001,
+        'intensity': 20
     }
 
 
