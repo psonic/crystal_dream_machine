@@ -129,7 +129,7 @@ SMOOTHING_FACTOR=0.0001     # Intensità smussamento (range: 0.00001-0.01, 0.000
 # --- Traccianti Logo ---
 TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
 TRACER_TRAIL_LENGTH=45  # Lunghezza scie (ridotta in test mode per velocità)
-TRACER_MAX_OPACITY=0.006        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+TRACER_MAX_OPACITY=0.26        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
 TRACER_BASE_COLOR_B=255  # Colore base scie Blue (BGR: 0-255)
 TRACER_BASE_COLOR_G=200  # Colore base scie Green (BGR: 0-255)
 TRACER_BASE_COLOR_R=220  # Colore base scie Red (BGR: 0-255)
@@ -139,10 +139,10 @@ TRACER_THRESHOLD2=200          # Soglia alta rilevamento bordi (range: 100-500, 
 # --- Traccianti Sfondo ---
 BG_TRACER_ENABLED=True         # Attiva scie sui contorni dello sfondo
 BG_TRACER_TRAIL_LENGTH=45  # Lunghezza scie sfondo (ridotta in test mode)
-BG_TRACER_MAX_OPACITY=0.02     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
-BG_TRACER_BASE_COLOR_B=20  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_G=20  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_R=20  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
+BG_TRACER_MAX_OPACITY=0.2     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+BG_TRACER_BASE_COLOR_B=255  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_G=200  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_R=220  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
 BG_TRACER_THRESHOLD1=20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
 BG_TRACER_THRESHOLD2=100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 

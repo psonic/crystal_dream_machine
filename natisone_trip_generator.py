@@ -54,8 +54,16 @@ from components.blending import (
     load_texture,
     find_texture_file,
     validate_blending_config,
-    load_texture_wrapper,
-    extract_logo_tracers
+    load_texture_wrapper
+)
+from components.tracers import (
+    extract_logo_tracers,
+    extract_logo_and_bg_tracers,
+    apply_logo_tracers,
+    apply_background_tracers,
+    initialize_tracer_histories,
+    update_tracer_histories,
+    calculate_tracer_dynamic_params
 )
 
 # CAIROSVG verrà importato solo se necessario (gestito nel componente svg_pdf)
@@ -97,12 +105,9 @@ def get_dynamic_parameters(frame_index, total_frames):
         params['lens_speed_factor'] = Config.LENS_SPEED_FACTOR * (1.0 + lens_var_x)
         params['lens_strength_multiplier'] = 1.0 + lens_var_y
         
-        # Variazioni veloci per traccianti
-        tracer_var_x = np.sin(base_seed * Config.VARIATION_SPEED_FAST + 2.0) * Config.VARIATION_AMPLITUDE
-        tracer_var_y = np.cos(base_seed * Config.VARIATION_SPEED_FAST + 6.0) * Config.VARIATION_AMPLITUDE
-        
-        params['tracer_opacity_multiplier'] = 1.0 + tracer_var_x
-        params['bg_tracer_opacity_multiplier'] = 1.0 + tracer_var_y
+        # Aggiungi parametri tracers tramite funzione dedicata
+        tracer_params = calculate_tracer_dynamic_params(base_seed, Config)
+        params.update(tracer_params)
     else:
         # Usa valori fissi se le variazioni sono disabilitate
         deformation_params = get_organic_deformation_params(Config, False)
@@ -111,8 +116,13 @@ def get_dynamic_parameters(frame_index, total_frames):
         params['deformation_intensity'] = deformation_params['intensity']
         params['lens_speed_factor'] = Config.LENS_SPEED_FACTOR
         params['lens_strength_multiplier'] = 1.0
-        params['tracer_opacity_multiplier'] = 1.0
-        params['bg_tracer_opacity_multiplier'] = 1.0
+        
+        # Aggiungi parametri tracers con valori fissi
+        tracer_params = {
+            'tracer_opacity_multiplier': 1.0,
+            'bg_tracer_opacity_multiplier': 1.0
+        }
+        params.update(tracer_params)
     
     return params
 
@@ -284,20 +294,14 @@ def process_background(bg_frame, config):
     if config.BG_CONTRAST_FACTOR > 1.0:
         final_bg = cv2.convertScaleAbs(final_bg, alpha=config.BG_CONTRAST_FACTOR, beta=0)
 
-    # 3. Estrae i contorni (bordi) per l'effetto tracciante del logo con soglie ottimizzate
+    # 3. & 4. Estrae i traccianti del logo e dello sfondo usando la funzione dedicata
     gray_bg = cv2.cvtColor(final_bg, cv2.COLOR_BGR2GRAY)  # Usa il frame processato
     # Applica un leggero blur per ridurre il rumore prima di Canny
     gray_bg = cv2.GaussianBlur(gray_bg, (3, 3), 0)
-    logo_edges = cv2.Canny(gray_bg, config.TRACER_THRESHOLD1, config.TRACER_THRESHOLD2)
     
-    # 4. NUOVO: Estrae traccianti separati per lo sfondo con soglie diverse
-    bg_edges = None
-    if hasattr(config, 'BG_TRACER_ENABLED') and config.BG_TRACER_ENABLED:
-        # Usa soglie ottimizzate per catturare i contorni del video di sfondo
-        bg_edges = cv2.Canny(gray_bg, config.BG_TRACER_THRESHOLD1, config.BG_TRACER_THRESHOLD2)
-        # Dilata leggermente per renderli più visibili e organici
-        kernel = np.ones((2,2), np.uint8)
-        bg_edges = cv2.dilate(bg_edges, kernel, iterations=1)
+    # Crea frame temporaneo per l'estrazione tracers
+    temp_frame = cv2.cvtColor(gray_bg, cv2.COLOR_GRAY2BGR)
+    logo_edges, bg_edges = extract_logo_and_bg_tracers(temp_frame, config)
     
     return final_bg, logo_edges, bg_edges
 
@@ -319,53 +323,11 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
         final_frame, current_logo_edges = bg_result
         current_bg_edges = None
     
-    # --- 2. Creazione Layer Traccianti del Logo (CON PARAMETRI DINAMICI) ---
-    if config.TRACER_ENABLED and len(tracer_history) > 0:
-        tracer_layer = np.zeros_like(final_frame, dtype=np.float32)
-        # Applica moltiplicatore dinamico all'opacità
-        dynamic_opacity = config.TRACER_MAX_OPACITY * dynamic_params.get('tracer_opacity_multiplier', 1.0)
-        opacities = np.linspace(0, dynamic_opacity, len(tracer_history))
-        
-        for i, past_edges in enumerate(reversed(tracer_history)):
-            # --- NUOVO: Colore dinamico per i traccianti ---
-            hue_shift = (frame_index * 0.1 + i * 0.5) % 180
-            base_color_hsv = cv2.cvtColor(np.uint8([[config.TRACER_BASE_COLOR]]), cv2.COLOR_BGR2HSV)[0][0]
-            new_hue = (base_color_hsv[0] + hue_shift) % 180
-            dynamic_color_hsv = np.uint8([[[new_hue, base_color_hsv[1], base_color_hsv[2]]]])
-            dynamic_color_bgr = cv2.cvtColor(dynamic_color_hsv, cv2.COLOR_HSV2BGR)[0][0]
-            
-            # Colora i bordi e applica l'opacità dinamica
-            colored_tracer = cv2.cvtColor(past_edges, cv2.COLOR_GRAY2BGR).astype(np.float32)
-            colored_tracer[past_edges > 0] = np.array(dynamic_color_bgr, dtype=np.float32)
-            tracer_with_opacity = cv2.multiply(colored_tracer, opacities[i])
-            tracer_layer = cv2.add(tracer_layer, tracer_with_opacity)
-            
-        final_frame = cv2.add(final_frame.astype(np.float32), tracer_layer)
-        final_frame = np.clip(final_frame, 0, 255).astype(np.uint8)
+    # --- 2. Applicazione Traccianti del Logo ---
+    final_frame = apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic_params)
 
-    # --- 2.5. NUOVO: Creazione Layer Traccianti Sfondo (CON PARAMETRI DINAMICI) ---
-    if hasattr(config, 'BG_TRACER_ENABLED') and config.BG_TRACER_ENABLED and len(bg_tracer_history) > 0:
-        bg_tracer_layer = np.zeros_like(final_frame, dtype=np.float32)
-        # Applica moltiplicatore dinamico all'opacità dello sfondo
-        dynamic_bg_opacity = config.BG_TRACER_MAX_OPACITY * dynamic_params.get('bg_tracer_opacity_multiplier', 1.0)
-        bg_opacities = np.linspace(0, dynamic_bg_opacity, len(bg_tracer_history))
-        
-        for i, past_bg_edges in enumerate(reversed(bg_tracer_history)):
-            # Colore dinamico per traccianti sfondo (diverso dal logo)
-            hue_shift_bg = (frame_index * 0.05 + i * 0.3) % 180  # Velocità diversa
-            base_color_hsv_bg = cv2.cvtColor(np.uint8([[config.BG_TRACER_BASE_COLOR]]), cv2.COLOR_BGR2HSV)[0][0]
-            new_hue_bg = (base_color_hsv_bg[0] + hue_shift_bg) % 180
-            dynamic_color_hsv_bg = np.uint8([[[new_hue_bg, base_color_hsv_bg[1], base_color_hsv_bg[2]]]])
-            dynamic_color_bgr_bg = cv2.cvtColor(dynamic_color_hsv_bg, cv2.COLOR_HSV2BGR)[0][0]
-            
-            # Colora i bordi dello sfondo e applica l'opacità dinamica
-            colored_bg_tracer = cv2.cvtColor(past_bg_edges, cv2.COLOR_GRAY2BGR).astype(np.float32)
-            colored_bg_tracer[past_bg_edges > 0] = np.array(dynamic_color_bgr_bg, dtype=np.float32)
-            bg_tracer_with_opacity = cv2.multiply(colored_bg_tracer, bg_opacities[i])
-            bg_tracer_layer = cv2.add(bg_tracer_layer, bg_tracer_with_opacity)
-            
-        final_frame = cv2.add(final_frame.astype(np.float32), bg_tracer_layer)
-        final_frame = np.clip(final_frame, 0, 255).astype(np.uint8)
+    # --- 2.5. Applicazione Traccianti Sfondo ---
+    final_frame = apply_background_tracers(final_frame, bg_tracer_history, frame_index, config, dynamic_params)
 
     # --- 3. Creazione Maschera del Logo ---
     logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
@@ -1033,11 +995,8 @@ def main():
         print("ERRORE CRITICO: Nessun codec video funziona!")
         return
     
-    # --- Inizializzazione Effetti ---
-    tracer_history = deque(maxlen=Config.TRACER_TRAIL_LENGTH)
-    
-    # --- NUOVO: Inizializzazione Traccianti Sfondo ---
-    bg_tracer_history = deque(maxlen=getattr(Config, 'BG_TRACER_TRAIL_LENGTH', 35))
+    # --- Inizializzazione Strutture Dati Traccianti ---
+    tracer_history, bg_tracer_history = initialize_tracer_histories(Config)
 
     # --- Inizializzazione per Effetto Lenti (NUOVO) ---
     lenses = []
@@ -1109,13 +1068,8 @@ def main():
                 frame, current_logo_edges = frame_result
                 current_bg_edges = None
             
-            # Aggiorna la storia dei traccianti
-            if Config.TRACER_ENABLED:
-                tracer_history.append(current_logo_edges)
-            
-            # Aggiorna la storia dei traccianti dello sfondo
-            if hasattr(Config, 'BG_TRACER_ENABLED') and Config.BG_TRACER_ENABLED and current_bg_edges is not None:
-                bg_tracer_history.append(current_bg_edges)
+            # Aggiorna le historie dei traccianti usando la funzione dedicata
+            update_tracer_histories(tracer_history, bg_tracer_history, current_logo_edges, current_bg_edges, Config)
             
             out.write(frame)
             
