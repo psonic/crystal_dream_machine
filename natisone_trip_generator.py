@@ -533,13 +533,6 @@ def main():
     # Mostra le opzioni di blending disponibili
     print_blending_options()
     
-    # Assicurati che la cartella test esista se siamo in TEST_MODE
-    if Config.TEST_MODE:
-        test_dir = "output/test"
-        if not os.path.exists(test_dir):
-            os.makedirs(test_dir)
-            print(f"📁 Creata cartella: {test_dir}")
-
     # 🎨 APPLICA PRESET BLENDING AUTOMATICO
     apply_blending_preset(Config)
 
@@ -734,7 +727,16 @@ def main():
     
     # Setup video writer usando funzione di rendering helper
     base_filename = get_timestamp_filename()
-    output_filename = f"output/{base_filename}.mp4"
+    
+    # Usa cartella test se siamo in TEST_MODE
+    if Config.TEST_MODE:
+        output_dir = "output/test"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        output_filename = f"{output_dir}/{base_filename}.mp4"
+    else:
+        output_filename = f"output/{base_filename}.mp4"
+    
     fourcc, fps, size = get_video_writer_params(Config, output_filename)
     
     out = cv2.VideoWriter(output_filename, fourcc, fps, size)
