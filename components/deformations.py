@@ -18,9 +18,10 @@ except ImportError:
 # Import condizionale per noise
 NOISE_AVAILABLE = False
 pnoise2 = None
+pnoise3 = None
 
 try:
-    from noise import pnoise2
+    from noise import pnoise2, pnoise3
     NOISE_AVAILABLE = True
     print("🌊 Perlin noise disponibile - Deformazioni organiche attivate!")
 except ImportError:
@@ -94,7 +95,7 @@ def apply_organic_deformation_old_style(mask, frame_index, params, dynamic_param
 
 
 def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params=None):
-    """Applica la nuova deformazione organica con stretching drammatico."""
+    """Applica deformazione organica stretch in stile semplice e funzionante."""
     if not NOISE_AVAILABLE:
         print("⚠️ Deformazione organica saltata: modulo noise non disponibile")
         return mask
@@ -113,130 +114,50 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     
     time_component = frame_index * speed
     
-    # NUOVO APPROCCIO: Stretching organico invece di piccole ondulazioni
+    # Coordinate per deformazione
     x_indices, y_indices = np.meshgrid(np.arange(w), np.arange(h))
     
-    # Onde principali per stretching orizzontale (più ampie e drammatiche)
-    wave_frequency_x = scale * 2.0  # Onde più ampie
-    wave_amplitude_x = intensity * 0.8  # Stretching più evidente
+    # Genera deformazione usando pnoise2 (molto più semplice e stabile)
+    wave_x = np.zeros((h, w), dtype=np.float32)
+    wave_y = np.zeros((h, w), dtype=np.float32)
     
-    # Onde principali per stretching verticale 
-    wave_frequency_y = scale * 1.5
-    wave_amplitude_y = intensity * 0.6
-    
-    # Stretching orizzontale organico (effetto "fisarmonica")
-    horizontal_stretch = np.zeros_like(x_indices, dtype=np.float32)
-    for y in range(0, h, 8):  # Campionamento per performance
-        for x in range(0, w, 8):
-            # Onde principali per stretching
-            stretch_factor = pnoise2(
-                x * wave_frequency_x + time_component,
-                y * wave_frequency_x * 0.3,
-                octaves=3, persistence=0.6, lacunarity=2.5
-            )
-            # Converti in fattore di stretching (0.5 = compressione, 2.0 = allungamento)
-            stretch_factor = 0.7 + stretch_factor * 0.6  # Range: 0.1 - 1.3
-            horizontal_stretch[y:y+8, x:x+8] = stretch_factor
-    
-    # Stretching verticale organico (effetto "respirazione")
-    vertical_stretch = np.zeros_like(y_indices, dtype=np.float32)
-    for y in range(0, h, 8):
-        for x in range(0, w, 8):
-            stretch_factor = pnoise2(
-                x * wave_frequency_y * 0.5,
-                y * wave_frequency_y + time_component * 0.7,
-                octaves=2, persistence=0.7, lacunarity=3.0
-            )
-            stretch_factor = 0.8 + stretch_factor * 0.4  # Range: 0.4 - 1.2
-            vertical_stretch[y:y+8, x:x+8] = stretch_factor
-    
-    # Interpola per ottenere valori fluidi
-    horizontal_stretch = cv2.resize(horizontal_stretch, (w, h), interpolation=cv2.INTER_CUBIC)
-    vertical_stretch = cv2.resize(vertical_stretch, (w, h), interpolation=cv2.INTER_CUBIC)
-    
-    # Applica lo stretching organico
-    center_x, center_y = w // 2, h // 2
-    
-    # Calcola nuove coordinate con stretching
-    map_x = center_x + (x_indices - center_x) * horizontal_stretch
-    map_y = center_y + (y_indices - center_y) * vertical_stretch
-    
-    # Aggiungi anche piccole ondulazioni per organicità extra
-    fine_noise_x = np.zeros((h, w), dtype=np.float32)
-    fine_noise_y = np.zeros((h, w), dtype=np.float32)
-    
-    for y in range(0, h, 4):
-        for x in range(0, w, 4):
-            fine_noise_x[y:y+4, x:x+4] = pnoise2(
-                x * scale * 8 + time_component * 2,
-                y * scale * 8,
-                octaves=3, persistence=0.4
-            ) * intensity * 0.2
+    # Generiamo le onde con campionamento ogni 10 pixel per performance
+    for y in range(0, h, 10):
+        for x in range(0, w, 10):
+            # Onda X per stretching orizzontale
+            wave_val_x = pnoise2(
+                x * scale + time_component,
+                y * scale * 0.5,
+                octaves=3, persistence=0.5
+            ) * intensity * 15  # Intensità moderata
             
-            fine_noise_y[y:y+4, x:x+4] = pnoise2(
-                x * scale * 8,
-                y * scale * 8 + time_component * 2,
-                octaves=3, persistence=0.4
-            ) * intensity * 0.2
-    
-    # Combina stretching e ondulazioni fini
-    map_x = map_x + fine_noise_x
-    map_y = map_y + fine_noise_y
-    
-    # Assicurati che le coordinate siano nei limiti
-    map_x = np.clip(map_x, 0, w-1).astype(np.float32)
-    map_y = np.clip(map_y, 0, h-1).astype(np.float32)
-    
-    # MIGLIORAMENTO ANTI-ALIASING: Sistema Shader Avanzato
-    config = params.get('config')
-    
-    # Controlla se l'anti-aliasing è abilitato nella configurazione
-    if config and hasattr(config, 'STRETCH_ANTIALIASING_ENABLED') and config.STRETCH_ANTIALIASING_ENABLED:
-        
-        # Determina livello qualità shader
-        quality_level = "medium"  # default
-        if hasattr(config, 'STRETCH_SHADER_QUALITY'):
-            quality_level = config.STRETCH_SHADER_QUALITY
-        
-        # Usa sistema shader se disponibile
-        if SHADER_AVAILABLE and quality_level in ["high", "ultra"]:
-            print(f"🎨 Usando shader qualità {quality_level}")
-            deformed_mask = apply_shader_deformation(mask, map_x, map_y, 
-                                                   quality_level=quality_level)
-        else:
-            # Multi-pass standard migliorato
-            # Pass 1: LANCZOS4 per dettagli fini (migliore per text/edge)
-            deformed_mask_pass1 = cv2.remap(mask, map_x, map_y, 
-                                           interpolation=cv2.INTER_LANCZOS4, 
-                                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            # Onda Y per stretching verticale
+            wave_val_y = pnoise2(
+                x * scale * 0.5,
+                y * scale + time_component * 0.7,
+                octaves=3, persistence=0.5
+            ) * intensity * 15  # Intensità moderata
             
-            # Pass 2: CUBIC per smoothness
-            deformed_mask_pass2 = cv2.remap(mask, map_x, map_y, 
-                                           interpolation=cv2.INTER_CUBIC, 
-                                           borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-            
-            # Blend dei due passaggi per il meglio di entrambi
-            blend_ratio = getattr(config, 'STRETCH_MULTIPASS_BLENDING', 0.7)
-            deformed_mask = cv2.addWeighted(deformed_mask_pass1, blend_ratio, 
-                                           deformed_mask_pass2, 1.0 - blend_ratio, 0)
-            
-            # MIGLIORAMENTO FINALE: Leggero blur selettivo per eliminare artefatti
-            blur_threshold = getattr(config, 'STRETCH_BLUR_THRESHOLD', 10)
-            blur_strength = getattr(config, 'STRETCH_BLUR_STRENGTH', 0.5)
-            
-            total_deformation_intensity = np.mean(np.abs(map_x - x_indices)) + np.mean(np.abs(map_y - y_indices))
-            if total_deformation_intensity > blur_threshold:
-                # Usa edge-aware blur se disponibile, altrimenti Gaussian standard
-                if SHADER_AVAILABLE:
-                    deformed_mask = edge_aware_blur(deformed_mask, intensity=blur_strength)
-                else:
-                    kernel_size = 3
-                    deformed_mask = cv2.GaussianBlur(deformed_mask, (kernel_size, kernel_size), blur_strength)
-    else:
-        # Metodo standard senza anti-aliasing
-        deformed_mask = cv2.remap(mask, map_x, map_y, 
-                                 interpolation=cv2.INTER_CUBIC, 
-                                 borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            # Riempi il blocco 10x10
+            wave_x[y:y+10, x:x+10] = wave_val_x
+            wave_y[y:y+10, x:x+10] = wave_val_y
+    
+    # Interpola per rendere fluido
+    wave_x = cv2.resize(wave_x, (w, h), interpolation=cv2.INTER_CUBIC)
+    wave_y = cv2.resize(wave_y, (w, h), interpolation=cv2.INTER_CUBIC)
+    
+    # Applica deformazione additiva semplice
+    map_x = (x_indices + wave_x).astype(np.float32)
+    map_y = (y_indices + wave_y).astype(np.float32)
+    
+    # Clamp
+    map_x = np.clip(map_x, 0, w-1)
+    map_y = np.clip(map_y, 0, h-1)
+    
+    # Deformazione con interpolazione CUBIC (perfetto bilanciamento qualità/velocità)
+    deformed_mask = cv2.remap(mask, map_x, map_y,
+                             interpolation=cv2.INTER_CUBIC,
+                             borderMode=cv2.BORDER_REFLECT)
     
     return deformed_mask
 

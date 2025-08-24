@@ -129,7 +129,9 @@ class LivePreview:
                 'BACKGROUND_VIDEO_PATH', 'AUDIO_FILES', 'FPS', 'DURATION_SECONDS',
                 'INSTAGRAM_STORIES_MODE', 'LENS_DEFORMATION_ENABLED', 'LOGO_ZOOM_FACTOR',
                 'SVG_LEFT_PADDING', 'LOGO_COLOR_B', 'LOGO_COLOR_G', 'LOGO_COLOR_R',
-                'BLENDING_PRESET', 'ADVANCED_BLENDING', 'BLENDING_MODE'
+                'BLENDING_PRESET', 'ADVANCED_BLENDING', 'BLENDING_MODE',
+                'ORGANIC_DEFORMATION_ENABLED', 'STRETCH_DEFORMATION_ENABLED',
+                'BACKGROUND_ENABLED', 'GLOW_ENABLED', 'TRACER_ENABLED', 'BG_TRACER_ENABLED'
             }
             
             with open(self.live_params_file, 'r') as f:
@@ -303,13 +305,13 @@ class LivePreview:
             return False
     
     def _check_params_file_changes(self):
-        """Controlla se il file dei parametri è stato modificato o forza la rilettura ogni refresh"""
+        """Controlla se il file dei parametri è stato modificato"""
         if not os.path.exists(self.live_params_file):
             return False
             
         mtime = os.path.getmtime(self.live_params_file)
-        # Forza sempre la rilettura ogni refresh per essere sicuri
-        if mtime != self.last_params_mtime or True:  # Sempre True per forzare rilettura
+        # Controlla se il file è stato veramente modificato
+        if mtime != self.last_params_mtime:
             self.last_params_mtime = mtime
             print("🔄 Rilettura forzata del file config...")
             result = self._load_live_params()
@@ -320,6 +322,8 @@ class LivePreview:
                 self.restart_requested = True
                 self.is_running = False  # Ferma il loop principale
                 return 'RESTART'
+            elif result:
+                print("✅ Parametri aggiornati! Preview si aggiornerà al prossimo frame...")
                 
             return result
         
@@ -589,8 +593,10 @@ class LivePreview:
                             self._reload_resources()
                         self.last_file_check = current_time
                     
-                    # Controlla modifiche al file parametri (solo ogni 1 secondo in modalità veloce)
-                    check_interval = 1.0 if self.fast_preview_mode else 0.5
+                    # Controlla modifiche al file parametri 
+                    # In modalità fast: controlla ogni 3 secondi per vedere cambiamenti
+                    # In modalità normale: controlla ogni 0.5 secondi (più reattiva)
+                    check_interval = 3.0 if self.fast_preview_mode else 0.5
                     if current_time - getattr(self, 'last_params_check', 0) > check_interval:
                         params_result = self._check_params_file_changes()
                         if params_result == 'RESTART':
@@ -598,6 +604,7 @@ class LivePreview:
                             break
                         elif params_result:
                             self.force_refresh = True
+                        self.last_params_check = current_time
                         self.last_params_check = current_time
                     
                     self.last_refresh_time = current_time

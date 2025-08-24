@@ -92,12 +92,12 @@ ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione org
 
 # --- Deformazione Stretch (stiramento drammatico) ---
 STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
-STRETCH_SPEED=0.002              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
-STRETCH_SCALE=0.0005             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
-STRETCH_INTENSITY=18.0           # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
-STRETCH_HORIZONTAL_FACTOR=0.2    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
-STRETCH_VERTICAL_FACTOR=0.6      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
-STRETCH_FINE_DETAIL=0.01          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
+STRETCH_SPEED=0.02               # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SCALE=0.002              # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
+STRETCH_INTENSITY = 0.5           # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
+STRETCH_HORIZONTAL_FACTOR=1.0    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
+STRETCH_VERTICAL_FACTOR=1.0      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
+STRETCH_FINE_DETAIL=0.05         # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
 STRETCH_AUDIO_REACTIVE=False     # Collega deformazione stretch all'audio
 STRETCH_BASS_INTENSITY=0.25      # Quanto i bassi influenzano l'intensità stretch (range: 0.1-0.6)
 STRETCH_BASS_SPEED=0.025         # Quanto i bassi influenzano la velocità stretch (range: 0.005-0.04)
@@ -106,15 +106,15 @@ STRETCH_SMOOTHING=0.9            # Smoothing per effetto rimbalzo stretch (range
 STRETCH_AUDIO_MULTIPLIER=1.5     # Moltiplicatore globale audio deformazione stretch (range: 0.5-2.5)
 
 # --- Qualità Anti-Aliasing Stretch ---
-STRETCH_ANTIALIASING_ENABLED=True  # Attiva anti-aliasing avanzato per stretch
-STRETCH_MULTIPASS_BLENDING=0.7     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
-STRETCH_BLUR_THRESHOLD=10          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
-STRETCH_BLUR_STRENGTH=0.5          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
+STRETCH_ANTIALIASING_ENABLED=False # Attiva anti-aliasing avanzato per stretch
+STRETCH_MULTIPASS_BLENDING=0.8     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
+STRETCH_BLUR_THRESHOLD=15          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
+STRETCH_BLUR_STRENGTH=0.3          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
 
 # --- Sistema Shader Avanzato ---
-STRETCH_SHADER_QUALITY=high        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
-STRETCH_EDGE_PRESERVATION=True     # Preserva i bordi durante il blur (usa bilateral filter)
-STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
+STRETCH_SHADER_QUALITY=medium          # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
+STRETCH_EDGE_PRESERVATION=False     # Preserva i bordi durante il blur (usa bilateral filter)
+STRETCH_TEMPORAL_STABILIZATION=0.0 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=False  # Attiva effetto lenti che distorcono il logo

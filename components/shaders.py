@@ -7,42 +7,83 @@ import cv2
 import numpy as np
 from typing import Tuple, Optional
 
-def super_sample_deformation(mask: np.ndarray, map_x: np.ndarray, map_y: np.ndarray, 
-                           scale_factor: int = 2) -> np.ndarray:
+def sub_pixel_deformation(mask: np.ndarray, map_x: np.ndarray, map_y: np.ndarray) -> np.ndarray:
     """
-    🔬 Super-sampling per deformazioni ultra-smooth.
-    Render a risoluzione più alta, poi downscale per eliminare aliasing.
+    🎯 Deformazione sub-pixel precisa senza ingrossamento.
+    Usa interpolazione bilineare ad alta precisione invece di super-sampling.
     
     Args:
         mask: Maschera originale
         map_x, map_y: Mappe di deformazione
-        scale_factor: Fattore di super-sampling (2 = 4x pixel, 3 = 9x pixel)
     
     Returns:
-        Maschera deformata con super-sampling
+        Maschera deformata con precisione sub-pixel
     """
     h, w = mask.shape
     
-    # Upscale la maschera
-    mask_upscaled = cv2.resize(mask, (w * scale_factor, h * scale_factor), 
-                              interpolation=cv2.INTER_LANCZOS4)
+    # Assicura che la maschera sia float per interpolazione precisa
+    if mask.dtype != np.float32:
+        mask_float = mask.astype(np.float32) / 255.0
+    else:
+        mask_float = mask
     
-    # Upscale le mappe di deformazione
-    map_x_upscaled = cv2.resize(map_x, (w * scale_factor, h * scale_factor), 
-                               interpolation=cv2.INTER_CUBIC) * scale_factor
-    map_y_upscaled = cv2.resize(map_y, (w * scale_factor, h * scale_factor), 
-                               interpolation=cv2.INTER_CUBIC) * scale_factor
+    # Applica deformazione con interpolazione LANCZOS4 (migliore per preservare dettagli)
+    # ma con bordi riflessi per evitare artefatti ai margini
+    deformed = cv2.remap(mask_float, map_x, map_y,
+                        interpolation=cv2.INTER_LANCZOS4,
+                        borderMode=cv2.BORDER_REFLECT_101)
     
-    # Applica deformazione alla versione upscaled
-    deformed_upscaled = cv2.remap(mask_upscaled, map_x_upscaled, map_y_upscaled,
-                                 interpolation=cv2.INTER_LANCZOS4,
-                                 borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    # Ritorna nel formato originale
+    if mask.dtype != np.float32:
+        return (deformed * 255.0).astype(mask.dtype)
+    else:
+        return deformed
+
+
+def smart_interpolation(mask: np.ndarray, map_x: np.ndarray, map_y: np.ndarray,
+                       edge_threshold: float = 30) -> np.ndarray:
+    """
+    🧠 Interpolazione intelligente che preserva i dettagli senza ingrossare.
     
-    # Downscale con filtro anti-aliasing
-    deformed_final = cv2.resize(deformed_upscaled, (w, h), 
-                               interpolation=cv2.INTER_AREA)
+    Args:
+        mask: Maschera originale
+        map_x, map_y: Mappe di deformazione
+        edge_threshold: Soglia per rilevamento bordi (più basso = più sensibile)
     
-    return deformed_final
+    Returns:
+        Maschera deformata con interpolazione intelligente
+    """
+    h, w = mask.shape
+    
+    # Converte in uint8 per edge detection se necessario
+    if mask.dtype != np.uint8:
+        mask_uint8 = (mask * 255).astype(np.uint8) if mask.max() <= 1.0 else mask.astype(np.uint8)
+    else:
+        mask_uint8 = mask
+    
+    # Rileva i bordi con Canny più sensibile
+    edges = cv2.Canny(mask_uint8, edge_threshold, edge_threshold * 2)
+    edge_mask = (edges > 0).astype(np.float32)
+    
+    # Dilata leggermente la maschera dei bordi
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    edge_mask_dilated = cv2.dilate(edge_mask, kernel, iterations=1)
+    
+    # Per i bordi: usa LANCZOS4 per preservare nitidezza
+    deformed_edges = cv2.remap(mask, map_x, map_y,
+                              interpolation=cv2.INTER_LANCZOS4,
+                              borderMode=cv2.BORDER_REFLECT_101)
+    
+    # Per le aree lisce: usa interpolazione bilineare più smooth
+    deformed_smooth = cv2.remap(mask, map_x, map_y,
+                               interpolation=cv2.INTER_LINEAR,
+                               borderMode=cv2.BORDER_REFLECT_101)
+    
+    # Combina i due risultati
+    alpha = edge_mask_dilated
+    result = deformed_edges * alpha + deformed_smooth * (1 - alpha)
+    
+    return result.astype(mask.dtype)
 
 
 def edge_aware_blur(mask: np.ndarray, intensity: float = 0.5) -> np.ndarray:
@@ -146,54 +187,50 @@ def temporal_stabilization(current_frame: np.ndarray, previous_frame: Optional[n
 
 
 def apply_shader_deformation(mask: np.ndarray, map_x: np.ndarray, map_y: np.ndarray,
-                           quality_level: str = "high",
-                           previous_frame: Optional[np.ndarray] = None) -> np.ndarray:
+                           quality: str = "medium", temporal_smoothing: bool = False) -> np.ndarray:
     """
-    🎨 Applica deformazione con shader-like quality.
+    🎨 Applica deformazione con qualità shader configurabile.
     
     Args:
         mask: Maschera da deformare
         map_x, map_y: Mappe di deformazione
-        quality_level: "low", "medium", "high", "ultra"
-        previous_frame: Frame precedente per stabilizzazione temporale
+        quality: Livello qualità ('low', 'medium', 'high', 'ultra')
+        temporal_smoothing: Abilita smoothing temporale (future)
     
     Returns:
         Maschera deformata con qualità shader
     """
-    if quality_level == "low":
-        # Metodo standard veloce
-        return cv2.remap(mask, map_x, map_y,
-                        interpolation=cv2.INTER_LINEAR,
-                        borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    print(f"🎨 Usando shader qualità {quality}")
     
-    elif quality_level == "medium":
-        # Interpolazione adattiva
-        return adaptive_interpolation(mask, map_x, map_y)
-    
-    elif quality_level == "high":
-        # Super-sampling 2x + edge-aware blur
-        result = super_sample_deformation(mask, map_x, map_y, scale_factor=2)
-        result = edge_aware_blur(result, intensity=0.3)
+    if quality == "low":
+        # Interpolazione semplice e veloce
+        result = cv2.remap(mask, map_x, map_y,
+                          interpolation=cv2.INTER_LINEAR,
+                          borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         
-        # Stabilizzazione temporale
-        if previous_frame is not None:
-            result = temporal_stabilization(result, previous_frame, 0.1)
+    elif quality == "medium":
+        # Sub-pixel precision senza ingrossamento
+        result = sub_pixel_deformation(mask, map_x, map_y)
         
-        return result
-    
-    elif quality_level == "ultra":
-        # Super-sampling 3x + interpolazione adattiva + stabilizzazione
-        result = super_sample_deformation(mask, map_x, map_y, scale_factor=3)
-        result = edge_aware_blur(result, intensity=0.2)
+    elif quality == "high":
+        # Interpolazione intelligente con edge detection
+        result = smart_interpolation(mask, map_x, map_y, edge_threshold=25)
         
-        # Stabilizzazione temporale più aggressiva
-        if previous_frame is not None:
-            result = temporal_stabilization(result, previous_frame, 0.15)
+    elif quality == "ultra":
+        # Interpolazione intelligente ultra-precisa + edge enhancement
+        result = smart_interpolation(mask, map_x, map_y, edge_threshold=15)
+        # Leggero sharpening solo sui bordi per compensare il blur della deformazione
+        kernel = np.array([[-0.1, -0.1, -0.1],
+                          [-0.1,  1.8, -0.1],
+                          [-0.1, -0.1, -0.1]])
+        enhanced = cv2.filter2D(result.astype(np.float32), -1, kernel)
+        result = np.clip(enhanced, 0, 255).astype(mask.dtype)
         
-        return result
-    
     else:
-        raise ValueError(f"Quality level '{quality_level}' non supportato")
+        # Fallback su medium
+        result = sub_pixel_deformation(mask, map_x, map_y)
+    
+    return result
 
 
 def create_flow_field_visualization(map_x: np.ndarray, map_y: np.ndarray,
