@@ -124,7 +124,7 @@ WORM_COMPLEXITY=5        # Complessità movimento verme (range: 1-8, 2=semplice,
 
 # --- Smussamento Contorni ---
 SMOOTHING_ENABLED=True      # Attiva bordi lisci del logo
-SMOOTHING_FACTOR=0.0001     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
+SMOOTHING_FACTOR=0.01     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
 
 # --- Traccianti Logo ---
 TRACER_ENABLED=False            # Attiva scie colorate sui bordi del logo
