@@ -257,6 +257,7 @@ def setup_config_defaults():
     Config.LOGO_ZOOM_FACTOR = 1.0
     
     # Video di Sfondo
+    Config.BACKGROUND_ENABLED = True
     Config.BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
     Config.BG_USE_ORIGINAL_SIZE = True
     Config.BG_ZOOM_FACTOR = 1.4
@@ -805,17 +806,19 @@ def main():
         print("La texturizzazione del logo è disabilitata.")
 
     # --- Apertura Video di Sfondo ---
-    bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
-    if not bg_video.isOpened():
-        print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
-        # Crea uno sfondo nero di fallback
-        bg_video = None
-        bg_start_frame = 0
-        bg_total_frames = 0  # Aggiungo variabile per fallback
-    else:
-        # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
-        bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
-        bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
+    if Config.BACKGROUND_ENABLED:
+        bg_video = cv2.VideoCapture(Config.BACKGROUND_VIDEO_PATH)
+        if not bg_video.isOpened():
+            print(f"Errore: impossibile aprire il video di sfondo in {Config.BACKGROUND_VIDEO_PATH}")
+            print("🖤 Usando sfondo nero come fallback")
+            # Crea uno sfondo nero di fallback
+            bg_video = None
+            bg_start_frame = 0
+            bg_total_frames = 0  # Aggiungo variabile per fallback
+        else:
+            # NUOVO: Ottieni informazioni del video di sfondo per il rallentamento
+            bg_total_frames = int(bg_video.get(cv2.CAP_PROP_FRAME_COUNT))
+            bg_fps = bg_video.get(cv2.CAP_PROP_FPS)
         
         # 🎲 RANDOM START: Calcola frame di inizio casuale (max 2/3 del video)
         bg_start_frame = 0
@@ -840,6 +843,12 @@ def main():
                 print(f"🔄 Inizio dal primo frame (random start disabilitato)")
         
         print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo {Config.BG_SLOWDOWN_FACTOR}x più lento")
+    else:
+        # Sfondo disabilitato - usa sfondo nero
+        print("🖤 Sfondo video DISABILITATO - Usando sfondo nero")
+        bg_video = None
+        bg_start_frame = 0
+        bg_total_frames = 0
     
     # Setup video writer usando funzione di rendering helper
     base_filename = get_timestamp_filename()
