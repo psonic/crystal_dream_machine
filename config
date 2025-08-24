@@ -87,7 +87,7 @@ GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2
 
 # --- Deformazione Organica (ondulazioni classiche) ---
 ORGANIC_DEFORMATION_ENABLED=False  # Attiva deformazione organica classica con ondulazioni sottili
-ORGANIC_SPEED=0.005              # Velocità cambio onde organiche (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
+ORGANIC_SPEED=0.0005              # Velocità cambio onde organiche (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
 ORGANIC_SCALE=0.0008             # Frequenza onde organiche (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
 ORGANIC_INTENSITY=25.0           # Forza deformazione organica (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
 ORGANIC_AUDIO_REACTIVE=False     # Collega deformazione organica all'audio
@@ -99,7 +99,7 @@ ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione org
 
 # --- Deformazione Stretch (stiramento drammatico) ---
 STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
-STRETCH_SPEED=0.02              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SPEED=0.002              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
 STRETCH_SCALE=0.004             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
 STRETCH_INTENSITY=15.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
 STRETCH_HORIZONTAL_FACTOR=0.8    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
@@ -181,7 +181,7 @@ ADVANCED_BLENDING=True  # Attiva fusione avanzata logo-sfondo
 
 # 🎨 SISTEMA PRESET AUTOMATICO
 # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-BLENDING_PRESET="bright"  # Usa 'manual' per configurazione manuale sotto
+BLENDING_PRESET="soft"  # Usa 'manual' per configurazione manuale sotto
 
 # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
 # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
