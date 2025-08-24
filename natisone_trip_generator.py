@@ -492,6 +492,111 @@ def load_config_from_file():
         print(f"⚠️  Errore nel caricamento del file config: {e}")
         print("📄 Uso valori di default")
 
+
+def setup_video_parameters(args):
+    """
+    Configura tutti i parametri iniziali per la generazione del video.
+    
+    Args:
+        args: Argomenti da linea di comando
+        
+    Returns:
+        tuple: (svg_width, svg_height, format_info, color_constants)
+    """
+    # --- Carica configurazione dal file config ---
+    load_config_from_file()
+    
+    # Applica le opzioni dalla linea di comando (override del config file)
+    if args.test:
+        Config.TEST_MODE = True
+        Config.FPS = 1
+        Config.DURATION_SECONDS = 4
+        Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+    
+    if args.preview:
+        Config.PREVIEW_MODE = True
+        print("🌊 Modalità LIVE PREVIEW attivata!")
+    
+    # --- Codici ANSI per colori e stili nel terminale ---
+    color_constants = {
+        'C_CYAN': '\033[96m',
+        'C_GREEN': '\033[92m',
+        'C_YELLOW': '\033[93m',
+        'C_BLUE': '\033[94m',
+        'C_MAGENTA': '\033[95m',
+        'C_RED': '\033[91m',
+        'C_BOLD': '\033[1m',
+        'C_END': '\033[0m',
+        'SPINNER_CHARS': ['🔮', '✨', '🌟', '💎']
+    }
+    
+    # Mostra le opzioni di blending disponibili
+    print_blending_options()
+    
+    # Assicurati che la cartella test esista se siamo in TEST_MODE
+    if Config.TEST_MODE:
+        test_dir = "output/test"
+        if not os.path.exists(test_dir):
+            os.makedirs(test_dir)
+            print(f"📁 Creata cartella: {test_dir}")
+
+    # 🎨 APPLICA PRESET BLENDING AUTOMATICO
+    apply_blending_preset(Config)
+
+    # NUOVO: Calcola dimensioni del video dalle dimensioni SVG + padding
+    svg_width, svg_height = get_svg_dimensions(Config.SVG_PATH)
+
+    # 📱 GESTIONE FORMATO VIDEO
+    if Config.VIDEO_FORMAT == "IG_STORY":
+        if Config.TEST_MODE:
+            # Versione ridotta per test: 540x960 (metà di 1080x1920)
+            Config.WIDTH = 540
+            Config.HEIGHT = 960
+        else:
+            # Formato Instagram Stories standard: 1080x1920
+            Config.WIDTH = 1080
+            Config.HEIGHT = 1920
+        format_info = "Instagram Stories (9:16)"
+    elif Config.VIDEO_FORMAT == "IG_POST":
+        if Config.TEST_MODE:
+            # Versione ridotta per test: 432x540 (4:5 ratio per test mode)
+            Config.WIDTH = 432
+            Config.HEIGHT = 540
+        else:
+            # Formato Instagram Post moderno: 1080x1350 (4:5 ratio)
+            Config.WIDTH = 1080
+            Config.HEIGHT = 1350
+        format_info = "Instagram Post (4:5)"
+    else:  # INPUT_VIDEO_SIZE
+        # Formato tradizionale basato su dimensioni SVG
+        Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
+        Config.HEIGHT = svg_height + (Config.SVG_PADDING * 2)
+        format_info = "Input Video Size"
+    
+    # Stampa informazioni di configurazione
+    print(f"{color_constants['C_BOLD']}{color_constants['C_CYAN']}🌊 Avvio rendering Crystal Therapy - SVG CENTRATO...{color_constants['C_END']}")
+    print(f"📐 Dimensioni SVG: {svg_width}x{svg_height}")
+    print(f"📐 Dimensioni video: {Config.WIDTH}x{Config.HEIGHT} (formato: {format_info})")
+    if Config.VIDEO_FORMAT == "IG_STORY" and not Config.TEST_MODE:
+        print(f"📱 INSTAGRAM STORIES: Formato verticale ottimizzato per mobile")
+    elif Config.VIDEO_FORMAT == "IG_POST" and not Config.TEST_MODE:
+        print(f"📱 INSTAGRAM POST: Formato 4:5 ottimizzato per feed moderno")
+    if Config.SVG_PADDING and Config.VIDEO_FORMAT == "INPUT_VIDEO_SIZE":
+        print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
+    if Config.TEST_MODE:
+        print(f"🎬 TEST MODE: 10fps, {Config.DURATION_SECONDS}s, risoluzione ridotta per velocità")
+    else:
+        print(f"🎬 PRODUZIONE: 30fps, {Config.DURATION_SECONDS}s, risoluzione completa")
+    source_type = "SVG vettoriale" if Config.USE_SVG_SOURCE else "PDF rasterizzato"
+    print(f"📄 Sorgente: {source_type} con smoothing ottimizzato")
+    print(f"🎥 Video sfondo: ORIGINALE senza crop, rallentato {Config.BG_SLOWDOWN_FACTOR}x")
+    print(f"✨ Traccianti + Blending + Glow COMPATIBILE")
+    print(f"🔮 Variazione dinamica + codec video testati")
+    print(f"💎 RENDERING MOVIMENTO GARANTITO per compatibilità VLC/QuickTime!")
+    
+    return svg_width, svg_height, format_info, color_constants
+
+
 def main():
     """Funzione principale per generare l'animazione del logo."""
     import os  # Assicuriamoci che os sia disponibile
@@ -505,15 +610,19 @@ def main():
                        help='Modalità test rapida (5 secondi)')
     args = parser.parse_args()
     
-    # --- Carica configurazione dal file config ---
-    load_config_from_file()
+    # --- Setup parametri video ---
+    svg_width, svg_height, format_info, colors = setup_video_parameters(args)
     
-    # Applica le opzioni dalla linea di comando (override del config file)
-    if args.test:
-        Config.TEST_MODE = True
-        Config.FPS = 1
-        Config.DURATION_SECONDS = 4
-        Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+    # Estrae le costanti colore per usarle nel resto della funzione
+    C_CYAN = colors['C_CYAN']
+    C_GREEN = colors['C_GREEN']
+    C_YELLOW = colors['C_YELLOW']
+    C_BLUE = colors['C_BLUE']
+    C_MAGENTA = colors['C_MAGENTA']
+    C_RED = colors['C_RED']
+    C_BOLD = colors['C_BOLD']
+    C_END = colors['C_END']
+    SPINNER_CHARS = colors['SPINNER_CHARS']
     
     if args.preview:
         Config.PREVIEW_MODE = True
