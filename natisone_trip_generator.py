@@ -2409,7 +2409,10 @@ def main():
             if audio_data['start_offset'] > 0:
                 print(f"⏯️ Inizio da: {audio_data['start_offset']:.1f}s")
         else:
-            print("⚠️ Errore nel caricamento audio: rendering senza sincronizzazione")
+            if not AUDIO_AVAILABLE:
+                print("🔇 Audio non disponibile: installare librosa per abilitare reattività audio")
+            else:
+                print("⚠️ Nessun file audio trovato: rendering senza sincronizzazione")
     else:
         print("🔇 Audio disabilitato nella configurazione")
 

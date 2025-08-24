@@ -7,15 +7,44 @@ import numpy as np
 import os
 import subprocess
 
-# Import condizionale per librosa
+# Import condizionale per librosa con verifica step-by-step
+AUDIO_AVAILABLE = False
+librosa = None
+
 try:
+    # Prima verifica numpy (dovrebbe essere già disponibile)
+    import numpy as np_test
+    
+    # Poi prova matplotlib
+    try:
+        import matplotlib
+        print("🎨 Matplotlib disponibile")
+    except ImportError:
+        print("⚠️ Matplotlib non trovato - tentativo installazione automatica...")
+        import subprocess
+        import sys
+        try:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'matplotlib'])
+            import matplotlib
+            print("✅ Matplotlib installato con successo")
+        except:
+            print("❌ Impossibile installare matplotlib automaticamente")
+            raise ImportError("matplotlib non disponibile")
+    
+    # Infine prova librosa
     import librosa
     import librosa.display
     AUDIO_AVAILABLE = True
     print("🎵 Librosa disponibile - Supporto audio attivato!")
-except ImportError:
+    
+except ImportError as e:
     AUDIO_AVAILABLE = False
-    print("⚠️ Librosa non disponibile. Per supporto audio: pip install librosa")
+    print(f"⚠️ Audio non disponibile: {e}")
+    print("   Per supporto audio completo: pip install librosa matplotlib")
+except Exception as e:
+    AUDIO_AVAILABLE = False
+    print(f"⚠️ Errore nell'inizializzazione audio: {e}")
+    print("   Per supporto audio completo: pip install librosa matplotlib")
 
 
 class AudioSmoothingState:
