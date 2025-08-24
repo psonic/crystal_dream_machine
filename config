@@ -72,7 +72,7 @@ AUDIO_STRENGTH_INFLUENCE=2 # Quanto l'audio influenza forza lenti (range: 0.8-2.
 AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-2.0, 1=normale, 1.8=estrema)
 
 # --- Effetto Glow ---
-GLOW_ENABLED=False          # Attiva effetto bagliore intorno al logo
+GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
 GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
 GLOW_INTENSITY=0.3         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
@@ -90,12 +90,12 @@ ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione org
 
 # --- Deformazione Stretch (stiramento drammatico) ---
 STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
-STRETCH_SPEED=0.3              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SPEED=0.01              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
 STRETCH_SCALE=0.002             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
-STRETCH_INTENSITY=20.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
-STRETCH_HORIZONTAL_FACTOR=0.9    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
-STRETCH_VERTICAL_FACTOR=0.2      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
-STRETCH_FINE_DETAIL=0.5          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
+STRETCH_INTENSITY=25.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
+STRETCH_HORIZONTAL_FACTOR=0.1    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
+STRETCH_VERTICAL_FACTOR=0.1      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
+STRETCH_FINE_DETAIL=0.01          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
 
 STRETCH_SMOOTHING=0.95            # Smoothing per effetto rimbalzo stretch (range: 0.6-0.95)
 STRETCH_AUDIO_MULTIPLIER=1.5     # Moltiplicatore globale audio deformazione stretch (range: 0.5-2.5)
@@ -106,18 +106,18 @@ STRETCH_BASS_SPEED=0.025         # Quanto i bassi influenzano la velocità stret
 STRETCH_MID_SCALE=0.0025         # Quanto i medi influenzano la scala stretch (range: 0.001-0.005)
 
 # --- Qualità Anti-Aliasing Stretch ---
-STRETCH_ANTIALIASING_ENABLED=True  # Attiva anti-aliasing avanzato per stretch
+STRETCH_ANTIALIASING_ENABLED=False  # Attiva anti-aliasing avanzato per stretch
 STRETCH_MULTIPASS_BLENDING=0.5     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
 STRETCH_BLUR_THRESHOLD=5          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
 STRETCH_BLUR_STRENGTH=0.5          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
 
 # --- Sistema Shader Avanzato ---
 STRETCH_SHADER_QUALITY=ultra        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
-STRETCH_EDGE_PRESERVATION=True     # Preserva i bordi durante il blur (usa bilateral filter)
+STRETCH_EDGE_PRESERVATION=False     # Preserva i bordi durante il blur (usa bilateral filter)
 STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
 
 # --- Deformazione a Lenti ---
-LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
+LENS_DEFORMATION_ENABLED=False  # Attiva effetto lenti che distorcono il logo
 NUM_LENSES=50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
 LENS_MIN_STRENGTH=-0.4     # Forza minima ridotta per deformazione più delicata
 LENS_MAX_STRENGTH=0.2      # Forza massima ridotta per deformazione più delicata
@@ -150,7 +150,7 @@ SMOOTHING_ENABLED=True      # Attiva bordi lisci del logo
 SMOOTHING_FACTOR=0.001     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
 
 # --- Traccianti Logo ---
-TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
+TRACER_ENABLED=False            # Attiva scie colorate sui bordi del logo
 TRACER_TRAIL_LENGTH=35  # Lunghezza scie (ridotta in test mode per velocità)
 TRACER_MAX_OPACITY=0.06        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
 TRACER_BASE_COLOR_B=115  # Colore base scie Blue (BGR: 0-255)
