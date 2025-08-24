@@ -150,7 +150,10 @@ def initialize_lenses(config):
         initial_path_position = np.random.randint(0, len(path))
         
         # Parametri casuali per ogni lente (variazione controllata)
-        base_radius = np.random.uniform(config.LENS_MIN_RADIUS, config.LENS_MAX_RADIUS)
+        # Distribuzione non uniforme: molte piccole, poche grandi
+        # Usa distribuzione power law per favorire dimensioni piccole
+        random_factor = np.random.random() ** 2.5  # Esponente 2.5 = forte bias verso piccole
+        base_radius = config.LENS_MIN_RADIUS + (config.LENS_MAX_RADIUS - config.LENS_MIN_RADIUS) * random_factor
         base_strength = np.random.uniform(config.LENS_MIN_STRENGTH, config.LENS_MAX_STRENGTH)
         
         lens = {

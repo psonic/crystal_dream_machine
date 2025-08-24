@@ -19,7 +19,7 @@ WHATSAPP_COMPATIBLE=True   # Ottimizza per WhatsApp/social media
 CREATE_WHATSAPP_VERSION=True  # Crea versione aggiuntiva con ffmpeg
 
 # --- Sorgente Logo e Texture ---
-USE_SVG_SOURCE=False        # True = usa SVG, False = usa PDF
+USE_SVG_SOURCE=True        # True = usa SVG, False = usa PDF
 SVG_PATH="input/logo.svg"  # Percorso file SVG
 PDF_PATH="input/logo.pdf"  # Percorso file PDF alternativo
 SVG_LEFT_PADDING=50        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
@@ -36,7 +36,7 @@ TEXTURE_BACKGROUND_ALPHA=0.5  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sot
 TEXTURE_BLENDING_MODE="multiply"  # Modalità blending texture
 
 # --- Parametri Video ---
-SVG_PADDING=10  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+SVG_PADDING=100  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
 DURATION_SECONDS=6  # Durata video in secondi
 
@@ -51,10 +51,10 @@ LOGO_ZOOM_FACTOR=1.0       # Zoom del logo (range: 0.5-3.0, 1=normale, 1.5=ingra
 BACKGROUND_ENABLED=True    # Attiva/disattiva video di sfondo (False = sfondo nero)
 BACKGROUND_VIDEO_PATH="input/sfondo.MOV"  # Percorso video di sfondo
 BG_USE_ORIGINAL_SIZE=True  # Usa dimensioni originali video senza crop
-BG_ZOOM_FACTOR=1.1         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
-BG_SLOWDOWN_FACTOR=2.0     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
-BG_DARKEN_FACTOR=0.3      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
-BG_CONTRAST_FACTOR=1     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
+BG_ZOOM_FACTOR=1.3         # Zoom dello sfondo (range: 0.8-2.5, 1=normale, 1.5=zoomato, 2=molto zoomato)
+BG_SLOWDOWN_FACTOR=1.5     # Rallentamento sfondo (range: 0.5-3.0, 1=normale, 2=metà velocità, 0.8=più veloce)
+BG_DARKEN_FACTOR=0.45      # Scurimento sfondo (range: 0.1-1.0, 0.3=scuro, 0.7=normale)
+BG_CONTRAST_FACTOR=1.6     # Contrasto sfondo (range: 0.5-2.5, 1=normale, 1.5=più contrasto)
 BG_RANDOM_START=True       # Inizia da punto casuale del video (max 2/3 della durata)
 
 # --- Parametri Crop Video Verticale ---
@@ -81,8 +81,8 @@ AUDIO_STRENGTH_INFLUENCE=2 # Quanto l'audio influenza forza lenti (range: 0.8-2.
 AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-2.0, 1=normale, 1.8=estrema)
 
 # --- Effetto Glow ---
-GLOW_ENABLED=False          # Attiva effetto bagliore intorno al logo
-GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
+GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
+GLOW_KERNEL_SIZE=2  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
 GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
 # --- Deformazione Organica (ondulazioni classiche) ---
@@ -125,20 +125,20 @@ STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
-NUM_LENSES=12             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
-LENS_MIN_STRENGTH=-1.0     # Forza minima ridotta per deformazione più delicata
-LENS_MAX_STRENGTH=1.2      # Forza massima ridotta per deformazione più delicata
-LENS_MIN_RADIUS=20         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
+NUM_LENSES=50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+LENS_MIN_STRENGTH=-0.7     # Forza minima ridotta per deformazione più delicata
+LENS_MAX_STRENGTH=1.0      # Forza massima ridotta per deformazione più delicata
+LENS_MIN_RADIUS=10         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
 LENS_MAX_RADIUS=70         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
 LENS_SPEED_FACTOR=0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
 
 # --- Parametri Movimento Lenti ---
-LENS_PATH_SPEED_MULTIPLIER=0.1    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
-LENS_BASE_SPEED_MULTIPLIER=0.1    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
+LENS_PATH_SPEED_MULTIPLIER=0.08    # Velocità percorso (range: 1-20, 5=lenta, 10=normale, 15=veloce)
+LENS_BASE_SPEED_MULTIPLIER=0.08    # Moltiplicatore velocità base (range: 0.5-3, 1=normale, 2=doppia)
 LENS_ROTATION_SPEED_MULTIPLIER=0.01  # Velocità rotazione verme (range: 1-15, 5=lenta, 10=veloce)
 LENS_INERTIA=0.95                  # Fluidità movimento (range: 0.1-0.95, 0.3=scattoso, 0.9=fluido)
-LENS_ROTATION_SPEED_MIN=-0.02     # Velocità rotazione minima (range: -0.02 a 0)
-LENS_ROTATION_SPEED_MAX=0.02     # Velocità rotazione massima (range: 0 a 0.02)
+LENS_ROTATION_SPEED_MIN=-0.01     # Velocità rotazione minima (range: -0.02 a 0)
+LENS_ROTATION_SPEED_MAX=0.01     # Velocità rotazione massima (range: 0 a 0.02)
 
 # --- Movimento e Pulsazione Lenti ---
 LENS_HORIZONTAL_BIAS=2             # Preferenza movimento orizzontale (range: 1-5, 1=uniforme, 3=bias, 5=solo orizzontale)
@@ -157,31 +157,31 @@ SMOOTHING_ENABLED=True      # Attiva bordi lisci del logo
 SMOOTHING_FACTOR=0.001     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)
 
 # --- Traccianti Logo ---
-TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
-TRACER_TRAIL_LENGTH=25  # Lunghezza scie (ridotta in test mode per velocità)
+TRACER_ENABLED=False            # Attiva scie colorate sui bordi del logo
+TRACER_TRAIL_LENGTH=35  # Lunghezza scie (ridotta in test mode per velocità)
 TRACER_MAX_OPACITY=0.08        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
-TRACER_BASE_COLOR_B=115  # Colore base scie Blue (BGR: 0-255)
-TRACER_BASE_COLOR_G=200  # Colore base scie Green (BGR: 0-255)
-TRACER_BASE_COLOR_R=120  # Colore base scie Red (BGR: 0-255)
+TRACER_BASE_COLOR_B=105  # Colore base scie Blue (BGR: 0-255)
+TRACER_BASE_COLOR_G=110  # Colore base scie Green (BGR: 0-255)
+TRACER_BASE_COLOR_R=160  # Colore base scie Red (BGR: 0-255)
 TRACER_THRESHOLD1=50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
 TRACER_THRESHOLD2=200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
 
 # --- Traccianti Sfondo ---
 BG_TRACER_ENABLED=True         # Attiva scie sui contorni dello sfondo
-BG_TRACER_TRAIL_LENGTH=85  # Lunghezza scie sfondo (ridotta in test mode)
-BG_TRACER_MAX_OPACITY=0.05     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
-BG_TRACER_BASE_COLOR_B=155  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_G=100  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_R=120  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
+BG_TRACER_TRAIL_LENGTH=50  # Lunghezza scie sfondo (ridotta in test mode)
+BG_TRACER_MAX_OPACITY=0.02     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+BG_TRACER_BASE_COLOR_B=40  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_G=40  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_R=40  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
 BG_TRACER_THRESHOLD1=10        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-BG_TRACER_THRESHOLD2=80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+BG_TRACER_THRESHOLD2=50       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 
 # --- Blending Avanzato ---
 ADVANCED_BLENDING=True  # Attiva fusione avanzata logo-sfondo
 
 # 🎨 SISTEMA PRESET AUTOMATICO
 # Preset disponibili: 'manual', 'cinematic', 'artistic', 'soft', 'dramatic', 'bright', 'intense', 'psychedelic', 'glow', 'dark', 'geometric'
-BLENDING_PRESET="soft"  # Usa 'manual' per configurazione manuale sotto
+BLENDING_PRESET="cinematic"  # Usa 'manual' per configurazione manuale sotto
 
 # Parametri blending configurabili (usati solo se BLENDING_PRESET = 'manual')
 # Modalità disponibili: 'normal', 'multiply', 'screen', 'overlay', 'soft_light', 'hard_light', 'color_dodge', 'color_burn', 'darken', 'lighten', 'difference', 'exclusion'
