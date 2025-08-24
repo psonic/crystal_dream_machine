@@ -20,7 +20,7 @@ TEXTURE_AUTO_SEARCH=True   # Cerca automaticamente file texture.*
 TEXTURE_FALLBACK_PATH="input/texture.jpg"  # Texture di fallback
 
 # --- Sistema Texture Avanzato ---
-TEXTURE_ENABLED=True       # Attiva sistema texture
+TEXTURE_ENABLED=False       # Attiva sistema texture
 TEXTURE_TARGET="logo"      # Dove applicare: 'logo', 'background', 'both'
 TEXTURE_ALPHA=0.6          # Opacità texture logo (range: 0.0-1.0, 0.3=leggera, 0.7=forte)
 TEXTURE_BACKGROUND_ALPHA=0.5  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sottile, 0.5=visibile)
