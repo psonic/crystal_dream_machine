@@ -81,7 +81,7 @@ AUDIO_STRENGTH_INFLUENCE=2 # Quanto l'audio influenza forza lenti (range: 0.8-2.
 AUDIO_PULSATION_INFLUENCE=1.3 # Quanto l'audio influenza pulsazione (range: 0.5-2.0, 1=normale, 1.8=estrema)
 
 # --- Effetto Glow ---
-GLOW_ENABLED=True          # Attiva effetto bagliore intorno al logo
+GLOW_ENABLED=False          # Attiva effetto bagliore intorno al logo
 GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale, 100=molto ampio)
 GLOW_INTENSITY=0.5         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
@@ -158,23 +158,23 @@ SMOOTHING_FACTOR=0.001     # Intensità smussamento (range: 0.00001-0.01, 0.0001
 
 # --- Traccianti Logo ---
 TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
-TRACER_TRAIL_LENGTH=45  # Lunghezza scie (ridotta in test mode per velocità)
-TRACER_MAX_OPACITY=0.05        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
-TRACER_BASE_COLOR_B=255  # Colore base scie Blue (BGR: 0-255)
+TRACER_TRAIL_LENGTH=25  # Lunghezza scie (ridotta in test mode per velocità)
+TRACER_MAX_OPACITY=0.08        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+TRACER_BASE_COLOR_B=115  # Colore base scie Blue (BGR: 0-255)
 TRACER_BASE_COLOR_G=200  # Colore base scie Green (BGR: 0-255)
-TRACER_BASE_COLOR_R=220  # Colore base scie Red (BGR: 0-255)
+TRACER_BASE_COLOR_R=120  # Colore base scie Red (BGR: 0-255)
 TRACER_THRESHOLD1=50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
 TRACER_THRESHOLD2=200          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
 
 # --- Traccianti Sfondo ---
 BG_TRACER_ENABLED=True         # Attiva scie sui contorni dello sfondo
-BG_TRACER_TRAIL_LENGTH=45  # Lunghezza scie sfondo (ridotta in test mode)
-BG_TRACER_MAX_OPACITY=0.02     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
-BG_TRACER_BASE_COLOR_B=255  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_G=200  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_R=220  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
-BG_TRACER_THRESHOLD1=20        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
-BG_TRACER_THRESHOLD2=100       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
+BG_TRACER_TRAIL_LENGTH=85  # Lunghezza scie sfondo (ridotta in test mode)
+BG_TRACER_MAX_OPACITY=0.05     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+BG_TRACER_BASE_COLOR_B=155  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_G=100  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_R=120  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
+BG_TRACER_THRESHOLD1=10        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
+BG_TRACER_THRESHOLD2=80       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 
 # --- Blending Avanzato ---
 ADVANCED_BLENDING=True  # Attiva fusione avanzata logo-sfondo

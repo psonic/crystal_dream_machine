@@ -543,7 +543,7 @@ def setup_video_parameters(args):
     # Applica le opzioni dalla linea di comando (override del config file)
     if args.test:
         Config.TEST_MODE = True
-        Config.FPS = 5  # FPS bassi per test veloce
+        Config.FPS = 2  # FPS bassi per test veloce
         Config.DURATION_SECONDS = 4
         Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
     
