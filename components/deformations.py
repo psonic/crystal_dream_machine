@@ -272,11 +272,8 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
     stretch_enabled = params.get('stretch_enabled', False)
     
     if organic_enabled and stretch_enabled:
-        # Se entrambi sono attivi, combina gli effetti (50% ognuno)
-        mask_organic = apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params)
-        mask_stretch = apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params)
-        # Media pesata dei due effetti
-        return cv2.addWeighted(mask_organic, 0.5, mask_stretch, 0.5, 0).astype(np.uint8)
+        # Se entrambi sono attivi, combina gli effetti 
+        return apply_organic_deformation_new_style(apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params), frame_index, params, dynamic_params)
     elif organic_enabled:
         # Solo deformazione organica classica
         return apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params)
