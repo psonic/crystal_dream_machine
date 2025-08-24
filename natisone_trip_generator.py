@@ -113,23 +113,11 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     # --- 4. Applica Deformazioni ---
     # Applica deformazione organica classica se abilitata
     if config.ORGANIC_DEFORMATION_ENABLED or config.STRETCH_DEFORMATION_ENABLED:
-        # Parametri base per entrambi i tipi di deformazione
-        deformation_params = {
-            # Parametri generali (per compatibilità)
-            'speed': getattr(config, 'ORGANIC_SPEED', getattr(config, 'STRETCH_SPEED', 0.015)),
-            'scale': getattr(config, 'ORGANIC_SCALE', getattr(config, 'STRETCH_SCALE', 0.0008)),
-            'intensity': getattr(config, 'ORGANIC_INTENSITY', getattr(config, 'STRETCH_INTENSITY', 25.0)),
-            # Flags per tipo di deformazione
-            'organic_enabled': config.ORGANIC_DEFORMATION_ENABLED,
-            'stretch_enabled': config.STRETCH_DEFORMATION_ENABLED,
-            # Parametri anti-aliasing per stretch
-            'config': config  # Passa l'intera configurazione per accedere ai parametri AA
-        }
-        
         # Calcola parametri dinamici basati sull'audio per movimento delicato
         dynamic_deformation_params = get_organic_deformation_factors(audio_data, frame_index, config)
         
-        logo_mask = apply_organic_deformation(logo_mask, frame_index, deformation_params, dynamic_deformation_params)
+        # Usa il nuovo sistema refactorizzato che prende direttamente la config
+        logo_mask = apply_organic_deformation(logo_mask, frame_index, config, dynamic_deformation_params)
 
     # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
     if config.LENS_DEFORMATION_ENABLED:

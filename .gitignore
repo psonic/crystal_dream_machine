@@ -16,6 +16,14 @@ input/*.avi
 input/*.mkv
 input/*.MKV
 
+# Audio files (possono essere grandi)
+input/*.aif
+input/*.AIF
+input/*.wav
+input/*.WAV
+input/*.mp3
+input/*.MP3
+
 # Opzionalmente, se gli MP4 in output diventano troppo grandi:
 # output/*.mp4
 
