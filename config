@@ -29,7 +29,7 @@ TEXTURE_BLENDING_MODE="multiply"  # Modalità blending texture
 # --- Parametri Video ---
 SVG_PADDING=50  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
-DURATION_SECONDS=10  # Durata video in secondi
+DURATION_SECONDS=3  # Durata video in secondi
 
 # --- Colore e Stile ---
 LOGO_COLOR_B=255    # Colore logo BGR Blue (range: 0-255)
