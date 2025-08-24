@@ -27,7 +27,7 @@ TEXTURE_BACKGROUND_ALPHA=0.5  # Opacità texture sfondo (range: 0.1-0.8, 0.2=sot
 TEXTURE_BLENDING_MODE="multiply"  # Modalità blending texture
 
 # --- Parametri Video ---
-SVG_PADDING=100  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
+SVG_PADDING=10  # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 FPS=30  # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
 DURATION_SECONDS=6  # Durata video in secondi
 
@@ -90,12 +90,12 @@ ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione org
 
 # --- Deformazione Stretch (stiramento drammatico) ---
 STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
-STRETCH_SPEED=0.02              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
-STRETCH_SCALE=0.005             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
-STRETCH_INTENSITY=15.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
-STRETCH_HORIZONTAL_FACTOR=0.8    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
-STRETCH_VERTICAL_FACTOR=0.4      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
-STRETCH_FINE_DETAIL=0.1          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
+STRETCH_SPEED=0.3              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
+STRETCH_SCALE=0.002             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
+STRETCH_INTENSITY=20.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
+STRETCH_HORIZONTAL_FACTOR=0.9    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
+STRETCH_VERTICAL_FACTOR=0.2      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
+STRETCH_FINE_DETAIL=0.5          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
 
 STRETCH_SMOOTHING=0.95            # Smoothing per effetto rimbalzo stretch (range: 0.6-0.95)
 STRETCH_AUDIO_MULTIPLIER=1.5     # Moltiplicatore globale audio deformazione stretch (range: 0.5-2.5)
@@ -107,13 +107,13 @@ STRETCH_MID_SCALE=0.0025         # Quanto i medi influenzano la scala stretch (r
 
 # --- Qualità Anti-Aliasing Stretch ---
 STRETCH_ANTIALIASING_ENABLED=True  # Attiva anti-aliasing avanzato per stretch
-STRETCH_MULTIPASS_BLENDING=0.1     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
-STRETCH_BLUR_THRESHOLD=15          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
-STRETCH_BLUR_STRENGTH=0.8          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
+STRETCH_MULTIPASS_BLENDING=0.5     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
+STRETCH_BLUR_THRESHOLD=5          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
+STRETCH_BLUR_STRENGTH=0.5          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
 
 # --- Sistema Shader Avanzato ---
 STRETCH_SHADER_QUALITY=ultra        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
-STRETCH_EDGE_PRESERVATION=False     # Preserva i bordi durante il blur (usa bilateral filter)
+STRETCH_EDGE_PRESERVATION=True     # Preserva i bordi durante il blur (usa bilateral filter)
 STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
 
 # --- Deformazione a Lenti ---
@@ -152,9 +152,9 @@ SMOOTHING_FACTOR=0.001     # Intensità smussamento (range: 0.00001-0.01, 0.0001
 # --- Traccianti Logo ---
 TRACER_ENABLED=True            # Attiva scie colorate sui bordi del logo
 TRACER_TRAIL_LENGTH=35  # Lunghezza scie (ridotta in test mode per velocità)
-TRACER_MAX_OPACITY=0.08        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
-TRACER_BASE_COLOR_B=105  # Colore base scie Blue (BGR: 0-255)
-TRACER_BASE_COLOR_G=110  # Colore base scie Green (BGR: 0-255)
+TRACER_MAX_OPACITY=0.06        # Opacità massima scie (range: 0.01-0.2, 0.02=sottili, 0.05=visibili, 0.1=forti)
+TRACER_BASE_COLOR_B=115  # Colore base scie Blue (BGR: 0-255)
+TRACER_BASE_COLOR_G=120  # Colore base scie Green (BGR: 0-255)
 TRACER_BASE_COLOR_R=110  # Colore base scie Red (BGR: 0-255)
 TRACER_THRESHOLD1=50           # Soglia bassa rilevamento bordi (range: 20-100, 30=sensibile, 70=selettivo)
 TRACER_THRESHOLD2=100          # Soglia alta rilevamento bordi (range: 100-500, 200=normale, 400=rigido)
@@ -162,10 +162,10 @@ TRACER_THRESHOLD2=100          # Soglia alta rilevamento bordi (range: 100-500, 
 # --- Traccianti Sfondo ---
 BG_TRACER_ENABLED=True         # Attiva scie sui contorni dello sfondo
 BG_TRACER_TRAIL_LENGTH=35  # Lunghezza scie sfondo (ridotta in test mode)
-BG_TRACER_MAX_OPACITY=0.03     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
-BG_TRACER_BASE_COLOR_B=240  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_G=10  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
-BG_TRACER_BASE_COLOR_R=10  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
+BG_TRACER_MAX_OPACITY=0.05     # Opacità scie sfondo (range: 0.005-0.1, 0.02=sottili, 0.06=evidenti)
+BG_TRACER_BASE_COLOR_B=30  # Colore scie sfondo Blue (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_G=40  # Colore scie sfondo Green (BGR: tonalità viola/magenta)
+BG_TRACER_BASE_COLOR_R=30  # Colore scie sfondo Red (BGR: tonalità viola/magenta)
 BG_TRACER_THRESHOLD1=25        # Soglia bassa contorni sfondo (range: 10-80, 20=tutto, 50=selettivo)
 BG_TRACER_THRESHOLD2=40       # Soglia alta contorni sfondo (range: 50-200, 80=normale, 150=rigido)
 
