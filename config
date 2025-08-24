@@ -3,7 +3,7 @@
 # Lo script legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
-TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 FAST_PREVIEW=True  # Preview ultra veloce (0.5s refresh vs 3s normale)
 
 # --- Formato Video ---
@@ -56,7 +56,7 @@ BG_CROP_WIDTH_RATIO=1.0    # Larghezza crop come ratio (1.0=tutto)
 BG_CROP_HEIGHT_RATIO=0.5   # Altezza crop come ratio (0.5=metà altezza per formato orizzontale)
 
 # --- Sistema Audio Reattivo ---
-AUDIO_ENABLED=True         # Attiva reattività audio per lenti
+AUDIO_ENABLED=False         # Attiva reattività audio per lenti
 AUDIO_FILES="input/audio1.aif,input/audio2.aif"  # Lista file audio per selezione casuale
 AUDIO_RANDOM_SELECTION=True  # Seleziona casualmente un file dalla lista
 AUDIO_RANDOM_START=True    # Inizia da punto casuale (max 2/3 del file)

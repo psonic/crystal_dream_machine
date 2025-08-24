@@ -8,6 +8,7 @@ Funzionalità:
 - Hot-reload di sfondo.MOV e texture.jpg quando modificati
 - Premere SPAZIO per generare il video completo e fare Git push
 - Premere T per generare video in test mode e fare Git push
+- Premere R per reload completo della configurazione
 - Premere ESC per uscire dalla preview
 """
 
