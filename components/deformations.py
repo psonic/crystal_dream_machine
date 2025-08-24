@@ -128,8 +128,8 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     wave_y = np.zeros((h, w), dtype=np.float32)
     
     # Generiamo le onde con campionamento ogni 10 pixel per performance
-    for y in range(0, h, 1):
-        for x in range(0, w, 1):
+    for y in range(0, h, 10):
+        for x in range(0, w, 10):
             # Onda X per stretching orizzontale (con fattore di controllo)
             wave_val_x = pnoise2(
                 x * scale + time_component,
