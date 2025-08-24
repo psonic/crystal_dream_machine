@@ -68,8 +68,6 @@ from components.tracers import (
     calculate_tracer_dynamic_params
 )
 from components.rendering import (
-    render_frame,
-    extract_logo_tracers,
     get_dynamic_parameters,
     process_background,
     get_background_frame,
@@ -88,6 +86,136 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 # --- FUNZIONI DI SUPPORTO ---
 # Funzioni di rendering estratte in components/rendering.py
 
+def main():
+    
+    # --- 0.5. Calcola Fattori Audio-Reattivi ---
+    audio_factors = get_audio_reactive_factors(audio_data, frame_index, config)
+
+    # --- 1. Preparazione Sfondo e Traccianti ---
+    bg_result = process_background(bg_frame, config)
+    if len(bg_result) == 3:
+        final_frame, current_logo_edges, current_bg_edges = bg_result
+    else:
+        final_frame, current_logo_edges = bg_result
+        current_bg_edges = None
+    
+    # --- 2. Applicazione Traccianti del Logo ---
+    final_frame = apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic_params)
+
+    # --- 2.5. Applicazione Traccianti Sfondo ---
+    final_frame = apply_background_tracers(final_frame, bg_tracer_history, frame_index, config, dynamic_params)
+
+    # --- 3. Creazione Maschera del Logo ---
+    logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
+
+    # --- 4. Applica Deformazione Organica (per movimento di base CON AUDIO REATTIVO) ---
+    if config.DEFORMATION_ENABLED:
+        # Parametri base per il "respiro" costante
+        deformation_params = {
+            'speed': config.DEFORMATION_SPEED,
+            'scale': config.DEFORMATION_SCALE,
+            'intensity': config.DEFORMATION_INTENSITY
+        }
+        
+        # Calcola parametri dinamici basati sull'audio per movimento delicato
+        dynamic_deformation_params = get_organic_deformation_factors(audio_data, frame_index, config)
+        
+        logo_mask = apply_organic_deformation(logo_mask, frame_index, deformation_params, dynamic_deformation_params)
+
+    # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
+    if config.LENS_DEFORMATION_ENABLED:
+        logo_mask = apply_lens_deformation(logo_mask, lenses, frame_index, config, dynamic_params, audio_factors)
+
+    # --- 5.5. Estrai Traccianti del Logo (NUOVO per maggiore aderenza) ---
+    logo_tracers = extract_logo_tracers(logo_mask, config)
+    # Combina i traccianti del logo con quelli dello sfondo per un effetto più ricco
+    combined_logo_edges = cv2.add(current_logo_edges, logo_tracers)
+
+    # --- 6. Applicazione Texture Dinamica (NUOVO SISTEMA) ---
+    # Applica texture secondo la modalità configurata PRIMA di creare i layer del logo
+    if config.TEXTURE_ENABLED and texture_image is not None:
+        if config.TEXTURE_TARGET in ['background', 'both']:
+            # Applica texture allo sfondo
+            
+            final_frame = apply_texture_blending(
+                final_frame, 
+                texture_image, 
+                config.TEXTURE_BACKGROUND_ALPHA, 
+                config.TEXTURE_BLENDING_MODE
+            )
+    
+    # --- 7. Creazione Layer Logo e Glow ---
+    logo_layer = np.zeros_like(final_frame)
+    glow_layer = np.zeros_like(final_frame)
+
+    # Applica texture al logo (se configurato)
+    if config.TEXTURE_ENABLED and texture_image is not None and config.TEXTURE_TARGET in ['logo', 'both']:        
+        # Crea base di colore solido
+        solid_color_layer = np.zeros_like(final_frame)
+        solid_color_layer[logo_mask > 0] = config.LOGO_COLOR
+        
+        # Applica texture usando il nuovo sistema di blending
+        logo_layer = apply_texture_blending(
+            solid_color_layer,
+            texture_image,
+            config.TEXTURE_ALPHA,
+            config.TEXTURE_BLENDING_MODE,
+            logo_mask
+        )
+    else:
+        # Usa colore solido se la texture è disabilitata o non per il logo
+        logo_layer[logo_mask > 0] = config.LOGO_COLOR
+
+    # Applica l'effetto Glow (se abilitato)
+    if config.GLOW_ENABLED:
+        ksize = config.GLOW_KERNEL_SIZE if config.GLOW_KERNEL_SIZE % 2 != 0 else config.GLOW_KERNEL_SIZE + 1
+        blurred_mask = cv2.GaussianBlur(logo_mask, (ksize, ksize), 0)
+        glow_mask_3ch = cv2.cvtColor(blurred_mask, cv2.COLOR_GRAY2BGR)
+        glow_effect = cv2.multiply(glow_mask_3ch, np.array(config.LOGO_COLOR, dtype=np.float32) / 255.0, dtype=cv2.CV_32F)
+        glow_layer = np.clip(glow_effect * dynamic_params['glow_intensity'], 0, 255).astype(np.uint8)
+
+    # --- 6. Composizione Finale con BLENDING AVANZATO SCRITTA-SFONDO ---
+    
+    # A. Aggiungi il glow allo sfondo in modo additivo
+    final_frame_with_glow = cv2.add(final_frame, glow_layer)
+
+    # B. Crea una versione "pulita" del logo (senza glow)
+    final_logo_layer = np.zeros_like(final_frame)
+    
+    # Crea una maschera booleana per un'applicazione precisa
+    logo_mask_bool = logo_mask > 0
+    
+    # Applica il logo (texturizzato o a colore solido) alla sua area
+    final_logo_layer[logo_mask_bool] = logo_layer[logo_mask_bool]
+
+    # C. NUOVO: Applica il Blending Avanzato se abilitato
+    if config.ADVANCED_BLENDING:
+        final_frame = apply_advanced_blending(final_frame_with_glow, final_logo_layer, logo_mask, config)
+    else:
+        # Metodo tradizionale: sovrapponi il logo pulito allo sfondo con glow
+        final_frame_with_glow[logo_mask_bool] = 0
+        final_frame = cv2.add(final_frame_with_glow, final_logo_layer)
+
+    return final_frame, combined_logo_edges, current_bg_edges
+
+
+
+def extract_logo_tracers(logo_mask, config):
+    """
+    Estrae i contorni dal logo stesso per creare traccianti più aderenti.
+    """
+    # Estrae i bordi della maschera del logo
+    logo_edges = cv2.Canny(logo_mask, 50, 150)
+    
+    # Dilata leggermente i bordi per renderli più visibili
+    kernel = np.ones((2,2), np.uint8)
+    logo_edges = cv2.dilate(logo_edges, kernel, iterations=1)
+    
+    return logo_edges
+
+
+
+# BRIDGE SECTION per collegare le due parti
 def main():
     """Funzione principale per generare l'animazione del logo."""
     import os  # Assicuriamoci che os sia disponibile

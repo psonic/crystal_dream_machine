@@ -16,7 +16,6 @@ import sys
 # Configurazione caricata dinamicamente dal file config
 Config = type('Config', (), {})()
 from components.config import load_config_from_file, print_config_summary, validate_config
-from components.rendering import render_frame, extract_logo_tracers, get_dynamic_parameters, process_background
 from components.preview import run_preview_mode
 from components.audio import (
     load_audio_analysis, 
@@ -68,8 +67,6 @@ from components.tracers import (
     calculate_tracer_dynamic_params
 )
 from components.rendering import (
-    render_frame,
-    extract_logo_tracers,
     get_dynamic_parameters,
     process_background,
     get_background_frame,
@@ -86,7 +83,140 @@ Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 # --- FUNZIONI DI SUPPORTO ---
 
 # --- FUNZIONI DI SUPPORTO ---
-# Funzioni di rendering estratte in components/rendering.py
+
+def render_frame(contours, hierarchy, width, height, frame_index, total_frames, config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses, audio_data=None):
+    """
+    Rende un singolo frame dell'animazione, applicando la pipeline di effetti completa.
+    """
+    # --- 0. Ottieni Parametri Dinamici ---
+    dynamic_params = get_dynamic_parameters(frame_index, total_frames, config)
+    
+    # --- 0.5. Calcola Fattori Audio-Reattivi ---
+    audio_factors = get_audio_reactive_factors(audio_data, frame_index, config)
+
+    # --- 1. Preparazione Sfondo e Traccianti ---
+    bg_result = process_background(bg_frame, config)
+    if len(bg_result) == 3:
+        final_frame, current_logo_edges, current_bg_edges = bg_result
+    else:
+        final_frame, current_logo_edges = bg_result
+        current_bg_edges = None
+    
+    # --- 2. Applicazione Traccianti del Logo ---
+    final_frame = apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic_params)
+
+    # --- 2.5. Applicazione Traccianti Sfondo ---
+    final_frame = apply_background_tracers(final_frame, bg_tracer_history, frame_index, config, dynamic_params)
+
+    # --- 3. Creazione Maschera del Logo ---
+    logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
+
+    # --- 4. Applica Deformazione Organica (per movimento di base CON AUDIO REATTIVO) ---
+    if config.DEFORMATION_ENABLED:
+        # Parametri base per il "respiro" costante
+        deformation_params = {
+            'speed': config.DEFORMATION_SPEED,
+            'scale': config.DEFORMATION_SCALE,
+            'intensity': config.DEFORMATION_INTENSITY
+        }
+        
+        # Calcola parametri dinamici basati sull'audio per movimento delicato
+        dynamic_deformation_params = get_organic_deformation_factors(audio_data, frame_index, config)
+        
+        logo_mask = apply_organic_deformation(logo_mask, frame_index, deformation_params, dynamic_deformation_params)
+
+    # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
+    if config.LENS_DEFORMATION_ENABLED:
+        logo_mask = apply_lens_deformation(logo_mask, lenses, frame_index, config, dynamic_params, audio_factors)
+
+    # --- 5.5. Estrai Traccianti del Logo (NUOVO per maggiore aderenza) ---
+    logo_tracers = extract_logo_tracers(logo_mask, config)
+    # Combina i traccianti del logo con quelli dello sfondo per un effetto più ricco
+    combined_logo_edges = cv2.add(current_logo_edges, logo_tracers)
+
+    # --- 6. Applicazione Texture Dinamica (NUOVO SISTEMA) ---
+    # Applica texture secondo la modalità configurata PRIMA di creare i layer del logo
+    if config.TEXTURE_ENABLED and texture_image is not None:
+        if config.TEXTURE_TARGET in ['background', 'both']:
+            # Applica texture allo sfondo
+            
+            final_frame = apply_texture_blending(
+                final_frame, 
+                texture_image, 
+                config.TEXTURE_BACKGROUND_ALPHA, 
+                config.TEXTURE_BLENDING_MODE
+            )
+    
+    # --- 7. Creazione Layer Logo e Glow ---
+    logo_layer = np.zeros_like(final_frame)
+    glow_layer = np.zeros_like(final_frame)
+
+    # Applica texture al logo (se configurato)
+    if config.TEXTURE_ENABLED and texture_image is not None and config.TEXTURE_TARGET in ['logo', 'both']:        
+        # Crea base di colore solido
+        solid_color_layer = np.zeros_like(final_frame)
+        solid_color_layer[logo_mask > 0] = config.LOGO_COLOR
+        
+        # Applica texture usando il nuovo sistema di blending
+        logo_layer = apply_texture_blending(
+            solid_color_layer,
+            texture_image,
+            config.TEXTURE_ALPHA,
+            config.TEXTURE_BLENDING_MODE,
+            logo_mask
+        )
+    else:
+        # Usa colore solido se la texture è disabilitata o non per il logo
+        logo_layer[logo_mask > 0] = config.LOGO_COLOR
+
+    # Applica l'effetto Glow (se abilitato)
+    if config.GLOW_ENABLED:
+        ksize = config.GLOW_KERNEL_SIZE if config.GLOW_KERNEL_SIZE % 2 != 0 else config.GLOW_KERNEL_SIZE + 1
+        blurred_mask = cv2.GaussianBlur(logo_mask, (ksize, ksize), 0)
+        glow_mask_3ch = cv2.cvtColor(blurred_mask, cv2.COLOR_GRAY2BGR)
+        glow_effect = cv2.multiply(glow_mask_3ch, np.array(config.LOGO_COLOR, dtype=np.float32) / 255.0, dtype=cv2.CV_32F)
+        glow_layer = np.clip(glow_effect * dynamic_params['glow_intensity'], 0, 255).astype(np.uint8)
+
+    # --- 6. Composizione Finale con BLENDING AVANZATO SCRITTA-SFONDO ---
+    
+    # A. Aggiungi il glow allo sfondo in modo additivo
+    final_frame_with_glow = cv2.add(final_frame, glow_layer)
+
+    # B. Crea una versione "pulita" del logo (senza glow)
+    final_logo_layer = np.zeros_like(final_frame)
+    
+    # Crea una maschera booleana per un'applicazione precisa
+    logo_mask_bool = logo_mask > 0
+    
+    # Applica il logo (texturizzato o a colore solido) alla sua area
+    final_logo_layer[logo_mask_bool] = logo_layer[logo_mask_bool]
+
+    # C. NUOVO: Applica il Blending Avanzato se abilitato
+    if config.ADVANCED_BLENDING:
+        final_frame = apply_advanced_blending(final_frame_with_glow, final_logo_layer, logo_mask, config)
+    else:
+        # Metodo tradizionale: sovrapponi il logo pulito allo sfondo con glow
+        final_frame_with_glow[logo_mask_bool] = 0
+        final_frame = cv2.add(final_frame_with_glow, final_logo_layer)
+
+    return final_frame, combined_logo_edges, current_bg_edges
+
+
+
+def extract_logo_tracers(logo_mask, config):
+    """
+    Estrae i contorni dal logo stesso per creare traccianti più aderenti.
+    """
+    # Estrae i bordi della maschera del logo
+    logo_edges = cv2.Canny(logo_mask, 50, 150)
+    
+    # Dilata leggermente i bordi per renderli più visibili
+    kernel = np.ones((2,2), np.uint8)
+    logo_edges = cv2.dilate(logo_edges, kernel, iterations=1)
+    
+    return logo_edges
+
+
 
 def main():
     """Funzione principale per generare l'animazione del logo."""
@@ -103,6 +233,291 @@ def main():
     
     # --- Carica configurazione dal file config ---
     load_config_from_file(Config)
+    
+    # Formato Video
+    Config.VIDEO_FORMAT = "INPUT_VIDEO_SIZE"  # "IG_STORY", "IG_POST", "INPUT_VIDEO_SIZE"
+    
+    # Compatibilità WhatsApp
+    Config.WHATSAPP_COMPATIBLE = True
+    Config.CREATE_WHATSAPP_VERSION = True
+    
+    # Sorgente Logo e Texture
+    Config.USE_SVG_SOURCE = True
+    Config.SVG_PATH = 'input/logo.svg'
+    Config.PDF_PATH = 'input/logo.pdf'
+    Config.SVG_LEFT_PADDING = 50
+    Config.TEXTURE_AUTO_SEARCH = True
+    Config.TEXTURE_FALLBACK_PATH = 'input/texture.jpg'
+    
+    # Sistema Texture Avanzato
+    Config.TEXTURE_ENABLED = True
+    Config.TEXTURE_TARGET = 'logo'
+    Config.TEXTURE_ALPHA = 0.6
+    Config.TEXTURE_BACKGROUND_ALPHA = 0.1
+    Config.TEXTURE_BLENDING_MODE = 'lighten'
+    
+    # Parametri Video
+    Config.SVG_PADDING = 20
+    Config.FPS = 20
+    Config.DURATION_SECONDS = 10
+    Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+    
+    # Colore e Stile
+    Config.LOGO_COLOR = (255, 255, 255)
+    Config.LOGO_ALPHA = 0.7
+    Config.LOGO_ZOOM_FACTOR = 1.0
+    
+    # Video di Sfondo
+    Config.BACKGROUND_VIDEO_PATH = 'input/sfondo.MOV'
+    Config.BG_USE_ORIGINAL_SIZE = True
+    Config.BG_ZOOM_FACTOR = 1.4
+    Config.BG_SLOWDOWN_FACTOR = 1.0
+    Config.BG_DARKEN_FACTOR = 0.7
+    Config.BG_CONTRAST_FACTOR = 1.0
+    Config.BG_RANDOM_START = True
+    
+    # Parametri Crop Video Verticale
+    Config.BG_CROP_Y_START = 0.0
+    Config.BG_CROP_X_START = 0.0
+    Config.BG_CROP_WIDTH_RATIO = 1.0
+    Config.BG_CROP_HEIGHT_RATIO = 1.0
+    
+    # Sistema Audio Reattivo
+    Config.AUDIO_ENABLED = True
+    Config.AUDIO_FILES = ['input/audio1.aif', 'input/audio2.aif']
+    Config.AUDIO_RANDOM_SELECTION = True
+    Config.AUDIO_RANDOM_START = True
+    Config.AUDIO_REACTIVE_LENSES = True
+    Config.AUDIO_BASS_SENSITIVITY = 0.5
+    Config.AUDIO_MID_SENSITIVITY = 0.3
+    Config.AUDIO_HIGH_SENSITIVITY = 0.25
+    Config.AUDIO_SMOOTHING = 0.5
+    Config.AUDIO_BOOST_FACTOR = 4.0
+    
+    # Parametri Audio Lenti
+    Config.AUDIO_SPEED_INFLUENCE = 1.0
+    Config.AUDIO_STRENGTH_INFLUENCE = 2
+    Config.AUDIO_PULSATION_INFLUENCE = 1.3
+    
+    # Effetto Glow
+    Config.GLOW_ENABLED = True
+    Config.GLOW_KERNEL_SIZE = 30
+    Config.GLOW_INTENSITY = 0.5
+    
+    # Altri parametri con valori di default
+    Config.DEFORMATION_ENABLED = True
+    Config.DEFORMATION_SPEED = 0.01
+    Config.DEFORMATION_SCALE = 0.002
+    Config.DEFORMATION_INTENSITY = 10.0
+    Config.DEFORMATION_AUDIO_REACTIVE = True
+    Config.DEFORMATION_BASS_INTENSITY = 0.22
+    Config.DEFORMATION_BASS_SPEED = 0.03
+    Config.DEFORMATION_MID_SCALE = 0.002
+    Config.DEFORMATION_SMOOTHING = 0.85
+    Config.DEFORMATION_AUDIO_MULTIPLIER = 1.4
+    
+    Config.LENS_DEFORMATION_ENABLED = True
+    Config.NUM_LENSES = 50
+    Config.LENS_MIN_STRENGTH = -1.2
+    Config.LENS_MAX_STRENGTH = 1.5
+    Config.LENS_MIN_RADIUS = 5
+    Config.LENS_MAX_RADIUS = 35
+    Config.LENS_SPEED_FACTOR = 0.1
+    Config.LENS_PATH_SPEED_MULTIPLIER = 0.1
+    Config.LENS_BASE_SPEED_MULTIPLIER = 0.1
+    Config.LENS_ROTATION_SPEED_MULTIPLIER = 0.01
+    Config.LENS_INERTIA = 0.95
+    Config.LENS_ROTATION_SPEED_MIN = -0.02
+    Config.LENS_ROTATION_SPEED_MAX = 0.02
+    Config.LENS_HORIZONTAL_BIAS = 2
+    Config.LENS_PULSATION_ENABLED = True
+    Config.LENS_PULSATION_SPEED = 0.0005
+    Config.LENS_PULSATION_AMPLITUDE = 0.2
+    Config.LENS_FORCE_PULSATION_ENABLED = True
+    Config.LENS_FORCE_PULSATION_AMPLITUDE = 0.2
+    Config.WORM_SHAPE_ENABLED = True
+    Config.WORM_LENGTH = 1.8
+    Config.WORM_COMPLEXITY = 5
+    
+    Config.SMOOTHING_ENABLED = True
+    Config.SMOOTHING_FACTOR = 0.0001
+    
+    Config.TRACER_ENABLED = True
+    Config.TRACER_TRAIL_LENGTH = 45
+    Config.TRACER_MAX_OPACITY = 0.01
+    Config.TRACER_BASE_COLOR = (255, 200, 220)
+    Config.TRACER_THRESHOLD1 = 50
+    Config.TRACER_THRESHOLD2 = 200
+    
+    Config.BG_TRACER_ENABLED = True
+    Config.BG_TRACER_TRAIL_LENGTH = 45
+    Config.BG_TRACER_MAX_OPACITY = 0.01
+    Config.BG_TRACER_BASE_COLOR = (200, 170, 200)
+    Config.BG_TRACER_THRESHOLD1 = 20
+    Config.BG_TRACER_THRESHOLD2 = 100
+    
+    Config.ADVANCED_BLENDING = True
+    Config.BLENDING_PRESET = "cinematic"
+    Config.BLENDING_MODE = "color_burn"
+    Config.BLENDING_STRENGTH = 0.7
+    Config.EDGE_DETECTION_ENABLED = True
+    Config.EDGE_BLUR_RADIUS = 21
+    Config.ADAPTIVE_BLENDING = False
+    Config.COLOR_HARMONIZATION = False
+    Config.LUMINANCE_MATCHING = False
+    Config.LOGO_BLEND_FACTOR = 0.8
+    Config.EDGE_SOFTNESS = 80
+    Config.BLEND_TRANSPARENCY = 0.5
+    Config.COLOR_BLENDING_STRENGTH = 0.6
+    
+    Config.DEBUG_MASK = False
+    
+    Config.DYNAMIC_VARIATION_ENABLED = True
+    Config.RANDOM_DEFORMATION_PARAMS = True  # Nuovo attributo per il componente deformazioni
+    Config.VARIATION_AMPLITUDE = 0.8
+    Config.VARIATION_SPEED_SLOW = 0.01
+    Config.VARIATION_SPEED_MEDIUM = 0.025
+    Config.VARIATION_SPEED_FAST = 0.005
+
+def load_config_from_file():
+    """Carica i parametri dal file config se esiste"""
+    # Prima imposta i valori di default
+    setup_config_defaults()
+    
+    config_file = "config"
+    if not os.path.exists(config_file):
+        print("📄 File config non trovato, uso valori di default")
+        return
+    
+    print("📄 Caricamento parametri dal file config...")
+    
+    try:
+        with open(config_file, 'r') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    try:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        # Separa il valore dal commento
+                        if '#' in value:
+                            value = value.split('#')[0].strip()
+                        else:
+                            value = value.strip()
+                        
+                        # Rimuove le virgolette se presenti
+                        value = value.strip('"\'')
+                        
+                        # Converti il valore nel tipo appropriato e gestisci parametri speciali
+                        # Gestione speciale per parametri BGR (prima del controllo hasattr)
+                        if key == 'LOGO_COLOR_B':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[0] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'LOGO_COLOR_G':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[1] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'LOGO_COLOR_R':
+                            current_color = list(Config.LOGO_COLOR)
+                            current_color[2] = int(value)
+                            Config.LOGO_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_B':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[0] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_G':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[1] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'TRACER_BASE_COLOR_R':
+                            current_color = list(Config.TRACER_BASE_COLOR)
+                            current_color[2] = int(value)
+                            Config.TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_B':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[0] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_G':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[1] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'BG_TRACER_BASE_COLOR_R':
+                            current_color = list(Config.BG_TRACER_BASE_COLOR)
+                            current_color[2] = int(value)
+                            Config.BG_TRACER_BASE_COLOR = tuple(current_color)
+                        elif key == 'AUDIO_FILES':
+                            if ',' in value:
+                                Config.AUDIO_FILES = [item.strip() for item in value.split(',')]
+                            else:
+                                Config.AUDIO_FILES = [value]
+                        elif hasattr(Config, key):
+                            current_value = getattr(Config, key)
+                            
+                            # Converti in base al tipo dell'attributo esistente
+                            if isinstance(current_value, bool):
+                                new_value = value.lower() in ('true', '1', 'yes', 'on')
+                            elif isinstance(current_value, int):
+                                new_value = int(value)
+                            elif isinstance(current_value, float):
+                                new_value = float(value)
+                            elif isinstance(current_value, str):
+                                new_value = value
+                            elif isinstance(current_value, tuple):
+                                # Per i colori BGR
+                                if key.endswith('_COLOR_B') or key.endswith('_COLOR_G') or key.endswith('_COLOR_R'):
+                                    current_color = list(getattr(Config, key.rsplit('_', 1)[0]))
+                                    if key.endswith('_B'):
+                                        current_color[0] = int(value)
+                                    elif key.endswith('_G'):
+                                        current_color[1] = int(value)
+                                    elif key.endswith('_R'):
+                                        current_color[2] = int(value)
+                                    setattr(Config, key.rsplit('_', 1)[0], tuple(current_color))
+                                    continue
+                            elif isinstance(current_value, list):
+                                # Per liste di file audio
+                                if ',' in value:
+                                    new_value = [item.strip() for item in value.split(',')]
+                                else:
+                                    new_value = [value]
+                            else:
+                                new_value = value
+                            
+                            # Imposta il valore normalmente per parametri standard
+                            setattr(Config, key, new_value)
+                        else:
+                            print(f"⚠️  Parametro sconosciuto '{key}' alla riga {line_num}")
+                    except Exception as e:
+                        print(f"⚠️  Errore nel parsing della riga {line_num}: {line} ({e})")
+        
+        # Ricalcola i valori dipendenti
+        if Config.TEST_MODE:
+            Config.FPS = 1
+            Config.DURATION_SECONDS = 4
+        Config.TOTAL_FRAMES = Config.DURATION_SECONDS * Config.FPS
+        
+        print("✅ Configurazione caricata dal file config")
+    
+    except Exception as e:
+        print(f"⚠️  Errore nel caricamento del file config: {e}")
+        print("📄 Uso valori di default")
+
+def main():
+    """Funzione principale per generare l'animazione del logo."""
+    import os  # Assicuriamoci che os sia disponibile
+    import sys  # Assicuriamoci che sys sia disponibile
+    
+    # --- Parsing degli argomenti da linea di comando ---
+    parser = argparse.ArgumentParser(description='Crystal Therapy Video Generator')
+    parser.add_argument('--preview', action='store_true', 
+                       help='Avvia modalità Live Preview')
+    parser.add_argument('--test', action='store_true',
+                       help='Modalità test rapida (5 secondi)')
+    args = parser.parse_args()
+    
+    # --- Carica configurazione dal file config ---
+    load_config_from_file()
     
     # Applica le opzioni dalla linea di comando (override del config file)
     if args.test:
