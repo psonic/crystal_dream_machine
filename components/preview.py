@@ -53,7 +53,9 @@ class LivePreview:
         self.current_frame = None
         self.frame_counter = 0
         self.last_refresh_time = 0
-        self.refresh_interval = 3.0  # 3 secondi per refresh più frequente
+        # Usa refresh veloce se abilitato nel config
+        self.refresh_interval = 0.1 if getattr(config, 'FAST_PREVIEW', True) else 3.0
+        self.fast_preview_mode = getattr(config, 'FAST_PREVIEW', True)
         self.should_render_video = False
         self.should_render_test = False  # Nuovo: per test mode
         self.force_refresh = False  # Per forzare il refresh quando si cambiano parametri
@@ -87,7 +89,8 @@ class LivePreview:
         
         print("🌊 Live Preview inizializzata!")
         print("   📺 Finestra: Crystal Therapy - Live Preview")
-        print("   🔄 Auto-refresh: ogni 3 secondi")
+        refresh_text = f"ogni {self.refresh_interval}s (ULTRA-VELOCE!)" if self.fast_preview_mode else f"ogni {self.refresh_interval}s"
+        print(f"   🔄 Auto-refresh: {refresh_text}")
         print("   📝 MODIFICA PARAMETRI: Edita il file 'config' e salvalo!")
         print("   🎬 SPAZIO: genera video completo + Git push")
         print("   ⚡ T: genera video TEST mode + Git push")
@@ -551,7 +554,10 @@ class LivePreview:
         
         print("✅ Live Preview attiva!")
         print("   📺 Guarda la finestra per vedere l'anteprima")
-        print("   🔄 Il frame si aggiornerà automaticamente ogni secondo")
+        if self.fast_preview_mode:
+            print("   ⚡ MODALITÀ ULTRA-VELOCE! Aggiornamenti continui")
+        else:
+            print("   🔄 Il frame si aggiornerà automaticamente")
         
         try:
             while self.is_running:
@@ -560,14 +566,16 @@ class LivePreview:
                 # Controlla se è ora di fare refresh
                 if (current_time - self.last_refresh_time >= self.refresh_interval) or self.force_refresh:
                     if not self.force_refresh:
-                        print("🔄 Auto-refresh frame + controllo config...")
+                        print("⚡ Fast-refresh frame...")
                     else:
                         print("🎚️ Refresh forzato per cambio parametri...")
                         self.force_refresh = False
                     
-                    # Controlla modifiche ai file
-                    if self._check_file_changes():
-                        self._reload_resources()
+                    # Controlla modifiche ai file (solo ogni 2 secondi per velocità)
+                    if current_time - getattr(self, 'last_file_check', 0) > 2.0:
+                        if self._check_file_changes():
+                            self._reload_resources()
+                        self.last_file_check = current_time
                     
                     # Controlla modifiche al file parametri
                     params_result = self._check_params_file_changes()
@@ -579,8 +587,10 @@ class LivePreview:
                     
                     self.last_refresh_time = current_time
                 
-                # Genera frame corrente
-                if self.current_frame is None or current_time - self.last_refresh_time < 0.1:
+                # Genera frame corrente (solo se necessario per velocità)
+                if (self.current_frame is None or 
+                    current_time - self.last_refresh_time < 0.1 or 
+                    self.force_refresh):
                     self.current_frame = self._generate_preview_frame()
                 
                 # Aggiungi overlay informativo
@@ -590,7 +600,7 @@ class LivePreview:
                 cv2.imshow("Crystal Therapy - Live Preview", display_frame)
                 
                 # Gestisci input utente
-                key = cv2.waitKey(33) & 0xFF  # ~30 FPS per UI fluida
+                key = cv2.waitKey(10) & 0xFF  # 10ms per aggiornamenti più frequenti (~100 FPS UI)
                 
                 if key == 27:  # ESC
                     print("❌ Uscita dalla Live Preview...")
