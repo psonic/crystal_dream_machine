@@ -1,7 +1,7 @@
 # CRYSTAL THERAPY - CONFIGURAZIONE GLOBALE
 
 # --- Modalità e Qualità ---
-TEST_MODE=True  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
+TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
 FAST_PREVIEW=True  # Preview ultra veloce (0.5s refresh vs 3s normale)
 
 # --- Formato Video ---
