@@ -843,7 +843,13 @@ def main():
     
     # Setup video writer usando funzione di rendering helper
     base_filename = get_timestamp_filename()
-    output_filename = f"output/{base_filename}.mp4"
+    
+    # Usa cartella test se siamo in TEST_MODE
+    if Config.TEST_MODE:
+        output_filename = f"output/test/{base_filename}.mp4"
+    else:
+        output_filename = f"output/{base_filename}.mp4"
+    
     fourcc, fps, size = get_video_writer_params(Config, output_filename)
     
     out = cv2.VideoWriter(output_filename, fourcc, fps, size)
