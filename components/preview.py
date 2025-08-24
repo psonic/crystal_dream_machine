@@ -440,7 +440,7 @@ class LivePreview:
         """Genera un singolo frame per la preview"""
         try:
             # Ottieni frame di sfondo con offset casuale
-            bg_frame = self.get_background_func(self.bg_video, self.frame_counter, self.bg_start_frame)
+            bg_frame = self.get_background_func(self.bg_video, self.frame_counter, self.bg_start_frame, self.config)
             
             # Renderizza il frame
             frame_result = self.render_frame_func(

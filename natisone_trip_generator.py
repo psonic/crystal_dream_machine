@@ -65,6 +65,13 @@ from components.tracers import (
     update_tracer_histories,
     calculate_tracer_dynamic_params
 )
+from components.rendering import (
+    get_dynamic_parameters,
+    process_background,
+    get_background_frame,
+    get_timestamp_filename,
+    get_video_writer_params
+)
 
 # CAIROSVG verrà importato solo se necessario (gestito nel componente svg_pdf)
 CAIROSVG_AVAILABLE = None
@@ -74,243 +81,14 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = None  # Rimuove il limite di sicurezza PIL
 # --- FUNZIONI DI SUPPORTO ---
 
-def get_dynamic_parameters(frame_index, total_frames):
-    """
-    Calcola parametri che cambiano automaticamente nel tempo per creare variazioni.
-    """
-    t = frame_index / total_frames  # Progresso animazione (0.0 a 1.0)
-    params = {}
-
-    # Pulsazione del glow
-    glow_pulse = np.sin(t * np.pi)
-    params['glow_intensity'] = Config.GLOW_INTENSITY + (glow_pulse * 0.2)
-
-    # Variazioni automatiche dei parametri principali
-    if Config.DYNAMIC_VARIATION_ENABLED:
-        base_seed = frame_index * 0.001
-        
-        # Usa il nuovo componente deformazioni per parametri dinamici
-        # (compatibilità mantenuta con i nomi della Config)
-        enable_variation = Config.DYNAMIC_VARIATION_ENABLED
-        deformation_params = get_organic_deformation_params(Config, enable_variation)
-        
-        params['deformation_speed'] = deformation_params['speed']
-        params['deformation_scale'] = deformation_params['scale']
-        params['deformation_intensity'] = deformation_params['intensity']
-        
-        # Variazioni medie per lenti
-        lens_var_x = np.sin(base_seed * Config.VARIATION_SPEED_MEDIUM + 3.0) * Config.VARIATION_AMPLITUDE
-        lens_var_y = np.cos(base_seed * Config.VARIATION_SPEED_MEDIUM + 5.5) * Config.VARIATION_AMPLITUDE
-        
-        params['lens_speed_factor'] = Config.LENS_SPEED_FACTOR * (1.0 + lens_var_x)
-        params['lens_strength_multiplier'] = 1.0 + lens_var_y
-        
-        # Aggiungi parametri tracers tramite funzione dedicata
-        tracer_params = calculate_tracer_dynamic_params(base_seed, Config)
-        params.update(tracer_params)
-    else:
-        # Usa valori fissi se le variazioni sono disabilitate
-        deformation_params = get_organic_deformation_params(Config, False)
-        params['deformation_speed'] = deformation_params['speed']
-        params['deformation_scale'] = deformation_params['scale']
-        params['deformation_intensity'] = deformation_params['intensity']
-        params['lens_speed_factor'] = Config.LENS_SPEED_FACTOR
-        params['lens_strength_multiplier'] = 1.0
-        
-        # Aggiungi parametri tracers con valori fissi
-        tracer_params = {
-            'tracer_opacity_multiplier': 1.0,
-            'bg_tracer_opacity_multiplier': 1.0
-        }
-        params.update(tracer_params)
-    
-    return params
-
-def get_timestamp_filename():
-    """Genera nome file con timestamp e carattere decorativo."""
-    now = datetime.datetime.now()
-    magic_chars = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω', 'ॐ', '☯', '✨', 'Δ', 'Σ', 'Ω']
-    magic_char = np.random.choice(magic_chars)
-    
-    # File di test vanno nella sottocartella test/
-    if Config.TEST_MODE:
-        return f"output/test/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_TEST_{magic_char}.mp4"
-    else:
-        return f"output/crystalpy_{now.strftime('%Y%m%d_%H%M%S')}_{magic_char}.mp4"
-
 # --- FUNZIONI DI SUPPORTO ---
-
-    if texture_image is None or alpha <= 0:
-        return base_image.copy()
-    
-    # Converti in float32 per calcoli precisi
-    base_float = base_image.astype(np.float32) / 255.0
-    texture_float = texture_image.astype(np.float32) / 255.0
-    
-    # Applica blending mode
-    if blending_mode == 'normal':
-        # Normal: sovrapposizione diretta
-        blended = texture_float
-    
-    elif blending_mode == 'overlay':
-        # Overlay: moltiplica se base < 0.5, altrimenti screen
-        condition = base_float < 0.5
-        blended = np.where(condition, 
-                          2 * base_float * texture_float,
-                          1 - 2 * (1 - base_float) * (1 - texture_float))
-    
-    elif blending_mode == 'multiply':
-        # Multiply: moltiplica i valori
-        blended = base_float * texture_float
-    
-    elif blending_mode == 'screen':
-        # Screen: inverso del multiply
-        blended = 1 - (1 - base_float) * (1 - texture_float)
-    
-    elif blending_mode == 'soft_light':
-        # Soft Light: versione più morbida di overlay
-        condition = texture_float <= 0.5
-        blended = np.where(condition,
-                          base_float - (1 - 2 * texture_float) * base_float * (1 - base_float),
-                          base_float + (2 * texture_float - 1) * (np.sqrt(base_float) - base_float))
-    
-    elif blending_mode == 'hard_light':
-        # Hard Light: overlay invertito
-        condition = texture_float < 0.5
-        blended = np.where(condition,
-                          2 * base_float * texture_float,
-                          1 - 2 * (1 - base_float) * (1 - texture_float))
-    
-    elif blending_mode == 'color_dodge':
-        # Color Dodge: schiarisce drasticamente
-        blended = np.where(texture_float >= 1.0, 
-                          1.0, 
-                          np.minimum(1.0, base_float / (1.0 - texture_float + 1e-10)))
-    
-    elif blending_mode == 'color_burn':
-        # Color Burn: scurisce drasticamente
-        blended = np.where(texture_float <= 0.0,
-                          0.0,
-                          1.0 - np.minimum(1.0, (1.0 - base_float) / (texture_float + 1e-10)))
-    
-    elif blending_mode == 'darken':
-        # Darken: prende il più scuro
-        blended = np.minimum(base_float, texture_float)
-    
-    elif blending_mode == 'lighten':
-        # Lighten: prende il più chiaro
-        blended = np.maximum(base_float, texture_float)
-    
-    elif blending_mode == 'difference':
-        # Difference: differenza assoluta
-        blended = np.abs(base_float - texture_float)
-    
-    elif blending_mode == 'exclusion':
-        # Exclusion: simile a difference ma più morbido
-        blended = base_float + texture_float - 2 * base_float * texture_float
-    
-    else:
-        # Default overlay
-        condition = base_float < 0.5
-        blended = np.where(condition, 
-                          2 * base_float * texture_float,
-                          1 - 2 * (1 - base_float) * (1 - texture_float))
-    
-    # Miscela con alpha
-    result = base_float * (1 - alpha) + blended * alpha
-    
-    # Applica maschera se fornita
-    if mask is not None:
-        mask_norm = mask.astype(np.float32) / 255.0
-        if len(mask_norm.shape) == 2:
-            mask_norm = cv2.cvtColor(mask_norm, cv2.COLOR_GRAY2BGR)
-        result = base_float * (1 - mask_norm) + result * mask_norm
-    
-    # Converti back a uint8
-    return np.clip(result * 255, 0, 255).astype(np.uint8)
-
-# Rimuovo la vettorizzazione che rallentava invece di velocizzare
-
-def process_background(bg_frame, config):
-    """
-    Processa il frame di sfondo: lo adatta alle dimensioni video senza crop,
-    lo scurisce e ne estrae i contorni per i traccianti.
-    """
-    h, w, _ = bg_frame.shape
-    
-    # 1. NUOVO: Usa video originale senza crop, adattalo alle dimensioni target
-    if hasattr(config, 'BG_USE_ORIGINAL_SIZE') and config.BG_USE_ORIGINAL_SIZE:
-        # Scala il video originale mantenendo le proporzioni
-        target_width = config.WIDTH
-        target_height = config.HEIGHT
-        
-        # Calcola scaling per coprire tutto il frame (come background)
-        scale_x = target_width / w
-        scale_y = target_height / h
-        scale = max(scale_x, scale_y)  # Usa il maggiore per coprire tutto
-        
-        # Applica lo zoom configurabile moltiplicando il fattore di scala
-        zoom_factor = getattr(config, 'BG_ZOOM_FACTOR', 1.0)
-        scale = scale * zoom_factor
-        
-        # Nuove dimensioni scalate (ora con zoom)
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        
-        # Ridimensiona
-        scaled_bg = cv2.resize(bg_frame, (new_w, new_h))
-        
-        # Centro-crop per adattare alle dimensioni esatte (il crop sarà più stretto con zoom > 1)
-        start_x = (new_w - target_width) // 2
-        start_y = (new_h - target_height) // 2
-        final_bg = scaled_bg[start_y:start_y + target_height, start_x:start_x + target_width]
-        
-    else:
-        # Metodo crop personalizzato per video verticali
-        h, w, _ = bg_frame.shape
-        
-        # Calcola le dimensioni del crop basandosi sui ratio
-        crop_width = int(w * config.BG_CROP_WIDTH_RATIO)
-        crop_height = int(h * config.BG_CROP_HEIGHT_RATIO)
-        
-        # Calcola le coordinate di inizio
-        crop_x_start = int(config.BG_CROP_X_START * (w - crop_width))
-        crop_y_start = int(config.BG_CROP_Y_START * (h - crop_height))
-        
-        # Calcola le coordinate di fine
-        crop_x_end = crop_x_start + crop_width
-        crop_y_end = crop_y_start + crop_height
-        
-        # Esegue il crop
-        cropped_bg = bg_frame[crop_y_start:crop_y_end, crop_x_start:crop_x_end]
-        
-        # Ridimensiona alla dimensione target
-        final_bg = cv2.resize(cropped_bg, (config.WIDTH, config.HEIGHT))
-    
-    # 2. Scurisce e contrasta
-    if config.BG_DARKEN_FACTOR < 1.0:
-        # Applica lo scurimento in modo più "morbido"
-        final_bg = cv2.addWeighted(final_bg, config.BG_DARKEN_FACTOR, np.zeros_like(final_bg), 1 - config.BG_DARKEN_FACTOR, 0)
-    if config.BG_CONTRAST_FACTOR > 1.0:
-        final_bg = cv2.convertScaleAbs(final_bg, alpha=config.BG_CONTRAST_FACTOR, beta=0)
-
-    # 3. & 4. Estrae i traccianti del logo e dello sfondo usando la funzione dedicata
-    gray_bg = cv2.cvtColor(final_bg, cv2.COLOR_BGR2GRAY)  # Usa il frame processato
-    # Applica un leggero blur per ridurre il rumore prima di Canny
-    gray_bg = cv2.GaussianBlur(gray_bg, (3, 3), 0)
-    
-    # Crea frame temporaneo per l'estrazione tracers
-    temp_frame = cv2.cvtColor(gray_bg, cv2.COLOR_GRAY2BGR)
-    logo_edges, bg_edges = extract_logo_and_bg_tracers(temp_frame, config)
-    
-    return final_bg, logo_edges, bg_edges
 
 def render_frame(contours, hierarchy, width, height, frame_index, total_frames, config, bg_frame, texture_image, tracer_history, bg_tracer_history, lenses, audio_data=None):
     """
     Rende un singolo frame dell'animazione, applicando la pipeline di effetti completa.
     """
     # --- 0. Ottieni Parametri Dinamici ---
-    dynamic_params = get_dynamic_parameters(frame_index, total_frames)
+    dynamic_params = get_dynamic_parameters(frame_index, total_frames, config)
     
     # --- 0.5. Calcola Fattori Audio-Reattivi ---
     audio_factors = get_audio_reactive_factors(audio_data, frame_index, config)
@@ -436,22 +214,6 @@ def extract_logo_tracers(logo_mask, config):
     logo_edges = cv2.dilate(logo_edges, kernel, iterations=1)
     
     return logo_edges
-
-
-
-def get_background_frame(bg_video, frame_index, bg_start_frame=0):
-    """Funzione helper per ottenere un frame di sfondo con offset casuale"""
-    if bg_video and bg_video.isOpened():
-        # Calcola il frame considerando il rallentamento e l'offset casuale
-        bg_frame_index = int(frame_index / Config.BG_SLOWDOWN_FACTOR) + bg_start_frame
-        bg_video.set(cv2.CAP_PROP_POS_FRAMES, bg_frame_index)
-        ret, bg_frame = bg_video.read()
-        
-        if ret:
-            return bg_frame
-    
-    # Fallback: frame nero
-    return np.zeros((Config.HEIGHT, Config.WIDTH, 3), dtype=np.uint8)
 
 
 
@@ -797,14 +559,14 @@ def main():
         format_info = "Instagram Stories (9:16)"
     elif Config.VIDEO_FORMAT == "IG_POST":
         if Config.TEST_MODE:
-            # Versione ridotta per test: 540x540 (metà di 1080x1080)
-            Config.WIDTH = 540
+            # Versione ridotta per test: 432x540 (4:5 ratio per test mode)
+            Config.WIDTH = 432
             Config.HEIGHT = 540
         else:
-            # Formato Instagram Post standard: 1080x1080
+            # Formato Instagram Post moderno: 1080x1350 (4:5 ratio)
             Config.WIDTH = 1080
-            Config.HEIGHT = 1080
-        format_info = "Instagram Post (1:1)"
+            Config.HEIGHT = 1350
+        format_info = "Instagram Post (4:5)"
     else:  # INPUT_VIDEO_SIZE
         # Formato tradizionale basato su dimensioni SVG
         Config.WIDTH = svg_width + (Config.SVG_PADDING * 2)
@@ -817,7 +579,7 @@ def main():
     if Config.VIDEO_FORMAT == "IG_STORY" and not Config.TEST_MODE:
         print(f"📱 INSTAGRAM STORIES: Formato verticale ottimizzato per mobile")
     elif Config.VIDEO_FORMAT == "IG_POST" and not Config.TEST_MODE:
-        print(f"📱 INSTAGRAM POST: Formato quadrato ottimizzato per feed")
+        print(f"📱 INSTAGRAM POST: Formato 4:5 ottimizzato per feed moderno")
     if Config.SVG_PADDING and Config.VIDEO_FORMAT == "INPUT_VIDEO_SIZE":
         print(f"🎨 Padding SVG: {Config.SVG_PADDING}px")
     if Config.TEST_MODE:
@@ -841,7 +603,7 @@ def main():
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_svg(Config.SVG_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.SVG_LEFT_PADDING, Config.LOGO_ZOOM_FACTOR)
         elif Config.VIDEO_FORMAT == "IG_POST":
-            # Per Instagram Post, centra il logo nel formato quadrato
+            # Per Instagram Post, centra il logo nel formato 4:5 (verticale)
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             vertical_margin = (Config.HEIGHT - svg_height) // 2
             effective_padding = max(Config.SVG_PADDING, min(horizontal_margin, vertical_margin))
@@ -857,7 +619,7 @@ def main():
             effective_padding = max(Config.SVG_PADDING, horizontal_margin - right_shift)
             contours, hierarchy = extract_contours_from_pdf(Config.PDF_PATH, Config.WIDTH, Config.HEIGHT, effective_padding, Config.LOGO_ZOOM_FACTOR)
         elif Config.VIDEO_FORMAT == "IG_POST":
-            # Per Instagram Post, centra il logo nel formato quadrato
+            # Per Instagram Post, centra il logo nel formato 4:5 (verticale)
             horizontal_margin = (Config.WIDTH - svg_width) // 2
             vertical_margin = (Config.HEIGHT - svg_height) // 2
             effective_padding = max(Config.SVG_PADDING, min(horizontal_margin, vertical_margin))
@@ -970,27 +732,13 @@ def main():
         
         print(f"🐌 RALLENTAMENTO ATTIVATO: Video sfondo {Config.BG_SLOWDOWN_FACTOR}x più lento")
     
-    # Setup video writer con codec ottimizzato per WhatsApp
-    if Config.WHATSAPP_COMPATIBLE:
-        # H.264 è il migliore per WhatsApp
-        fourcc = cv2.VideoWriter_fourcc(*'H264')  # Priorità H264 per WhatsApp
-        print("🔄 Usando H.264 per compatibilità WhatsApp...")
-    else:
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fallback generico
-        
-    output_filename = get_timestamp_filename()
-    out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
+    # Setup video writer usando funzione di rendering helper
+    base_filename = get_timestamp_filename()
+    output_filename = f"output/{base_filename}.mp4"
+    fourcc, fps, size = get_video_writer_params(Config, output_filename)
     
-    if not out.isOpened():
-        print("TENTATIVO 1 FALLITO. Provo con mp4v...")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-        
-    if not out.isOpened():
-        print("TENTATIVO 2 FALLITO. Provo con XVID...")
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(output_filename, fourcc, Config.FPS, (Config.WIDTH, Config.HEIGHT))
-        
+    out = cv2.VideoWriter(output_filename, fourcc, fps, size)
+    
     if not out.isOpened():
         print("ERRORE CRITICO: Nessun codec video funziona!")
         return
