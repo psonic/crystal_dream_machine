@@ -21,9 +21,8 @@ except ImportError:
 
 
 def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
-    """Applica una deformazione organica super fluida usando calcolo a griglia con parametri dinamici."""
+    """Applica una deformazione organica che stira e allunga la scritta in modo drammatico."""
     if not NOISE_AVAILABLE:
-        # Se il modulo noise non è disponibile, restituisce la mask non modificata
         print("⚠️ Deformazione organica saltata: modulo noise non disponibile")
         return mask
     
@@ -41,46 +40,81 @@ def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
     
     time_component = frame_index * speed
     
-    # Creo una griglia ridotta per calcolare il noise più velocemente
-    # poi interpolo per ottenere un movimento fluido
-    grid_size = 6  # Griglia più fitta per curve più morbide, ma ancora ottimizzata
-    h_grid = h // grid_size + 1
-    w_grid = w // grid_size + 1
-    
-    # Griglie per il noise
-    noise_x = np.zeros((h_grid, w_grid), dtype=np.float32)
-    noise_y = np.zeros((h_grid, w_grid), dtype=np.float32)
-    
-    # Calcolo il noise solo sui punti della griglia
-    for y in range(h_grid):
-        for x in range(w_grid):
-            real_x = x * grid_size
-            real_y = y * grid_size
-            
-            noise_x[y, x] = pnoise2(
-                real_x * scale, 
-                real_y * scale + time_component, 
-                octaves=4, persistence=0.5, lacunarity=2.0
-            )
-            noise_y[y, x] = pnoise2(
-                real_x * scale + time_component, 
-                real_y * scale, 
-                octaves=4, persistence=0.5, lacunarity=2.0
-            )
-    
-    # Interpolo il noise per ottenere valori fluidi per tutti i pixel
-    noise_x_full = cv2.resize(noise_x, (w, h), interpolation=cv2.INTER_CUBIC)
-    noise_y_full = cv2.resize(noise_y, (w, h), interpolation=cv2.INTER_CUBIC)
-    
-    # Applico l'intensità dinamica
-    displacement_x = noise_x_full * intensity
-    displacement_y = noise_y_full * intensity
-    
-    # Creo le mappe di rimappatura
+    # NUOVO APPROCCIO: Stretching organico invece di piccole ondulazioni
     x_indices, y_indices = np.meshgrid(np.arange(w), np.arange(h))
-    map_x = (x_indices + displacement_x).astype(np.float32)
-    map_y = (y_indices + displacement_y).astype(np.float32)
     
+    # Onde principali per stretching orizzontale (più ampie e drammatiche)
+    wave_frequency_x = scale * 2.0  # Onde più ampie
+    wave_amplitude_x = intensity * 0.8  # Stretching più evidente
+    
+    # Onde principali per stretching verticale 
+    wave_frequency_y = scale * 1.5
+    wave_amplitude_y = intensity * 0.6
+    
+    # Stretching orizzontale organico (effetto "fisarmonica")
+    horizontal_stretch = np.zeros_like(x_indices, dtype=np.float32)
+    for y in range(0, h, 8):  # Campionamento per performance
+        for x in range(0, w, 8):
+            # Onde principali per stretching
+            stretch_factor = pnoise2(
+                x * wave_frequency_x + time_component,
+                y * wave_frequency_x * 0.3,
+                octaves=3, persistence=0.6, lacunarity=2.5
+            )
+            # Converti in fattore di stretching (0.5 = compressione, 2.0 = allungamento)
+            stretch_factor = 0.7 + stretch_factor * 0.6  # Range: 0.1 - 1.3
+            horizontal_stretch[y:y+8, x:x+8] = stretch_factor
+    
+    # Stretching verticale organico (effetto "respirazione")
+    vertical_stretch = np.zeros_like(y_indices, dtype=np.float32)
+    for y in range(0, h, 8):
+        for x in range(0, w, 8):
+            stretch_factor = pnoise2(
+                x * wave_frequency_y * 0.5,
+                y * wave_frequency_y + time_component * 0.7,
+                octaves=2, persistence=0.7, lacunarity=3.0
+            )
+            stretch_factor = 0.8 + stretch_factor * 0.4  # Range: 0.4 - 1.2
+            vertical_stretch[y:y+8, x:x+8] = stretch_factor
+    
+    # Interpola per ottenere valori fluidi
+    horizontal_stretch = cv2.resize(horizontal_stretch, (w, h), interpolation=cv2.INTER_CUBIC)
+    vertical_stretch = cv2.resize(vertical_stretch, (w, h), interpolation=cv2.INTER_CUBIC)
+    
+    # Applica lo stretching organico
+    center_x, center_y = w // 2, h // 2
+    
+    # Calcola nuove coordinate con stretching
+    map_x = center_x + (x_indices - center_x) * horizontal_stretch
+    map_y = center_y + (y_indices - center_y) * vertical_stretch
+    
+    # Aggiungi anche piccole ondulazioni per organicità extra
+    fine_noise_x = np.zeros((h, w), dtype=np.float32)
+    fine_noise_y = np.zeros((h, w), dtype=np.float32)
+    
+    for y in range(0, h, 4):
+        for x in range(0, w, 4):
+            fine_noise_x[y:y+4, x:x+4] = pnoise2(
+                x * scale * 8 + time_component * 2,
+                y * scale * 8,
+                octaves=3, persistence=0.4
+            ) * intensity * 0.2
+            
+            fine_noise_y[y:y+4, x:x+4] = pnoise2(
+                x * scale * 8,
+                y * scale * 8 + time_component * 2,
+                octaves=3, persistence=0.4
+            ) * intensity * 0.2
+    
+    # Combina stretching e ondulazioni fini
+    map_x = map_x + fine_noise_x
+    map_y = map_y + fine_noise_y
+    
+    # Assicurati che le coordinate siano nei limiti
+    map_x = np.clip(map_x, 0, w-1).astype(np.float32)
+    map_y = np.clip(map_y, 0, h-1).astype(np.float32)
+    
+    # Applica la deformazione
     deformed_mask = cv2.remap(mask, map_x, map_y, interpolation=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     
     return deformed_mask

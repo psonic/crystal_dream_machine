@@ -94,6 +94,7 @@ class LivePreview:
         print("   📝 MODIFICA PARAMETRI: Edita il file 'config' e salvalo!")
         print("   🎬 SPAZIO: genera video completo + Git push")
         print("   ⚡ T: genera video TEST mode + Git push")
+        print("   🔄 R: reload completo configurazione")
         print("   ❌ ESC: esci dalla preview")
         
     def _find_texture_file(self):
@@ -530,10 +531,12 @@ class LivePreview:
                        font, 0.4, (255, 200, 100), 1)
         
         # Controlli
-        cv2.putText(overlay, "SPAZIO: Genera Video + Git Push", (10, self.height - 60), 
+        cv2.putText(overlay, "SPAZIO: Genera Video + Git Push", (10, self.height - 80), 
                    font, 0.5, (255, 100, 255), 1)
-        cv2.putText(overlay, "T: Genera TEST mode + Git Push", (10, self.height - 40), 
+        cv2.putText(overlay, "T: Genera TEST mode + Git Push", (10, self.height - 60), 
                    font, 0.5, (100, 255, 100), 1)
+        cv2.putText(overlay, "R: Reload Config Completo", (10, self.height - 40), 
+                   font, 0.5, (100, 255, 255), 1)
         cv2.putText(overlay, "ESC: Esci", (10, self.height - 20), 
                    font, 0.5, (100, 100, 255), 1)
         
@@ -615,6 +618,10 @@ class LivePreview:
                 elif key == ord('t') or key == ord('T'):  # T o t
                     print("⚡ Richiesta generazione video TEST mode...")
                     self.should_render_test = True
+                    break
+                elif key == ord('r') or key == ord('R'):  # R o r
+                    print("🔄 Richiesta RELOAD COMPLETO configurazione...")
+                    self.restart_requested = True
                     break
                 
         except KeyboardInterrupt:
