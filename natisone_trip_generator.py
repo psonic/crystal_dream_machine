@@ -963,7 +963,7 @@ def main():
     texture_image = None
     if Config.TEXTURE_ENABLED:
         # Prima cerca la texture automaticamente
-        texture_path = find_texture_file()
+        texture_path = find_texture_file(Config)
         # Poi carica la texture trovata (o fallback se non trovata)
         texture_image = load_texture(texture_path, Config.WIDTH, Config.HEIGHT)
         if texture_image is not None:
