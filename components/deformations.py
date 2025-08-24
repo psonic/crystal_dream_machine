@@ -263,31 +263,46 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     return deformed_mask
 
 
-def apply_organic_deformation(mask, frame_index, params, dynamic_params=None):
+def apply_organic_deformation(mask, frame_index, config, dynamic_params=None):
     """
-    Funzione principale che sceglie quale deformazione applicare basandosi sulla configurazione.
+    Funzione principale che applica le deformazioni basandosi sulla configurazione.
+    Ora usa funzioni separate per i parametri di ogni tipo di deformazione.
     """
     # Determina quale deformazione applicare
-    organic_enabled = params.get('organic_enabled', False)
-    stretch_enabled = params.get('stretch_enabled', False)
+    organic_enabled = hasattr(config, 'ORGANIC_DEFORMATION_ENABLED') and config.ORGANIC_DEFORMATION_ENABLED
+    stretch_enabled = hasattr(config, 'STRETCH_DEFORMATION_ENABLED') and config.STRETCH_DEFORMATION_ENABLED
+    
+    result_mask = mask
     
     if organic_enabled and stretch_enabled:
-        # Se entrambi sono attivi, combina gli effetti 
-        return apply_organic_deformation_new_style(apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params), frame_index, params, dynamic_params)
+        # APPLICAZIONE SEQUENZIALE: prima organic, poi stretch
+        # 1. Prima applica deformazione organica (ondulazioni)
+        organic_params = get_organic_deformation_params(config)
+        result_mask = apply_organic_deformation_old_style(result_mask, frame_index, organic_params, dynamic_params)
+        
+        # 2. Poi applica stretch sulla maschera già deformata
+        stretch_params = get_stretch_deformation_params(config)
+        result_mask = apply_organic_deformation_new_style(result_mask, frame_index, stretch_params, dynamic_params)
+        
     elif organic_enabled:
         # Solo deformazione organica classica
-        return apply_organic_deformation_old_style(mask, frame_index, params, dynamic_params)
+        organic_params = get_organic_deformation_params(config)
+        result_mask = apply_organic_deformation_old_style(result_mask, frame_index, organic_params, dynamic_params)
+        
     elif stretch_enabled:
         # Solo deformazione stretch
-        return apply_organic_deformation_new_style(mask, frame_index, params, dynamic_params)
+        stretch_params = get_stretch_deformation_params(config)
+        result_mask = apply_organic_deformation_new_style(result_mask, frame_index, stretch_params, dynamic_params)
     else:
         # Nessuno attivo, restituisci maschera non modificata
-        return mask
+        pass
+    
+    return result_mask
 
 
 def get_organic_deformation_params(config, enable_random_variation=True):
     """
-    🌊 Genera i parametri per la deformazione organica con i nuovi parametri organici/stretch.
+    🌊 Genera i parametri per la deformazione organica classica (ondulazioni).
     
     Args:
         config: Configurazione con parametri base
@@ -296,23 +311,10 @@ def get_organic_deformation_params(config, enable_random_variation=True):
     Returns:
         dict: Parametri per la deformazione organica
     """
-    params = {}
-    
-    # Determina quale tipo di deformazione usare per i parametri base
-    base_speed = 0.015
-    base_scale = 0.0008  
-    base_intensity = 25.0
-    
-    # Usa parametri organic se abilitato
-    if hasattr(config, 'ORGANIC_DEFORMATION_ENABLED') and config.ORGANIC_DEFORMATION_ENABLED:
-        base_speed = config.ORGANIC_SPEED
-        base_scale = config.ORGANIC_SCALE
-        base_intensity = config.ORGANIC_INTENSITY
-    # Altrimenti usa parametri stretch se abilitato
-    elif hasattr(config, 'STRETCH_DEFORMATION_ENABLED') and config.STRETCH_DEFORMATION_ENABLED:
-        base_speed = config.STRETCH_SPEED
-        base_scale = config.STRETCH_SCALE
-        base_intensity = config.STRETCH_INTENSITY
+    # Parametri base per deformazione organica
+    base_speed = config.ORGANIC_SPEED if hasattr(config, 'ORGANIC_SPEED') else 0.015
+    base_scale = config.ORGANIC_SCALE if hasattr(config, 'ORGANIC_SCALE') else 0.0008
+    base_intensity = config.ORGANIC_INTENSITY if hasattr(config, 'ORGANIC_INTENSITY') else 25.0
     
     if enable_random_variation and hasattr(config, 'RANDOM_DEFORMATION_PARAMS') and config.RANDOM_DEFORMATION_PARAMS:
         # Genera parametri con variazione casuale
@@ -320,20 +322,57 @@ def get_organic_deformation_params(config, enable_random_variation=True):
         deform_var_y = np.random.uniform(-0.3, 0.3) 
         deform_var_z = np.random.uniform(-0.3, 0.3)
         
-        params['deformation_speed'] = base_speed * (1.0 + deform_var_x)
-        params['deformation_scale'] = base_scale * (1.0 + deform_var_y)
-        params['deformation_intensity'] = base_intensity * (1.0 + deform_var_z)
+        speed = base_speed * (1.0 + deform_var_x)
+        scale = base_scale * (1.0 + deform_var_y)
+        intensity = base_intensity * (1.0 + deform_var_z)
     else:
         # Usa parametri statici dalla configurazione
-        params['deformation_speed'] = base_speed
-        params['deformation_scale'] = base_scale
-        params['deformation_intensity'] = base_intensity
+        speed = base_speed
+        scale = base_scale
+        intensity = base_intensity
     
-    # Converte i nomi per compatibilità con apply_organic_deformation
     return {
-        'speed': params['deformation_speed'],
-        'scale': params['deformation_scale'],
-        'intensity': params['deformation_intensity']
+        'speed': speed,
+        'scale': scale,
+        'intensity': intensity
+    }
+
+
+def get_stretch_deformation_params(config, enable_random_variation=True):
+    """
+    🎪 Genera i parametri per la deformazione stretch (stretching organico).
+    
+    Args:
+        config: Configurazione con parametri base
+        enable_random_variation: Se True, aggiunge variazione casuale ai parametri
+    
+    Returns:
+        dict: Parametri per la deformazione stretch
+    """
+    # Parametri base per deformazione stretch
+    base_speed = config.STRETCH_SPEED if hasattr(config, 'STRETCH_SPEED') else 0.1
+    base_scale = config.STRETCH_SCALE if hasattr(config, 'STRETCH_SCALE') else 0.002
+    base_intensity = config.STRETCH_INTENSITY if hasattr(config, 'STRETCH_INTENSITY') else 50.0
+    
+    if enable_random_variation and hasattr(config, 'RANDOM_DEFORMATION_PARAMS') and config.RANDOM_DEFORMATION_PARAMS:
+        # Genera parametri con variazione casuale
+        deform_var_x = np.random.uniform(-0.3, 0.3)
+        deform_var_y = np.random.uniform(-0.3, 0.3) 
+        deform_var_z = np.random.uniform(-0.3, 0.3)
+        
+        speed = base_speed * (1.0 + deform_var_x)
+        scale = base_scale * (1.0 + deform_var_y)
+        intensity = base_intensity * (1.0 + deform_var_z)
+    else:
+        # Usa parametri statici dalla configurazione
+        speed = base_speed
+        scale = base_scale
+        intensity = base_intensity
+    
+    return {
+        'speed': speed,
+        'scale': scale,
+        'intensity': intensity
     }
 
 
@@ -421,8 +460,5 @@ def apply_deformation_wrapper(mask, frame_index, config, dynamic_params=None):
         print("⚠️ Configurazione deformazioni non valida, saltando deformazione")
         return mask
     
-    # Genera i parametri base
-    params = get_organic_deformation_params(config)
-    
-    # Applica la deformazione
-    return apply_organic_deformation(mask, frame_index, params, dynamic_params)
+    # Applica la deformazione passando direttamente la config
+    return apply_organic_deformation(mask, frame_index, config, dynamic_params)
