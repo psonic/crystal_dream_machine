@@ -149,7 +149,10 @@ class LivePreview:
                             current_val = getattr(self.config, key, None)
                             
                             # Converti il nuovo valore al tipo appropriato
-                            if key in ['USE_SVG_SOURCE', 'INSTAGRAM_STORIES_MODE', 'LENS_DEFORMATION_ENABLED', 'ADVANCED_BLENDING']:
+                            if key == 'AUDIO_FILES':
+                                # Gestione speciale per AUDIO_FILES: converte stringa in lista
+                                new_val = [f.strip() for f in value.split(',')]
+                            elif key in ['USE_SVG_SOURCE', 'INSTAGRAM_STORIES_MODE', 'LENS_DEFORMATION_ENABLED', 'ADVANCED_BLENDING']:
                                 new_val = value.lower() in ('true', '1', 'yes', 'on')
                             elif key in ['FPS', 'DURATION_SECONDS', 'NUM_LENSES', 'SVG_LEFT_PADDING', 
                                        'LOGO_COLOR_B', 'LOGO_COLOR_G', 'LOGO_COLOR_R']:
