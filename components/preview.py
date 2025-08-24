@@ -577,13 +577,16 @@ class LivePreview:
                             self._reload_resources()
                         self.last_file_check = current_time
                     
-                    # Controlla modifiche al file parametri
-                    params_result = self._check_params_file_changes()
-                    if params_result == 'RESTART':
-                        print("🔄 RESTART richiesto - Uscendo dal loop preview...")
-                        break
-                    elif params_result:
-                        self.force_refresh = True
+                    # Controlla modifiche al file parametri (solo ogni 1 secondo in modalità veloce)
+                    check_interval = 1.0 if self.fast_preview_mode else 0.5
+                    if current_time - getattr(self, 'last_params_check', 0) > check_interval:
+                        params_result = self._check_params_file_changes()
+                        if params_result == 'RESTART':
+                            print("🔄 RESTART richiesto - Uscendo dal loop preview...")
+                            break
+                        elif params_result:
+                            self.force_refresh = True
+                        self.last_params_check = current_time
                     
                     self.last_refresh_time = current_time
                 
