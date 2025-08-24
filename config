@@ -1,6 +1,7 @@
 # CRYSTAL THERAPY - CONFIGURAZIONE GLOBALE
 # Modifica questi valori e salvali per vedere i cambiamenti in tempo reale!
-# Lo script legge questo file ogni secondo automaticamente
+# Lo SMOOTHING_ENABLED=True      # Attiva bordi lisci del logo
+SMOOTHING_FACTOR=0.05     # Intensità smussamento (range: 0.00001-0.01, 0.0001=leggero, 0.001=forte)ript legge questo file ogni secondo automaticamente
 
 # --- Modalità e Qualità ---
 TEST_MODE=False  # Test rapido per verifiche (True = 5 sec, False = durata completa)        
