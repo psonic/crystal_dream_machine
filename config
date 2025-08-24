@@ -77,7 +77,7 @@ GLOW_KERNEL_SIZE=30  # Dimensione bagliore (range: 5-200, 25=sottile, 50=normale
 GLOW_INTENSITY=0.3         # Intensità bagliore (range: 0.0-1.0, 0.1=tenue, 0.2=normale, 0.5=forte)
 
 # --- Deformazione Organica (ondulazioni classiche) ---
-ORGANIC_DEFORMATION_ENABLED=True  # Attiva deformazione organica classica con ondulazioni sottili
+ORGANIC_DEFORMATION_ENABLED=False  # Attiva deformazione organica classica con ondulazioni sottili
 ORGANIC_SPEED=0.0005              # Velocità cambio onde organiche (range: 0.01-0.5, 0.05=lento, 0.1=normale, 0.3=veloce)
 ORGANIC_SCALE=0.0008             # Frequenza onde organiche (range: 0.0005-0.01, 0.001=fini, 0.002=medie, 0.005=larghe)
 ORGANIC_INTENSITY=25.0           # Forza deformazione organica (range: 0.5-20, 2=leggera, 5=normale, 15=estrema)
@@ -89,12 +89,12 @@ ORGANIC_SMOOTHING=0.95           # Smoothing per effetto rimbalzo organico (rang
 ORGANIC_AUDIO_MULTIPLIER=1.7     # Moltiplicatore globale audio deformazione organica (range: 0.5-2.0)
 
 # --- Deformazione Stretch (stiramento drammatico) ---
-STRETCH_DEFORMATION_ENABLED=False # Attiva deformazione stretch con stiramento drammatico
+STRETCH_DEFORMATION_ENABLED=True # Attiva deformazione stretch con stiramento drammatico
 STRETCH_SPEED=0.02              # Velocità cambio stretch (range: 0.008-0.3, 0.01=lento, 0.05=normale, 0.2=veloce)
-STRETCH_SCALE=0.001             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
+STRETCH_SCALE=0.005             # Frequenza onde stretch (range: 0.001-0.008, 0.002=ampie, 0.005=strette)
 STRETCH_INTENSITY=15.0          # Forza stiramento (range: 5-50, 10=leggero, 20=normale, 35=estremo)
-STRETCH_HORIZONTAL_FACTOR=1.5    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
-STRETCH_VERTICAL_FACTOR=04      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
+STRETCH_HORIZONTAL_FACTOR=0.8    # Intensità stiramento orizzontale (range: 0.3-1.5, 0.5=leggero, 1.0=forte)
+STRETCH_VERTICAL_FACTOR=0.4      # Intensità stiramento verticale (range: 0.2-1.2, 0.4=sottile, 0.8=evidente)
 STRETCH_FINE_DETAIL=0.1          # Dettagli fini aggiuntivi (range: 0.1-0.5, 0.1=liscio, 0.3=texturizzato)
 
 STRETCH_SMOOTHING=0.95            # Smoothing per effetto rimbalzo stretch (range: 0.6-0.95)
@@ -106,23 +106,23 @@ STRETCH_BASS_SPEED=0.025         # Quanto i bassi influenzano la velocità stret
 STRETCH_MID_SCALE=0.0025         # Quanto i medi influenzano la scala stretch (range: 0.001-0.005)
 
 # --- Qualità Anti-Aliasing Stretch ---
-STRETCH_ANTIALIASING_ENABLED=False  # Attiva anti-aliasing avanzato per stretch
+STRETCH_ANTIALIASING_ENABLED=True  # Attiva anti-aliasing avanzato per stretch
 STRETCH_MULTIPASS_BLENDING=0.1     # Blend Lanczos/Cubic (range: 0.5-0.9, 0.6=smooth, 0.8=sharp)
 STRETCH_BLUR_THRESHOLD=15          # Soglia intensità per blur anti-aliasing (range: 5-20, 8=sensibile, 15=conservativo)
 STRETCH_BLUR_STRENGTH=0.8          # Forza blur anti-aliasing (range: 0.2-1.0, 0.3=leggero, 0.8=forte)
 
 # --- Sistema Shader Avanzato ---
-STRETCH_SHADER_QUALITY=high        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
-STRETCH_EDGE_PRESERVATION=True     # Preserva i bordi durante il blur (usa bilateral filter)
+STRETCH_SHADER_QUALITY=ultra        # Qualità shader: "low", "medium", "high", "ultra" (high=super-sampling 2x, ultra=3x)
+STRETCH_EDGE_PRESERVATION=False     # Preserva i bordi durante il blur (usa bilateral filter)
 STRETCH_TEMPORAL_STABILIZATION=0.1 # Stabilizzazione temporale anti-flickering (range: 0.0-0.3, 0.0=off, 0.15=smooth)
 
 # --- Deformazione a Lenti ---
 LENS_DEFORMATION_ENABLED=True  # Attiva effetto lenti che distorcono il logo
-NUM_LENSES=80             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
-LENS_MIN_STRENGTH=-0.7     # Forza minima ridotta per deformazione più delicata
-LENS_MAX_STRENGTH=1.0      # Forza massima ridotta per deformazione più delicata
+NUM_LENSES=50             # Numero di lenti (range: 5-100, 20=poche, 40=normale, 80=molte)
+LENS_MIN_STRENGTH=-0.4     # Forza minima ridotta per deformazione più delicata
+LENS_MAX_STRENGTH=0.2      # Forza massima ridotta per deformazione più delicata
 LENS_MIN_RADIUS=20         # Raggio minimo area influenza (range: 5-50, 10=piccola, 30=grande)
-LENS_MAX_RADIUS=100         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
+LENS_MAX_RADIUS=70         # Raggio massimo area influenza (range: 20-150, 50=media, 100=ampia)
 LENS_SPEED_FACTOR=0.1    # Velocità movimento (range: 0.005-0.1, 0.01=lenta, 0.05=veloce)
 
 # --- Parametri Movimento Lenti ---
@@ -142,7 +142,7 @@ LENS_FORCE_PULSATION_ENABLED=True  # Attiva pulsazione anche della forza
 LENS_FORCE_PULSATION_AMPLITUDE=0.2 # Ampiezza pulsazione forza (range: 0.1-0.5, 0.2=normale, 0.4=estrema)
 
 WORM_SHAPE_ENABLED=True  # Forma allungata delle lenti (tipo verme)
-WORM_LENGTH=3          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
+WORM_LENGTH=1.5          # Lunghezza forma verme (range: 1.5-4, 2=normale, 3=lungo)
 WORM_COMPLEXITY=5        # Complessità movimento verme (range: 1-8, 2=semplice, 6=complesso)
 
 # --- Smussamento Contorni ---
