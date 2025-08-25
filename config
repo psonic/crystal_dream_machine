@@ -18,7 +18,7 @@ TEXTURE_BLENDING_MODE="overlay"  # Modalità texture disponibili: 'normal', 'ove
 # --- Parametri Video ---
 SVG_PADDING=60          # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 SVG_LEFT_PADDING=10        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
-FPS=5                    # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
+FPS=500                    # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
 DURATION_SECONDS=2      # Durata video in secondi
 
 # --- Colore e Stile ---
