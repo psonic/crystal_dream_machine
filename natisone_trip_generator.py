@@ -96,21 +96,15 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
     # --- 1. Preparazione Sfondo e Traccianti ---
     bg_result = process_background(bg_frame, config)
     if len(bg_result) == 3:
-        final_frame, current_logo_edges, current_bg_edges = bg_result
+        final_frame, _, current_bg_edges = bg_result  # Ignora i falsi "logo_edges"
     else:
-        final_frame, current_logo_edges = bg_result
+        final_frame, _ = bg_result  # Ignora i falsi "logo_edges"
         current_bg_edges = None
     
-    # --- 2. Applicazione Traccianti del Logo ---
-    final_frame = apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic_params)
-
-    # --- 2.5. Applicazione Traccianti Sfondo ---
-    final_frame = apply_background_tracers(final_frame, bg_tracer_history, frame_index, config, dynamic_params)
-
-    # --- 3. Creazione Maschera del Logo ---
+    # --- 2. Creazione Maschera del Logo (SPOSTATO PRIMA) ---
     logo_mask = create_unified_mask(contours, hierarchy, width, height, config.SMOOTHING_ENABLED, config.SMOOTHING_FACTOR)
 
-    # --- 4. Applica Deformazioni ---
+    # --- 3. Applica Deformazioni ---
     # Applica deformazione organica classica se abilitata
     if config.ORGANIC_DEFORMATION_ENABLED or config.STRETCH_DEFORMATION_ENABLED:
         # Calcola parametri dinamici basati sull'audio per movimento delicato
@@ -119,14 +113,18 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
         # Usa il nuovo sistema refactorizzato che prende direttamente la config
         logo_mask = apply_organic_deformation(logo_mask, frame_index, config, dynamic_deformation_params)
 
-    # --- 5. Applica Deformazione a Lenti (sovrapposta alla prima) ---
+    # --- 4. Applica Deformazione a Lenti (sovrapposta alla prima) ---
     if config.LENS_DEFORMATION_ENABLED:
         logo_mask = apply_lens_deformation(logo_mask, lenses, frame_index, config, dynamic_params, audio_factors)
 
-    # --- 5.5. Estrai Traccianti del Logo (NUOVO per maggiore aderenza) ---
-    logo_tracers = extract_logo_tracers(logo_mask, config)
-    # Combina i traccianti del logo con quelli dello sfondo per un effetto più ricco
-    combined_logo_edges = cv2.add(current_logo_edges, logo_tracers)
+    # --- 5. Estrai VERI Traccianti del Logo (dalla maschera del logo) ---
+    current_logo_edges = extract_logo_tracers(logo_mask, config)
+    
+    # --- 6. Applicazione Traccianti del Logo (VERI) ---
+    final_frame = apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic_params)
+
+    # --- 7. Applicazione Traccianti Sfondo ---
+    final_frame = apply_background_tracers(final_frame, bg_tracer_history, frame_index, config, dynamic_params)
 
     # --- 6. Applicazione Texture Dinamica (NUOVO SISTEMA) ---
     # Applica texture secondo la modalità configurata PRIMA di creare i layer del logo
@@ -193,7 +191,7 @@ def render_frame(contours, hierarchy, width, height, frame_index, total_frames, 
         final_frame_with_glow[logo_mask_bool] = 0
         final_frame = cv2.add(final_frame_with_glow, final_logo_layer)
 
-    return final_frame, combined_logo_edges, current_bg_edges
+    return final_frame, current_logo_edges, current_bg_edges
 
 
 
@@ -326,6 +324,7 @@ def setup_config_defaults():
     Config.STRETCH_SHADER_QUALITY = "high"
     Config.STRETCH_EDGE_PRESERVATION = True
     Config.STRETCH_TEMPORAL_STABILIZATION = 0.1
+    Config.STRETCH_PIXEL_GRANULARITY = 10
     
     Config.LENS_DEFORMATION_ENABLED = True
     Config.NUM_LENSES = 50

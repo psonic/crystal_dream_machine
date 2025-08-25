@@ -100,9 +100,12 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
         return mask
     
     h, w = mask.shape
-    
+
+    config = params.get('config')
+
     # Usa parametri dinamici se forniti, altrimenti quelli statici
-    if dynamic_params:
+    if dynamic_params and False:
+        print("dynamic fuck")
         speed = dynamic_params.get('deformation_speed', params['speed'])
         scale = dynamic_params.get('deformation_scale', params['scale'])
         intensity = dynamic_params.get('deformation_intensity', params['intensity'])
@@ -125,9 +128,12 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     wave_x = np.zeros((h, w), dtype=np.float32)
     wave_y = np.zeros((h, w), dtype=np.float32)
     
-    # Generiamo le onde con campionamento ogni 10 pixel per performance
-    for y in range(0, h, 10):
-        for x in range(0, w, 10):
+    # Generiamo le onde con campionamento ogni X pixel per performance
+
+    pixel_granularity = params.get('pixel_granularity', 1)
+
+    for y in range(0, h, pixel_granularity):
+        for x in range(0, w, pixel_granularity):
             # Onda X per stretching orizzontale (con fattore di controllo)
             wave_val_x = pnoise2(
                 x * scale + time_component,
@@ -138,21 +144,21 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
             # Onda Y per stretching verticale (con fattore di controllo)
             wave_val_y = pnoise2(
                 x * scale * 0.5,
-                y * scale + time_component * 0.7,
+                y * scale + time_component * 0.007,
                 octaves=3, persistence=0.5
             ) * intensity * 15 * vertical_factor  # Applicato il fattore verticale
             
             # Dettagli fini aggiuntivi se abilitati
             if fine_detail > 0:
                 fine_noise_x = pnoise2(
-                    x * scale * 5 + time_component * 2,
+                    x * scale * 5 + time_component * 0.02,
                     y * scale * 5,
                     octaves=2, persistence=0.3
                 ) * intensity * fine_detail
                 
                 fine_noise_y = pnoise2(
                     x * scale * 5,
-                    y * scale * 5 + time_component * 2,
+                    y * scale * 5 + time_component * 0.02,
                     octaves=2, persistence=0.3
                 ) * intensity * fine_detail
                 
@@ -311,7 +317,7 @@ def apply_organic_deformation(mask, frame_index, config, dynamic_params=None):
         organic_params = get_organic_deformation_params(config)
         result_mask = apply_organic_deformation_old_style(result_mask, frame_index, organic_params, dynamic_params)
         
-    elif stretch_enabled:
+    elif stretch_enabled:        
         # Solo deformazione stretch
         stretch_params = get_stretch_deformation_params(config)        
         result_mask = apply_organic_deformation_new_style(result_mask, frame_index, stretch_params, dynamic_params)
@@ -322,7 +328,7 @@ def apply_organic_deformation(mask, frame_index, config, dynamic_params=None):
     return result_mask
 
 
-def get_organic_deformation_params(config, enable_random_variation=True):
+def get_organic_deformation_params(config, enable_random_variation=False):
     """
     🌊 Genera i parametri per la deformazione organica classica (ondulazioni).
     
@@ -360,7 +366,7 @@ def get_organic_deformation_params(config, enable_random_variation=True):
     }
 
 
-def get_stretch_deformation_params(config, enable_random_variation=True):
+def get_stretch_deformation_params(config, enable_random_variation=False):
     """
     🎪 Genera i parametri per la deformazione stretch (stretching organico).
     
@@ -380,7 +386,8 @@ def get_stretch_deformation_params(config, enable_random_variation=True):
     horizontal_factor = config.STRETCH_HORIZONTAL_FACTOR if hasattr(config, 'STRETCH_HORIZONTAL_FACTOR') else 1.0
     vertical_factor = config.STRETCH_VERTICAL_FACTOR if hasattr(config, 'STRETCH_VERTICAL_FACTOR') else 1.0
     fine_detail = config.STRETCH_FINE_DETAIL if hasattr(config, 'STRETCH_FINE_DETAIL') else 0.0
-    
+    pixel_granularity = config.STRETCH_PIXEL_GRANULARITY if hasattr(config, 'STRETCH_PIXEL_GRANULARITY') else 10
+
     if enable_random_variation and hasattr(config, 'RANDOM_DEFORMATION_PARAMS') and config.RANDOM_DEFORMATION_PARAMS:
         # Genera parametri con variazione casuale        
         deform_var_y = np.random.uniform(-0.3, 0.3) 
@@ -401,7 +408,8 @@ def get_stretch_deformation_params(config, enable_random_variation=True):
         'intensity': intensity,
         'horizontal_factor': horizontal_factor,
         'vertical_factor': vertical_factor,
-        'fine_detail': fine_detail
+        'fine_detail': fine_detail,
+        'pixel_granularity': pixel_granularity
     }
 
 
