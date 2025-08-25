@@ -85,8 +85,8 @@ def apply_logo_tracers(final_frame, tracer_history, frame_index, config, dynamic
     opacities = np.linspace(0, dynamic_opacity, len(tracer_history))
     
     for i, past_edges in enumerate(reversed(tracer_history)):
-        # Dynamic color for tracers
-        hue_shift = (frame_index * 0.1 + i * 0.5) % 180
+        # Dynamic color for tracers - solo lungo la scia, non nel tempo
+        hue_shift = (i * 0.5) % 180  # Solo basato sulla posizione nella scia
         base_color_hsv = cv2.cvtColor(np.uint8([[config.TRACER_BASE_COLOR]]), cv2.COLOR_BGR2HSV)[0][0]
         new_hue = (base_color_hsv[0] + hue_shift) % 180
         dynamic_color_hsv = np.uint8([[[new_hue, base_color_hsv[1], base_color_hsv[2]]]])
@@ -129,8 +129,8 @@ def apply_background_tracers(final_frame, bg_tracer_history, frame_index, config
     bg_opacities = np.linspace(0, dynamic_bg_opacity, len(bg_tracer_history))
     
     for i, past_bg_edges in enumerate(reversed(bg_tracer_history)):
-        # Dynamic color for background tracers (different from logo)
-        hue_shift_bg = (frame_index * 0.05 + i * 0.3) % 180  # Different speed
+        # Dynamic color for background tracers - solo lungo la scia, non nel tempo
+        hue_shift_bg = (i * 0.3) % 180  # Solo basato sulla posizione nella scia
         base_color_hsv_bg = cv2.cvtColor(np.uint8([[config.BG_TRACER_BASE_COLOR]]), cv2.COLOR_BGR2HSV)[0][0]
         new_hue_bg = (base_color_hsv_bg[0] + hue_shift_bg) % 180
         dynamic_color_hsv_bg = np.uint8([[[new_hue_bg, base_color_hsv_bg[1], base_color_hsv_bg[2]]]])
