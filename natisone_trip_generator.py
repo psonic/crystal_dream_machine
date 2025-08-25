@@ -879,7 +879,59 @@ def main():
         output_filename = f"output/test/{base_filename}.mp4"
     else:
         output_filename = f"output/{base_filename}.mp4"
-    
+        
+        # --- BACKUP CONFIG E VERSIONAMENTO PRIMA DEL RENDER ---
+        try:
+            print(f"\n{C_BLUE}💾 Backup config e versionamento PRIMA del render...{C_END}")
+            
+            video_name = base_filename
+            config_backup_path = f"output/configs/config_{video_name}.backup"
+            
+            # Crea cartella configs se non esiste
+            os.makedirs("output/configs", exist_ok=True)
+            
+            # Copia il file config corrente
+            import shutil
+            shutil.copy2("config", config_backup_path)
+            print(f"💾 Config salvato: {C_BOLD}{config_backup_path}{C_END}")
+            
+            # Crea anche un file di log con timestamp
+            log_path = f"output/configs/render_log_{video_name}.txt"
+            with open(log_path, 'w') as f:
+                f.write(f"🎬 Video: {output_filename}\n")
+                f.write(f"⏰ Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"🎨 Blending Preset: {Config.BLENDING_PRESET}\n")
+                f.write(f"🌊 Lenti: {Config.NUM_LENSES} attive\n")
+                f.write(f"🎵 Audio: {'Sì' if Config.AUDIO_ENABLED else 'No'}\n")
+                f.write(f"📐 Formato: {Config.VIDEO_FORMAT}\n")
+                f.write(f"⏱️ Durata: {Config.DURATION_SECONDS}s @ {Config.FPS}fps\n")
+            print(f"📝 Log salvato: {C_BOLD}{log_path}{C_END}")
+            
+            # --- COMMIT, TAG e PUSH PRIMA DEL RENDER ---
+            print(f"\n{C_BLUE}🚀 Git commit + tag + push PRIMA del render...{C_END}")
+            source_script_path = os.path.abspath(__file__)
+            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'components', 'version_manager.py')
+            
+            if os.path.exists(version_manager_path):
+                result = subprocess.run(
+                    [sys.executable, version_manager_path, output_filename, source_script_path],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                print(result.stdout)
+                if result.stderr:
+                    if "nothing to commit" in result.stderr.lower():
+                         print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da committare.{C_END}")
+                    else:
+                        print(f"{C_YELLOW}Warning versioning:{C_END}\n{result.stderr}")
+            else:
+                print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando git operations.{C_END}")
+                
+        except Exception as e:
+            print(f"{C_YELLOW}⚠️ Errore nel backup pre-render: {e}{C_END}")
+            print(f"{C_YELLOW}Continuando comunque con il render...{C_END}")
+
     fourcc, fps, size = get_video_writer_params(Config, output_filename)
     
     out = cv2.VideoWriter(output_filename, fourcc, fps, size)
@@ -1033,34 +1085,7 @@ def main():
             print(f"🧪 TEST - Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
         else:
             print(f"🎬 PRODUZIONE - Animazione salvata in: {C_BOLD}{final_output_filename}{C_END}")
-
-        # --- GESTIONE VERSIONAMENTO ---
-        try:
-            print(f"\n{C_BLUE}🚀 Avvio gestore di versioni...{C_END}")
-            source_script_path = os.path.abspath(__file__)
-            # Assicurati che il percorso di version_manager.py sia corretto
-            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'components', 'version_manager.py')
-            
-            if os.path.exists(version_manager_path):
-                result = subprocess.run(
-                    [sys.executable, version_manager_path, final_output_filename, source_script_path],
-                    capture_output=True,
-                    text=True,
-                    check=False # Mettiamo a False per gestire l'errore manualmente
-                )
-                # Stampa sempre stdout e stderr per il debug
-                print(result.stdout)
-                if result.stderr:
-                    # Gestisce il caso "nothing to commit" come un'informazione, non un errore
-                    if "nothing to commit" in result.stderr.lower():
-                         print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da salvare nel versionamento.{C_END}")
-                    else:
-                        print(f"{C_YELLOW}Output di errore dal gestore versioni:{C_END}\n{result.stderr}")
-            else:
-                print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando il versionamento.{C_END}")
-
-        except Exception as e:
-            print(f"{C_YELLOW}Errore inatteso durante il versionamento: {e}{C_END}")
+            print(f"\n{C_GREEN}✅ Config e codice già committati con tag prima del render!{C_END}")
     
     # Ripristina le impostazioni originali se erano state modificate per TEST_MODE temporaneo
     if hasattr(Config, '_restore_settings') and Config._restore_settings:

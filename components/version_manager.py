@@ -123,33 +123,29 @@ class VersionManager:
         return True, f"Tag {tag_name} creato con successo"
     
     def push_tag(self, tag_name):
-        """Push del tag su origin"""
+        """Push del tag su origin senza cambiare branch"""
         if not self.is_git_repo:
             return False, "Non in un repository Git"
         
-        # Prima controlla se siamo in detached HEAD
+        # Salva dove siamo per il messaggio
         current_branch = self.get_current_branch()
-        if not current_branch:
-            # In detached HEAD, prima spostiamoci sul branch principale
-            stdout, stderr = self._run_git_command(["git", "switch", "-c", "main", "HEAD"])
-            if stdout is None:
-                # Se main esiste già, prova a switchare
-                stdout, stderr = self._run_git_command(["git", "switch", "main"])
-                if stdout is None:
-                    return False, f"Impossibile uscire da detached HEAD: {stderr}"
+        location = current_branch or "detached HEAD"
         
+        # Push del tag (funziona da qualsiasi stato)
         stdout, stderr = self._run_git_command(["git", "push", "origin", tag_name])
+        
         if stdout is None:
             return False, f"Errore push tag: {stderr}"
         
-        return True, f"Tag {tag_name} pushato su origin"
+        return True, f"Tag {tag_name} pushato su origin (rimasto su {location})"
     
     def create_version_for_video(self, video_filename, config_summary=None):
         """
-        Crea una versione completa per un video generato:
+        Crea una versione PRIMA del rendering:
         1. Commit delle modifiche (se necessario)
         2. Creazione del tag
-        3. Push del tag (opzionale)
+        3. Push immediato del tag
+        4. Il render può partire mentre tu modifichi altro codice
         """
         if not self.is_git_repo:
             print("⚠️  Non siamo in un repository Git. Saltando il versionamento.")
@@ -158,8 +154,9 @@ class VersionManager:
         # Sanitizza il nome del tag
         tag_name = self._sanitize_tag_name(video_filename)
         
-        print(f"🏷️  Creando versione per video: {video_filename}")
+        print(f"🏷️  Salvando configurazione PRIMA del rendering: {video_filename}")
         print(f"📋 Tag Git: {tag_name}")
+        print(f"⏰ Questo preserva il codice mentre il render è in corso!")
         
         # Controlla se ci sono modifiche da committare
         if not self.check_working_tree_clean():
@@ -175,7 +172,7 @@ class VersionManager:
             print(f"✅ Commit completato: {message}")
         
         # Crea il tag
-        tag_message = f"Video generato: {video_filename}"
+        tag_message = f"Video da generare: {video_filename}"
         if config_summary:
             tag_message += f"\n\nConfigurazione:\n{config_summary}"
         
@@ -196,16 +193,18 @@ class VersionManager:
         
         print(f"✅ {message}")
         
-        # Prova il push del tag (opzionale, non fallire se non riesce)
-        print("📤 Tentativo push del tag su origin...")
+        # Prova il push del tag SUBITO (così il codice è al sicuro)
+        print("📤 Push immediato del tag su origin...")
         success, message = self.push_tag(tag_name)
         if success:
             print(f"✅ {message}")
-            print(f"🌐 Tag disponibile su GitHub: {tag_name}")
+            print(f"🌐 Codice salvato su GitHub: {tag_name}")
+            print(f"🎬 Ora puoi modificare il codice mentre il render gira!")
         else:
             print(f"⚠️  Push non riuscito (normale se non hai configurato origin): {message}")
         
-        print(f"🔄 Per rigenerare questo video: git checkout {tag_name}")
+        print(f"🔄 Per ripristinare questa configurazione: git checkout {tag_name}")
+        print(f"⚡ Il rendering può iniziare, il codice è al sicuro!")
         return True
 
 def main():
