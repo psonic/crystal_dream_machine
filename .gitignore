@@ -25,7 +25,10 @@ input/*.mp3
 input/*.MP3
 
 # Opzionalmente, se gli MP4 in output diventano troppo grandi:
-# output/*.mp4
+output/*.mp4
+output/*.MOV
+output/*.mov
+output/test/*.mp4
 
 # File temporanei e cache
 *.tmp

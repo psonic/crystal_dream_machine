@@ -887,7 +887,7 @@ def main():
             video_name = base_filename
             config_backup_path = f"output/configs/config_{video_name}.backup"
             
-            # Crea cartella configs se non esiste
+            # Crea cartella configs se non esiste (dovrebbe già esistere)
             os.makedirs("output/configs", exist_ok=True)
             
             # Copia il file config corrente
@@ -907,26 +907,53 @@ def main():
                 f.write(f"⏱️ Durata: {Config.DURATION_SECONDS}s @ {Config.FPS}fps\n")
             print(f"📝 Log salvato: {C_BOLD}{log_path}{C_END}")
             
-            # --- COMMIT, TAG e PUSH PRIMA DEL RENDER ---
-            print(f"\n{C_BLUE}🚀 Git commit + tag + push PRIMA del render...{C_END}")
-            source_script_path = os.path.abspath(__file__)
-            version_manager_path = os.path.join(os.path.dirname(source_script_path), 'components', 'version_manager.py')
+            # --- GIT OPERATIONS ---
+            print(f"\n{C_BLUE}🚀 Git operations PRIMA del render...{C_END}")
             
-            if os.path.exists(version_manager_path):
-                result = subprocess.run(
-                    [sys.executable, version_manager_path, output_filename, source_script_path],
-                    capture_output=True,
-                    text=True,
-                    check=False
-                )
-                print(result.stdout)
-                if result.stderr:
-                    if "nothing to commit" in result.stderr.lower():
-                         print(f"{C_GREEN}ℹ️ Nessuna nuova modifica da committare.{C_END}")
-                    else:
-                        print(f"{C_YELLOW}Warning versioning:{C_END}\n{result.stderr}")
+            # Definisce percorsi
+            source_script_path = os.path.abspath(__file__)
+            repo_path = os.path.dirname(source_script_path)
+            
+            # Add dei file backup
+            result = subprocess.run(['git', 'add', config_backup_path, log_path], 
+                                 capture_output=True, text=True, cwd=repo_path)
+            
+            # Check se ci sono modifiche da committare  
+            result = subprocess.run(['git', 'status', '--porcelain'], 
+                                 capture_output=True, text=True, cwd=repo_path)
+            
+            if result.stdout.strip():
+                # Commit
+                commit_message = f"Config backup per video {video_name}"
+                result = subprocess.run(['git', 'commit', '-m', commit_message], 
+                                     capture_output=True, text=True, cwd=repo_path)
+                
+                if result.returncode == 0:
+                    print(f"✅ Commit completato: {commit_message}")
+                else:
+                    print(f"⚠️ Warning commit: {result.stderr}")
+            
+            # Crea tag
+            tag_name = video_name.replace('crystalpy_', 'v_')
+            tag_message = f"Video {video_name} - Config: {Config.BLENDING_PRESET}, Lenti: {Config.NUM_LENSES}"
+            
+            result = subprocess.run(['git', 'tag', '-a', tag_name, '-m', tag_message], 
+                                 capture_output=True, text=True, cwd=repo_path)
+            
+            if result.returncode == 0:
+                print(f"🏷️ Tag creato: {C_BOLD}{tag_name}{C_END}")
+                
+                # Push tag
+                result = subprocess.run(['git', 'push', 'origin', tag_name], 
+                                     capture_output=True, text=True, cwd=repo_path)
+                
+                if result.returncode == 0:
+                    print(f"📤 Tag pushato su GitHub: {C_GREEN}{tag_name}{C_END}")
+                    print(f"🎬 Config al sicuro! Ora puoi modificare mentre il render gira!")
+                else:
+                    print(f"⚠️ Push tag fallito (normale se non hai origin): {result.stderr}")
             else:
-                print(f"{C_YELLOW}ATTENZIONE: version_manager.py non trovato. Saltando git operations.{C_END}")
+                print(f"⚠️ Creazione tag fallita: {result.stderr}")
                 
         except Exception as e:
             print(f"{C_YELLOW}⚠️ Errore nel backup pre-render: {e}{C_END}")
