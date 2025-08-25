@@ -1,0 +1,7 @@
+🎬 Video: output/crystalpy_20250825_193752_γ.mp4
+⏰ Timestamp: 2025-08-25 19:37:52
+🎨 Blending Preset: cinematic
+🌊 Lenti: 80 attive
+🎵 Audio: Sì
+📐 Formato: INPUT_VIDEO_SIZE
+⏱️ Durata: 20s @ 30fps
