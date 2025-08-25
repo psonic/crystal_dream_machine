@@ -18,8 +18,8 @@ TEXTURE_BLENDING_MODE="overlay"  # Modalità texture disponibili: 'normal', 'ove
 # --- Parametri Video ---
 SVG_PADDING=60          # Spazio intorno al logo (range: 50-300, ridotto in test mode per velocità)
 SVG_LEFT_PADDING=10        # Padding sinistro aggiuntivo per SVG (range: 0-200, 50=standard)
-FPS=30                    # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
-DURATION_SECONDS=30      # Durata video in secondi
+FPS=1                    # Frame per secondo (range: 10-60, 24=cinema, 30=standard, 60=fluido) - In test mode: 5
+DURATION_SECONDS=1      # Durata video in secondi
 
 # --- Colore e Stile ---
 LOGO_COLOR_R=255    # Colore logo BGR Red (range: 0-255)

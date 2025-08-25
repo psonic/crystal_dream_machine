@@ -103,8 +103,6 @@ def apply_organic_deformation_new_style(mask, frame_index, params, dynamic_param
     
     # Usa parametri dinamici se forniti, altrimenti quelli statici
     if dynamic_params:
-        print(dynamic_params)
-        print("dynamic params!!")
         speed = dynamic_params.get('deformation_speed', params['speed'])
         scale = dynamic_params.get('deformation_scale', params['scale'])
         intensity = dynamic_params.get('deformation_intensity', params['intensity'])
