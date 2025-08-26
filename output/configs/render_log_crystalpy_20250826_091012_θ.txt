@@ -1,0 +1,7 @@
+🎬 Video: output/crystalpy_20250826_091012_θ.mp4
+⏰ Timestamp: 2025-08-26 09:10:12
+🎨 Blending Preset: cinematic
+🌊 Lenti: 70 attive
+🎵 Audio: Sì
+📐 Formato: INPUT_VIDEO_SIZE
+⏱️ Durata: 60s @ 30fps
