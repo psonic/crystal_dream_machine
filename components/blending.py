@@ -77,7 +77,7 @@ def apply_blending_preset(config):
         'intense': {
             'BLENDING_MODE': 'hard_light',
             'BLENDING_STRENGTH': 0.9,
-            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_DETECTION_ENABLED': False,
             'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': False,
             'COLOR_HARMONIZATION': False,
