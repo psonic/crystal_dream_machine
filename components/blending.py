@@ -44,7 +44,7 @@ def apply_blending_preset(config):
         'soft': {
             'BLENDING_MODE': 'soft_light',
             'BLENDING_STRENGTH': 0.6,
-            'EDGE_DETECTION_ENABLED': True,
+            'EDGE_DETECTION_ENABLED': False,
             'EDGE_BLUR_RADIUS': 3,
             'ADAPTIVE_BLENDING': True,
             'COLOR_HARMONIZATION': True,
