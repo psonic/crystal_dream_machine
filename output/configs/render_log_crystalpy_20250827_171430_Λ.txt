@@ -1,0 +1,7 @@
+🎬 Video: output/crystalpy_20250827_171430_Λ.mp4
+⏰ Timestamp: 2025-08-27 17:14:30
+🎨 Blending Preset: soft
+🌊 Lenti: 100 attive
+🎵 Audio: Sì
+📐 Formato: INPUT_VIDEO_SIZE
+⏱️ Durata: 40s @ 30fps
