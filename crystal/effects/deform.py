@@ -69,12 +69,11 @@ class Deformer:
         self.gy = np.arange(self.lh, dtype=np.float32) * ls + (ls - 1) / 2
         self.bx, self.by = np.meshgrid(self.gx, self.gy)
 
-        # frequenza massima di ogni campo (×1.3: l'audio può alzare la scala)
+        # frequenza dell'ottava più fine di ogni campo (×1.3 di margine)
         o, st = cfg.organic, cfg.stretch
         self.ngrid = {
-            "organic": _NoiseGrid(W, H, s, o.scale * 1.3 * 2 ** 3),
-            "stretch": _NoiseGrid(W, H, s, st.scale * 1.3 * 2 ** 2),
-            "fine": _NoiseGrid(W, H, s, st.scale * 1.3 * 5 * 2),
+            "organic": _NoiseGrid(W, H, s, 1.3 * 2 ** 3 / o.size),
+            "stretch": _NoiseGrid(W, H, s, 1.3 * 2 ** 2 / st.size),
         }
 
     # la griglia di lavoro non si spedisce ai processi: si ricrea lì (pickle più leggero)
@@ -101,9 +100,6 @@ class Deformer:
             mx, my = mx + lx, my + ly
         if "stretch" in self.active:
             dx, dy = cv2.split(self.ngrid["stretch"].sample(self._stretch(k), mx, my))
-            if self.cfg.stretch.fine_detail > 0:
-                fx, fy = cv2.split(self.ngrid["fine"].sample(self._stretch_fine(k), mx, my))
-                dx, dy = dx + fx, dy + fy
             mx = np.clip(mx + dx, 0, self.W - 1)
             my = np.clip(my + dy, 0, self.H - 1)
         if "organic" in self.active:
@@ -118,8 +114,8 @@ class Deformer:
 
     # ─── organic: ondulazioni morbide → campo (dx, dy) sulla griglia rada ────
     def _organic(self, k):
-        tl, ng = self.tl, self.ngrid["organic"]
-        sc, t, amp = float(tl.organic_scale[k]), float(tl.organic_phase[k]), float(tl.organic_intensity[k] * self.s)
+        c, tl, ng = self.cfg.organic, self.tl, self.ngrid["organic"]
+        sc, t, amp = 1.0 / c.size, float(tl.organic_phase[k]), float(c.amount * tl.organic_gain[k] * self.s)
         X, Y = ng.X * sc, ng.Y * sc
         f = np.empty((*X.shape, 2), np.float32)
         f[..., 0] = self.perlin.fbm(X, Y + t, octaves=4) * amp
@@ -129,29 +125,19 @@ class Deformer:
     # ─── stretch: stiramenti lunghi ──────────────────────────────────────────
     def _stretch(self, k):
         c, tl, ng = self.cfg.stretch, self.tl, self.ngrid["stretch"]
-        sc, t, inten = float(tl.stretch_scale[k]), float(tl.stretch_phase[k]), float(tl.stretch_intensity[k])
+        sc, t, gain = 1.0 / c.size, float(tl.stretch_phase[k]), float(tl.stretch_gain[k] * self.s)
         X, Y = ng.X * sc, ng.Y * sc
         f = np.empty((*X.shape, 2), np.float32)
-        f[..., 0] = self.perlin.fbm(X + t, Y * 0.5, octaves=3) * (inten * 15 * c.horizontal * self.s)
-        f[..., 1] = self.perlin.fbm(X * 0.5, Y + t * 0.007, octaves=3) * (inten * 15 * c.vertical * self.s)
-        return f
-
-    def _stretch_fine(self, k):
-        """Increspature fini dello stretch: ampiezza piccola, frequenza alta → griglia sua."""
-        c, tl, ng = self.cfg.stretch, self.tl, self.ngrid["fine"]
-        sc, t, inten = float(tl.stretch_scale[k]), float(tl.stretch_phase[k]), float(tl.stretch_intensity[k])
-        X, Y = ng.X * (sc * 5), ng.Y * (sc * 5)
-        fd = inten * c.fine_detail * self.s
-        f = np.empty((*X.shape, 2), np.float32)
-        f[..., 0] = self.perlin.fbm(X + t * 0.02, Y, octaves=2, persistence=0.3) * fd
-        f[..., 1] = self.perlin.fbm(X, Y + t * 0.02, octaves=2, persistence=0.3) * fd
+        # campi allungati (una coordinata a metà frequenza) che scorrono nella loro direzione
+        f[..., 0] = self.perlin.fbm(X + t, Y * 0.5, octaves=3) * (c.horizontal * gain)
+        f[..., 1] = self.perlin.fbm(X * 0.5, Y + t, octaves=3) * (c.vertical * gain)
         return f
 
     # ─── lenti: ogni lente lavora solo nel suo riquadro ──────────────────────
     def _lenses(self, k):
         c, tl, s, ls = self.cfg.lenses, self.tl, self.s, self.ls
-        pos, rad, ang = tl.lens_pos[k], tl.lens_radius[k], tl.lens_angle[k]
-        strength = tl.lens_strength[k] * tl.lens_mult[k]
+        pos, rad, ang = tl.lens_pos[k], tl.lens_radius, tl.lens_angle
+        strength = tl.lens_strength[k]
         wave_t = k * 0.03 + tl.lens_phase
         wave_amp, wave_freq, L = c.worm_wave * s, 0.01 / s, c.worm_length
         lx = np.zeros((self.lh, self.lw), np.float32)

@@ -32,44 +32,23 @@ class Timeline:
         self.n_ref = n = max(1, int(round(duration * REF_FPS)))
         self.n_out = max(1, int(round(duration * fps)))
         self.ref_index = np.minimum(np.round(np.arange(self.n_out) * REF_FPS / fps).astype(int), n - 1)
-        k = np.arange(n, dtype=np.float64)
 
-        # ─── audio → fattori per le lenti ────────────────────────────────────
-        a = cfg.audio
+        # ─── audio: bassi e medi, 0-1, ammorbiditi ───────────────────────────
+        # Ogni effetto ha la sua reattività (chiave `audio`, 0-1). L'audio cambia sempre
+        # VELOCITÀ e AMPIEZZE, mai direttamente le posizioni: le fasi si accumulano,
+        # così il movimento accelera e rallenta con la musica ma non salta mai.
         if bands is not None:
-            sm = {b: ema(bands[b], a.smoothing) for b in ("bass", "mid", "high")}
-            self.speed_f = np.clip(1 + sm["bass"] * a.bass, 0.5, 1.5)
-            self.strength_f = np.clip(1 + sm["mid"] * a.mid, 0.5, 1.5)
-            self.puls_f = np.clip(1 + sm["high"] * a.high, 0.5, 1.5)
+            sm = cfg.audio.smoothing
+            self.bass, self.mid = ema(bands["bass"], sm), ema(bands["mid"], sm)
         else:
-            self.speed_f = self.strength_f = self.puls_f = np.ones(n)
+            self.bass = self.mid = np.zeros(n)
 
-        # ─── organic / stretch (eventualmente audio-reattivi) ────────────────
+        # ─── organic / stretch ───────────────────────────────────────────────
         for name in ("organic", "stretch"):
             c = getattr(cfg, name)
-            inten = np.full(n, c.intensity, np.float64)
-            speed = np.full(n, c.speed, np.float64)
-            scale = np.full(n, c.scale, np.float64)
-            if c.audio_reactive and bands is not None:
-                inten = np.clip(ema(c.intensity + bands["bass"] * c.bass_intensity, c.smoothing),
-                                c.intensity * 0.6, c.intensity * 1.4)
-                speed = np.clip(ema(c.speed + bands["bass"] * c.bass_speed, c.smoothing),
-                                c.speed * 0.7, c.speed * 1.5)
-                scale = np.clip(ema(c.scale + bands["mid"] * c.mid_scale, c.smoothing),
-                                c.scale * 0.8, c.scale * 1.3)
-            setattr(self, f"{name}_intensity", inten)
-            setattr(self, f"{name}_scale", scale)
-            setattr(self, f"{name}_phase", _phase(speed))
-
-        # ─── variazioni lente automatiche ────────────────────────────────────
-        v = cfg.variation
-        if v.enabled:
-            seed_t = k * 0.001
-            self.lens_mult = 1 + np.cos(seed_t * v.speed_medium + 5.5) * v.amplitude
-            self.tracer_mult = 1 + np.sin(seed_t * v.speed_fast + 2.0) * v.amplitude
-            self.bg_tracer_mult = 1 + np.cos(seed_t * v.speed_fast + 6.0) * v.amplitude
-        else:
-            self.lens_mult = self.tracer_mult = self.bg_tracer_mult = np.ones(n)
+            speed = 1.0 / (max(c.period, 1e-3) * REF_FPS)        # unità di rumore per frame
+            setattr(self, f"{name}_gain", 1 + 0.6 * c.audio * self.bass)  # ampiezza: fino a +60%
+            setattr(self, f"{name}_phase", _phase(speed * (1 + c.audio * self.bass)))  # velocità: fino a ×2
 
         self.glow = glow_curve(cfg.glow.intensity, n)
 
@@ -91,54 +70,75 @@ class Timeline:
             off = rng.integers(0, n, L)
         base_r = (c.min_radius + (c.max_radius - c.min_radius) * rng.random(L) ** 2.5) * s
         base_s = rng.uniform(c.min_strength, c.max_strength, L)
-        angle = rng.uniform(0, 2 * np.pi, L)
-        rot = rng.uniform(c.rotation_min, c.rotation_max, L)
+        self.lens_angle = rng.uniform(0, 2 * np.pi, L).astype(np.float32)
+        rng.uniform(-1, 1, L)  # (era la rotazione: estrazione tenuta per avere le stesse lenti a parità di seed)
         self.lens_phase = rng.uniform(0, 2 * np.pi, L)
+        self.lens_radius = base_r.astype(np.float32)
 
+        # i medi rendono le lenti più forti, i bassi più veloci
+        self.lens_strength = (base_s[None, :] * (1 + 0.5 * c.audio * self.mid[:, None])).astype(np.float32)
         self.lens_pos = np.zeros((n, L, 2), np.float32)
-        self.lens_radius = np.zeros((n, L), np.float32)
-        self.lens_strength = np.zeros((n, L), np.float32)
-        self.lens_angle = np.zeros((n, L), np.float32)
         if L == 0:
             return
 
+        step = c.speed / REF_FPS * s * (1 + c.audio * self.bass)  # px per frame di riferimento
         if drift:
             swarm = _Drift(c, W, H, s, rng, mask, L)
             pos = swarm.pos
         else:
-            pos = paths[np.arange(L), off].astype(np.float64)
+            # punto sul percorso frame per frame (px percorsi = somma dei passi: niente salti)
+            targets = _Tracks(paths, off).along(np.concatenate([[0.0], np.cumsum(step)[:-1]]))
+            pos = targets[0].copy()
         vel = np.zeros((L, 2))
         inertia = min(0.99, c.inertia + 0.01)
         margin = c.min_radius * s
+        pos[:, 0] = np.clip(pos[:, 0], margin, W - margin)  # dentro il frame fin dal primo frame
+        pos[:, 1] = np.clip(pos[:, 1], margin, H - margin)
 
         for f in range(n):
-            pt = (f * c.pulsation_speed + self.lens_phase) * self.puls_f[f]
-            radius = base_r * (1 + c.pulsation_amplitude * self.puls_f[f] * np.sin(pt) * 0.5) if c.pulsation else base_r
-            strength = (base_s * (1 + c.force_pulsation_amplitude * self.strength_f[f] * np.sin(pt * 1.2) * 0.3)
-                        if c.force_pulsation else base_s)
-            self.lens_pos[f], self.lens_radius[f] = pos, radius
-            self.lens_strength[f], self.lens_angle[f] = strength, angle
-
+            self.lens_pos[f] = pos
             if drift:
                 # correnti lente + vagare personale + guinzaglio verso il logo
-                desired = swarm.velocity(pos, f) * (c.drift_speed * s * self.speed_f[f])
+                desired = swarm.velocity(pos, f) * step[f]
+                vel = vel * inertia + desired * (1 - inertia)
+                pos = pos + vel
             else:
-                # movimento lungo il percorso con inerzia
-                prog = ((f + off) * c.path_speed * self.speed_f[f]) % n
-                i0 = prog.astype(int)
-                i1 = (i0 + 1) % n
-                fr = prog - i0
-                smooth = (3 * fr ** 2 - 2 * fr ** 3)[:, None]
-                a, b = paths[np.arange(L), i0], paths[np.arange(L), i1]
-                target = a + (b - a) * smooth
-                d = target - pos
-                dist = np.linalg.norm(d, axis=1, keepdims=True)
-                desired = np.where(dist > 0, d / np.maximum(dist, 1e-9), 0) * (c.speed * s * self.speed_f[f])
-            vel = vel * inertia + desired * (1 - inertia)
-            pos = pos + vel
-            angle = angle + rot * c.rotation_speed
+                # il punto sul percorso avanza a velocità costante; la lente lo insegue morbida
+                pos = pos + (targets[min(f + 1, n - 1)] - pos) * (1 - inertia)
             pos[:, 0] = np.clip(pos[:, 0], margin, W - margin)
             pos[:, 1] = np.clip(pos[:, 1], margin, H - margin)
+
+
+class _Tracks:
+    """
+    I percorsi delle lenti percorsi a velocità costante (in px), non "a indice".
+    Ogni lente parte dal suo punto (off); i percorsi chiusi si ripetono, quelli
+    aperti (da un lato all'altro) si percorrono avanti e indietro, senza salti.
+    """
+
+    def __init__(self, paths, off):
+        self.paths = paths
+        seg = np.linalg.norm(np.diff(paths, axis=1), axis=2)              # (L, n-1)
+        self.cum = np.concatenate([np.zeros((len(paths), 1)), np.cumsum(seg, axis=1)], axis=1)
+        self.total = np.maximum(self.cum[:, -1], 1e-6)
+        gap = np.linalg.norm(paths[:, -1] - paths[:, 0], axis=1)
+        self.closed = gap < np.maximum(3 * seg.mean(axis=1), 1.0)
+        self.start = self.cum[np.arange(len(paths)), off]
+
+    def along(self, d: np.ndarray) -> np.ndarray:
+        """(frame, lente, xy): posizione di ogni lente dopo d[f] px percorsi."""
+        out = np.empty((len(d), len(self.paths), 2))
+        for j in range(len(self.paths)):
+            T = self.total[j]
+            s = self.start[j] + d
+            if self.closed[j]:
+                s = s % T
+            else:
+                s = s % (2 * T)
+                s = np.where(s <= T, s, 2 * T - s)
+            out[:, j, 0] = np.interp(s, self.cum[j], self.paths[j, :, 0])
+            out[:, j, 1] = np.interp(s, self.cum[j], self.paths[j, :, 1])
+        return out
 
 
 class _Drift:

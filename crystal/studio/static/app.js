@@ -123,14 +123,18 @@ function makeNumber(p, row) {
   num.type = "number"; num.step = p.log ? "any" : p.step;
   ctl.append(range, num);
   let lo = p.min, hi = p.max; // si allargano se il valore esce dal range
+  // log: grandezze e tempi; curve: più risoluzione verso il minimo (dove stanno i valori fini)
+  const cv = p.curve || 1;
   const toPos = (v) => {
     if (p.log) {
       if (v <= 0) return 0;
       return 1000 * (Math.log(v) - Math.log(lo)) / (Math.log(hi) - Math.log(lo));
     }
-    return 1000 * (v - lo) / (hi - lo || 1);
+    const u = Math.max(0, Math.min(1, (v - lo) / (hi - lo || 1)));
+    return 1000 * Math.pow(u, 1 / cv);
   };
-  const fromPos = (x) => p.log ? Math.exp(Math.log(lo) + (x / 1000) * (Math.log(hi) - Math.log(lo))) : lo + (x / 1000) * (hi - lo);
+  const fromPos = (x) => p.log ? Math.exp(Math.log(lo) + (x / 1000) * (Math.log(hi) - Math.log(lo)))
+    : lo + Math.pow(x / 1000, cv) * (hi - lo);
   const paint = () => range.style.setProperty("--p", (range.value / 10) + "%");
   const show = (v) => {
     if (typeof v !== "number") return;
@@ -259,6 +263,18 @@ function buildPanel() {
     const params = document.createElement("div");
     params.className = "params";
     det.append(params);
+    // i parametri secondari stanno in fondo, chiusi
+    let adv = null;
+    if (g.params.some((p) => p.advanced)) {
+      adv = document.createElement("details");
+      adv.className = "adv";
+      adv.open = !!store.get("adv", {})[g.id];
+      adv.addEventListener("toggle", () => { const o = store.get("adv", {}); o[g.id] = adv.open; store.set("adv", o); });
+      const s2 = document.createElement("summary");
+      s2.textContent = "avanzate";
+      adv.append(s2);
+      det.append(adv);
+    }
     root.append(det);
     for (const p of g.params) {
       if (p === enabledP) {
@@ -287,7 +303,7 @@ function buildPanel() {
       head.append(name, help, reset);
       row.append(head);
       const c = makeControl(p, row);
-      params.append(row);
+      (p.advanced ? adv : params).append(row);
       S.controls.set(p.key, { p, row, show: c.show, group: det });
     }
   }
@@ -346,6 +362,8 @@ function applyFilter() {
     }
     det.classList.toggle("hidden", !any);
     if ((q || onlySet) && any) det.open = true;
+    const adv = det.querySelector("details.adv");
+    if (adv && (q || onlySet) && adv.querySelector(".param:not(.hidden)")) adv.open = true;
   }
 }
 

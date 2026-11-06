@@ -89,13 +89,13 @@ class Trail:
         hsv = np.uint8([[[h, self.hsv[1], self.hsv[2]]]])
         return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0, 0].astype(np.float32) / 255.0
 
-    def push(self, buf, edges, i, mult=1.0, binary=True):
+    def push(self, buf, edges, i, binary=True):
         """edges: bordi binari (0/255) oppure, con binary=False, copertura 0-255 per pixel."""
         if buf is None:
             out = np.zeros((*edges.shape, 3), np.float32)
         else:
             out = cv2.multiply(buf, scalar(self.decay))
-        col = self.color(i) * (self.opacity * mult)
+        col = self.color(i) * self.opacity
         if binary:
             cv2.add(out, scalar(col), dst=out, mask=edges)
         else:
@@ -201,7 +201,7 @@ def blend_logo(frame, mask_u8, color, c, s, logo_img=None):
     if logo_img is not None:
         Lg = logo_img.reshape(-1, 3)[idx]
         BL = Lg.copy()
-        if c.adaptive and inside.any():
+        if inside.any():
             Bi = B[inside]
             avg_bg = Bi.mean(axis=0)
             if c.harmonize:
@@ -213,7 +213,7 @@ def blend_logo(frame, mask_u8, color, c, s, logo_img=None):
     else:
         # logo a tinta unita: armonizzazione e luminanza danno un colore costante → 3 numeri
         col = color.astype(np.float32)
-        if c.adaptive and inside.any():
+        if inside.any():
             avg_bg = (B if all_inside else B[inside]).mean(axis=0)
             if c.harmonize:
                 col = col * (1 - c.color_strength) + avg_bg * c.color_strength
@@ -227,8 +227,6 @@ def blend_logo(frame, mask_u8, color, c, s, logo_img=None):
 
     BS = B * S
     res = BS * (1 - c.strength) + blend_mode(BS, BL * S, c.mode) * c.strength
-    if c.transparency > 0:
-        res = res * (1 - c.transparency) + BS * c.transparency
     final = B - BS + res
 
     if e2d is not None:

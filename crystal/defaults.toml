@@ -10,7 +10,8 @@
 #  Convenzioni:
 #   • misure in pixel = riferite alla risoluzione PIENA del formato scelto
 #     (in --test vengono scalate da sole, così il test somiglia al finale)
-#   • velocità = "per frame a 30 fps": cambiando fps il movimento non cambia
+#   • tempi in secondi, velocità in px al secondo: cambiando fps il movimento non cambia
+#   • audio = reattività 0-1 di ogni effetto (0 = ignora la musica)
 #   • colori = [R, G, B] 0-255
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -54,8 +55,7 @@ video        = "input/sfondo.mov"   # un file, un glob ("input/fiume*.MOV") o un
 fit          = "cover"    # cover = riempie il frame | crop = ritaglio manuale con crop_*
 zoom         = 1.2        # solo cover
 slowdown     = 1.0        # 2 = metà velocità, 0.5 = doppia
-darken       = 0.6        # moltiplicatore di luminosità (1 = invariato)
-contrast     = 1.1        # secondo moltiplicatore (come nella v3)
+brightness   = 0.66       # luminosità dello sfondo (1 = invariata, 0.5 = metà)
 random_start = true       # parte da un punto a caso (entro i primi 2/3)
 start        = 0.0        # secondo di partenza se random_start = false
 crop_x       = 0.6        # solo fit = "crop": posizione e dimensione del ritaglio (0-1)
@@ -80,60 +80,41 @@ intensity = 0.3       # pulsa da sola di +0.2 a metà video
 
 # ─── Deformazione organica: ondulazioni morbide (Perlin) ─────────────────────
 [organic]
-enabled        = true
-speed          = 0.008
-scale          = 0.001    # frequenza: più alto = onde più strette
-intensity      = 20.0     # spostamento in px
-audio_reactive = true
-bass_intensity = 0.022    # quanto i bassi aumentano l'intensità
-bass_speed     = 0.003    # quanto i bassi aumentano la velocità
-mid_scale      = 0.0002   # quanto i medi cambiano la frequenza
-smoothing      = 0.95     # inerzia della reazione all'audio (0-1)
+enabled = true
+amount  = 20.0            # quanto si sposta il logo (px)
+size    = 1000            # grandezza delle onde (px): piccolo = increspato, grande = ondeggia tutto
+period  = 4.2             # in quanti secondi le onde cambiano forma (piccolo = agitato)
+audio   = 0.4             # i bassi le rendono più ampie e più veloci (0 = niente)
 
 # ─── Deformazione stretch: stiramenti lunghi ─────────────────────────────────
 [stretch]
-enabled        = true
-speed          = 0.0003
-scale          = 0.0015
-intensity      = 25.0
-horizontal     = 0.6      # forza dello stiramento orizzontale
-vertical       = 0.01     # forza dello stiramento verticale
-fine_detail    = 0.1      # increspature fini aggiuntive (0 = off)
-audio_reactive = false
-bass_intensity = 0.025
-bass_speed     = 0.0025
-mid_scale      = 0.00025
-smoothing      = 0.95
+enabled    = true
+horizontal = 225          # stiramento orizzontale (px; lo spostamento massimo è circa 2/3)
+vertical   = 4            # stiramento verticale (px)
+size       = 670          # lunghezza degli stiramenti (px)
+period     = 110          # in quanti secondi cambiano forma (sopra la durata del video = quasi fermi)
+audio      = 0.0          # i bassi li rendono più ampi e più veloci
 
 # ─── Lenti: "creature" che deformano il logo passandoci sopra ────────────────
 [lenses]
 enabled                   = true
 motion                    = "paths"  # paths = percorsi geometrici (look v3) | drift = nascono sul logo e
                                      # vagano piano, trasportate da correnti organiche (le chiavi drift_*)
-count                     = 60
-min_strength              = -0.5     # negativo = ingrandisce, positivo = rimpicciolisce
-max_strength              = 0.8
-min_radius                = 10
-max_radius                = 120      # le lenti piccole sono molte più delle grandi
-speed                     = 0.000001 # velocità di spostamento (px/frame). Col tuo config erano quasi ferme
-path_speed                = 0.001    # velocità lungo il percorso
-inertia                   = 0.95     # 0.3 = scattoso, 0.95 = fluido
-rotation_min              = -0.001
-rotation_max              = 0.001
-rotation_speed            = 0.001
-pulsation                 = true
-pulsation_speed           = 0.0005
-pulsation_amplitude       = 0.2
-force_pulsation           = true
-force_pulsation_amplitude = 0.2
-drift_speed               = 0.6      # drift: velocità in px/frame (0.3 = lentissime, 2 = vivaci)
-drift_scale               = 350      # drift: grandezza delle correnti in px (piccolo = vortici fitti)
-drift_change              = 1.0      # drift: quanto in fretta le correnti cambiano nel tempo
-drift_turbulence          = 0.35     # drift: 0 = si muovono tutte insieme col flusso, 1 = ognuna per conto suo
-drift_follow_logo         = 0.6      # drift: quanto le tiene sul logo (0 = libere di andarsene)
-worm                      = true     # forma allungata e ondulata
-worm_length               = 1.5
-worm_wave                 = 30       # ampiezza dell'ondulazione del verme (px)
+count             = 60
+min_strength      = -0.5     # negativo = ingrandisce, positivo = rimpicciolisce.
+max_strength      = 0.8      # oltre ±1 la lente ripiega l'immagine su se stessa
+min_radius        = 10
+max_radius        = 120      # le lenti piccole sono molte più delle grandi
+speed             = 0        # px al secondo (0 = ferme: il look v3; 10 = lente, 60 = vivaci)
+inertia           = 0.95     # morbidezza del movimento (0.5 = segue di scatto, 0.95 = fluido)
+audio             = 0.3      # i bassi le accelerano, i medi le rendono più forti
+drift_scale       = 350      # drift: grandezza delle correnti in px (piccolo = vortici fitti)
+drift_change      = 1.0      # drift: quanto in fretta le correnti cambiano nel tempo
+drift_turbulence  = 0.35     # drift: 0 = si muovono tutte insieme col flusso, 1 = ognuna per conto suo
+drift_follow_logo = 0.6      # drift: quanto le tiene sul logo (0 = libere di andarsene)
+worm              = true     # forma allungata e ondulata
+worm_length       = 1.5      # 1 = tonda
+worm_wave         = 30       # ampiezza dell'ondulazione del verme (px)
 
 # ─── Scie (tracers) ──────────────────────────────────────────────────────────
 [tracers.logo]            # scie dei bordi del logo
@@ -149,8 +130,7 @@ trail      = 105
 opacity    = 0.12
 color      = [40, 40, 40]
 hue_shift  = 0.3
-threshold1 = 4            # soglie Canny: più basse = più contorni
-threshold2 = 21
+threshold  = 21           # più basso = più contorni (su acqua e fumo alzarlo)
 
 # ─── Fusione logo / sfondo ───────────────────────────────────────────────────
 [blend]
@@ -160,14 +140,12 @@ preset  = "soft"          # cinematic artistic soft dramatic bright intense psyc
 # Le chiavi qui sotto valgono con preset = "manual". Con un preset, quelle che
 # scrivi nel TUO file preset lo sovrascrivono.
 mode            = "multiply"
-strength        = 0.5
-edge_detection  = true
+strength        = 0.5     # 0 = logo trasparente, 1 = fusione piena
+edge_detection  = true    # i bordi del logo fusi a parte, più marcati
 edge_blur       = 3
-adaptive        = true    # adatta il logo ai colori dello sfondo
-harmonize       = true
-luminance_match = true
-transparency    = 0.0
-color_strength  = 0.8
+harmonize       = true    # il logo prende il colore medio dello sfondo…
+color_strength  = 0.8     # …in questa misura
+luminance_match = true    # il logo prende la luminosità dello sfondo
 edge_softness   = 0       # sfumatura del bordo del logo (px)
 
 # ─── Audio ───────────────────────────────────────────────────────────────────
@@ -177,14 +155,5 @@ files        = ["input/audio1.aif", "input/audio2.aif"]   # anche glob; ne scegl
 random_start = true
 start        = 0.0        # secondo di partenza se random_start = false
 mux          = true       # mette la traccia nel video finale
-bass         = 0.05       # sensibilità: bassi → velocità lenti
-mid          = 0.03       # medi → forza lenti
-high         = 0.025      # alti → pulsazione lenti
-smoothing    = 0.95       # inerzia della reazione (0 = nervoso, 0.95 = fluido)
-
-# ─── Variazioni lente automatiche ────────────────────────────────────────────
-[variation]
-enabled      = false
-amplitude    = 0.8
-speed_medium = 0.025      # forza lenti
-speed_fast   = 0.005      # opacità scie
+smoothing    = 0.95       # morbidezza della reazione (0.6 = segue ogni colpo, 0.95 = fluido)
+                          # quanto reagisce ogni effetto: la chiave audio di organic, stretch, lenses

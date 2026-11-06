@@ -59,7 +59,7 @@ def output_size(cfg) -> tuple[int, int, float]:
 # Parametri che cambiano solo la composizione del frame (non timeline, deformazioni,
 # logo o sfondo): per questi lo studio aggiorna il Renderer al volo invece di rifarlo.
 LIGHT_KEYS = ("tracers.", "blend.", "glow.", "texture.", "logo.color",
-              "background.darken", "background.contrast")
+              "background.brightness")
 
 
 class Renderer:
@@ -137,7 +137,7 @@ class Renderer:
         tr = cfg.tracers
         self.logo_trail = Trail(tr.logo, self.fps) if tr.logo.enabled else None
         self.bg_trail = Trail(tr.background, self.fps) if tr.background.enabled else None
-        self.gain = cfg.background.darken * cfg.background.contrast
+        self.gain = cfg.background.brightness
         self.tl.glow = glow_curve(cfg.glow.intensity, self.tl.n_ref)
 
     def update_light(self, cfg, cfg_dict):
@@ -184,7 +184,7 @@ class Renderer:
         fut = _THREADS.submit(self._advance_bg, k, bg, bg_buf) if self.bg_trail else None
         if self.logo_trail:
             edges, binary = self._edges(mask, _logo_edges)
-            logo_buf = self.logo_trail.push(logo_buf, edges, k, self.tl.tracer_mult[k], binary)
+            logo_buf = self.logo_trail.push(logo_buf, edges, k, binary=binary)
         if fut:
             bg_buf = fut.result()
         self.timing["scie"] += time.perf_counter() - t
@@ -193,8 +193,10 @@ class Renderer:
     def _advance_bg(self, k, bg, bg_buf):
         c = self.cfg.tracers.background
         gray = cv2.cvtColor(bg, cv2.COLOR_BGR2GRAY)
-        edges, binary = self._edges(gray, lambda g: cv2.Canny(cv2.GaussianBlur(g, (3, 3), 0), c.threshold1, c.threshold2))
-        return self.bg_trail.push(bg_buf, edges, k, self.tl.bg_tracer_mult[k], binary)
+        # soglia bassa di Canny = ~1/5 di quella alta (il rapporto che si usava sempre)
+        edges, binary = self._edges(gray, lambda g: cv2.Canny(cv2.GaussianBlur(g, (3, 3), 0),
+                                                             c.threshold * 0.22, c.threshold))
+        return self.bg_trail.push(bg_buf, edges, k, binary=binary)
 
     def _edges(self, img, detect):
         """

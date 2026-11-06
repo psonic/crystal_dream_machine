@@ -144,17 +144,16 @@ Convenzioni:
 |---|---|---|
 | `[output]` | formato e qualità | `format` (`ig_post` 1080×1350, `ig_story` 1080×1920, `square`, `landscape`, `logo` = dimensioni del file logo, `custom`), `duration`, `fps`, `crf`, `encoder` (`x264` o `videotoolbox`, l'encoder hardware del Mac: più veloce, file più grandi) |
 | `[logo]` | il logo (SVG o PDF) | `file`, `color`, `zoom`, `left_padding`, `fill` |
-| `[background]` | video di sfondo | `video`, `zoom`, `slowdown`, `darken`, `random_start` / `start` |
-| `[organic]` | ondulazioni morbide del logo (Perlin) | `intensity` (px), `scale` (frequenza), `speed` |
-| `[stretch]` | stiramenti lunghi | `intensity`, `horizontal`, `vertical`, `fine_detail` |
-| `[lenses]` | "creature" che deformano il logo passandoci sopra | `count`, `min/max_strength`, `min/max_radius`, `speed`, `path_speed`, `worm_*`, `pulsation_*` |
+| `[background]` | video di sfondo | `video`, `zoom`, `slowdown`, `brightness`, `random_start` / `start` |
+| `[organic]` | ondulazioni morbide del logo (Perlin) | `amount` (px), `size` (px), `period` (s), `audio` |
+| `[stretch]` | stiramenti lunghi | `horizontal` / `vertical` (px), `size` (px), `period` (s), `audio` |
+| `[lenses]` | "creature" che deformano il logo passandoci sopra | `motion` (`paths` / `drift`), `count`, `min/max_strength` (±1), `min/max_radius`, `speed` (px/s), `audio`, `worm_*`, `drift_*` |
 | `[tracers.logo]` | scie dei bordi del logo | `trail` (frame), `opacity`, `color`, `hue_shift` |
-| `[tracers.background]` | scie dei contorni dello sfondo | come sopra + `threshold1/2` (più bassi = più contorni) |
+| `[tracers.background]` | scie dei contorni dello sfondo | come sopra + `threshold` (più basso = più contorni) |
 | `[texture]` | un'immagine fusa su logo/sfondo | `path`, `target`, `alpha`, `mode` |
 | `[glow]` | bagliore attorno al logo | `size`, `intensity` |
 | `[blend]` | come il logo si fonde con lo sfondo | `preset`: `soft` `cinematic` `artistic` `dramatic` `bright` `intense` `psychedelic` `glow` `dark` `geometric` `manual` |
-| `[audio]` | reattività all'audio e traccia nel video | `files`, `bass/mid/high` (sensibilità), `smoothing`, `mux` |
-| `[variation]` | oscillazioni lentissime automatiche | `enabled`, `amplitude` |
+| `[audio]` | la traccia: quale, da dove, e quanto morbida è la reazione | `files`, `smoothing`, `mux` |
 
 **`logo.fill`**:
 - `blob` (default) è il look dei video v3 fatti con `logo.svg`. I path vengono riempiti
@@ -168,10 +167,12 @@ Convenzioni:
 lighten difference exclusion`.
 
 **Audio**:
-- I bassi accelerano le lenti, i medi ne aumentano la forza, gli alti la pulsazione.
-- Con `organic.audio_reactive = true` i bassi muovono anche le ondulazioni.
-- Con i default la reattività è molto delicata. Per sentirla davvero alza
-  `audio.bass/mid/high` (es. 0.5) e abbassa `audio.smoothing` (es. 0.6).
+- Ogni effetto ha la sua chiave `audio` (0-1, 0 = ignora la musica):
+  `organic.audio` e `stretch.audio` (i bassi le rendono più ampie, fino a +60%, e più
+  veloci, fino a ×2), `lenses.audio` (i bassi le accelerano, i medi le rendono più forti).
+- L'audio cambia velocità e ampiezze, mai le posizioni: il movimento accelera e
+  rallenta con la musica ma non scatta.
+- `audio.smoothing`: 0.95 = reazione morbida, 0.6 = segue ogni colpo.
 
 ## 6. File di input
 
@@ -266,8 +267,18 @@ le stesse primitive (`Renderer.step`).
     Instagram.
 - **Parametri che prima venivano ignorati e ora funzionano**:
   - `audio.smoothing`;
-  - `lenses.rotation_min/max`;
-  - `stretch.audio_reactive`.
+  - la reattività audio di `stretch`.
+- **Pulizia dei parametri (novembre 2026)**: unità leggibili (px, secondi, px/s, 0-1),
+  slider in range sensati, doppioni accorpati. Preset e `.json` vecchi si caricano ancora:
+  le chiavi vecchie vengono convertite al volo (con lo stesso risultato).
+  - tolti perché non facevano niente o quasi: `variation`, rotazione e pulsazione delle
+    lenti, `stretch.fine_detail`, `lenses.path_speed`, l'audio sulla *frequenza* delle onde
+    (`mid_scale`, faceva "nuotare" il logo);
+  - accorpati: `background.darken × contrast` → `brightness`, `blend.transparency` dentro
+    `strength`, `blend.adaptive` tolto (bastano `harmonize` / `luminance_match`),
+    `threshold1/2` → `threshold`, `audio.bass/mid/high` → la chiave `audio` di ogni effetto;
+  - corretti: l'audio che faceva saltare lenti e pulsazioni, lo stiramento verticale che
+    stava fermo.
 - **Velocità legate al tempo, non al numero di frame**: test e finale si muovono
   uguale.
 - **Antialiasing più pulito**:
