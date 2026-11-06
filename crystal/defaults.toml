@@ -26,6 +26,8 @@ fps         = 30
 duration    = 40          # secondi
 crf         = 18          # qualità x264: 0 = lossless, 18 = ottima, 23 = default ffmpeg
 x264_preset = "medium"    # ultrafast … veryslow (più lento = file più piccolo)
+encoder     = "x264"      # x264 = qualità migliore | videotoolbox = encoder hardware del Mac,
+                          # molto più veloce (il bitrate segue crf), file più grandi
 dir         = "output"
 workers     = 0           # processi per le deformazioni. 0 = automatico, 1 = niente parallelismo
 

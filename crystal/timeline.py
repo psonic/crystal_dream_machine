@@ -68,8 +68,7 @@ class Timeline:
         else:
             self.lens_mult = self.tracer_mult = self.bg_tracer_mult = np.ones(n)
 
-        # ─── glow (pulsa una volta lungo tutto il video) ─────────────────────
-        self.glow = cfg.glow.intensity + np.sin(k / n * np.pi) * 0.2
+        self.glow = glow_curve(cfg.glow.intensity, n)
 
         self._simulate_lenses(cfg.lenses, W, H, s, n, rng)
 
@@ -126,6 +125,11 @@ class Timeline:
             angle = angle + rot * c.rotation_speed
             pos[:, 0] = np.clip(pos[:, 0], margin, W - margin)
             pos[:, 1] = np.clip(pos[:, 1], margin, H - margin)
+
+
+def glow_curve(intensity: float, n: int) -> np.ndarray:
+    """Il glow pulsa una volta lungo tutto il video (+0.2 a metà)."""
+    return intensity + np.sin(np.arange(n) / n * np.pi) * 0.2
 
 
 def cinematic_path(W, H, kind, n):

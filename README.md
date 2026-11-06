@@ -22,7 +22,37 @@ Tutti i comandi si lanciano **dalla cartella del progetto**:
 source .venv/bin/activate                 # così basta scrivere "python"
 ```
 
-## 2. Fare un video
+## 2. Lo studio: la preview live
+
+```bash
+python -m crystal studio crystal_therapy  # si apre il browser su http://127.0.0.1:8765
+```
+
+È il posto dove si lavora. Il video gira **in tempo reale** (a metà risoluzione,
+30 fps) e ogni parametro di `defaults.toml` è uno slider: lo muovi e vedi subito
+l'effetto, mentre il video continua (o, da fermo, sul frame che stai guardando).
+
+- **Quello che vedi è quello che esce.** La preview usa lo stesso motore del render
+  e lo stesso seed. «Render video» fa il video finale identico, a piena risoluzione.
+- **Timeline** con bassi/medi/alti dell'audio sotto: clicca o trascina per andare in un
+  punto qualsiasi. Le scie si "scaldano" da sole (meno di un secondo).
+- **Audio** sincronizzato (🔊), così senti cosa fa reagire le lenti.
+- **📌 Fissa A** + **⇆ Confronta**: congeli un frame e lo confronti a tendina con quello
+  live mentre cambi i parametri.
+- **Salva** scrive nel preset solo le chiavi diverse dai default, **mantenendo i commenti**
+  del file. A sinistra di ogni parametro: viola = scritto nel preset, giallo = cambiato e
+  da salvare. ↺ (o doppio clic sul nome) lo toglie dal preset. ⌘Z / ⇧⌘Z annulla e ripete.
+- **seed**: 🎲 ne prova uno nuovo (sfondo, punto di partenza, lenti, audio cambiano);
+  📌 lo scrive nel preset, così il video è sempre quello.
+- Puoi anche modificare il `.toml` nell'editor: quando salvi, lo studio lo ricarica.
+- **Frame PNG**, **Render test** e **Render video** partono dalla pagina, con la barra di
+  avanzamento e il pulsante per guardare il risultato.
+- In alto a destra: risoluzione (25–100%) e fps della preview. `?` mostra le scorciatoie
+  (spazio, ←/→, ⇧←/→, P, C, M, /, ⌘S).
+
+`python -m crystal preview` è un sinonimo di `studio`.
+
+## 3. Fare un video dal terminale
 
 ```bash
 python -m crystal render                  # video con i default (il look Natisone)
@@ -38,16 +68,10 @@ Per rifare lo stesso identico video:
 python -m crystal render output/<data>_<preset>.json
 ```
 
-### Il giro consigliato
+Altri comandi:
 
-1. **`python -m crystal preview <preset>`**: si apre una finestra con l'anteprima
-   live a bassa risoluzione. Tieni il file del preset aperto nell'editor: **ogni volta
-   che salvi, la preview si ricarica**. Tasti: `spazio` pausa · `s` salva il frame ·
-   `r` ricomincia · `n` nuovo seed (nuovo sfondo/lenti a caso) · `q` esci.
-2. **`python -m crystal frame <preset> --at 12`**: un PNG a risoluzione piena del
-   secondo 12. Serve a controllare i dettagli.
-3. **`python -m crystal render <preset> --test`**: un video breve per vedere il movimento.
-4. **`python -m crystal render <preset>`**: il video finale.
+- **`python -m crystal frame <preset> --at 12`**: un PNG a risoluzione piena del secondo 12.
+- **`python -m crystal render <preset> --test`**: un video breve a risoluzione ridotta.
 
 ### Cambiare un parametro al volo
 
@@ -59,7 +83,7 @@ python -m crystal render --set 'background.video="input/ghiaccio.MOV"'
 
 Le stringhe dentro `--set` vanno tra virgolette doppie, e il tutto tra apici.
 
-## 3. Preset e parametri
+## 4. Preset e parametri
 
 La configurazione si applica a strati:
 
@@ -95,11 +119,11 @@ Convenzioni:
   (`"input/fiume*.MOV"`) o una lista. Se sono più di uno ne viene scelto uno a caso
   (in base al seed).
 
-## 4. Gli effetti, in ordine
+## 5. Gli effetti, in ordine
 
 | sezione | cosa fa | i parametri che contano |
 |---|---|---|
-| `[output]` | formato e qualità | `format` (`ig_post` 1080×1350, `ig_story` 1080×1920, `square`, `landscape`, `logo` = dimensioni del file logo, `custom`), `duration`, `fps`, `crf` |
+| `[output]` | formato e qualità | `format` (`ig_post` 1080×1350, `ig_story` 1080×1920, `square`, `landscape`, `logo` = dimensioni del file logo, `custom`), `duration`, `fps`, `crf`, `encoder` (`x264` o `videotoolbox`, l'encoder hardware del Mac: più veloce, file più grandi) |
 | `[logo]` | il logo (SVG o PDF) | `file`, `color`, `zoom`, `left_padding`, `fill` |
 | `[background]` | video di sfondo | `video`, `zoom`, `slowdown`, `darken`, `random_start` / `start` |
 | `[organic]` | ondulazioni morbide del logo (Perlin) | `intensity` (px), `scale` (frequenza), `speed` |
@@ -130,7 +154,7 @@ lighten difference exclusion`.
 - Con i default la reattività è molto delicata. Per sentirla davvero alza
   `audio.bass/mid/high` (es. 0.5) e abbassa `audio.smoothing` (es. 0.6).
 
-## 5. File di input
+## 6. File di input
 
 Tutto in `input/`:
 - il logo, SVG o PDF (`input/logo.svg`, `input/logo.pdf`);
@@ -140,32 +164,36 @@ Tutto in `input/`:
 
 Video e audio sono esclusi da git perché pesano troppo.
 
-## 6. Prestazioni
+## 7. Prestazioni
 
-Sul tuo M4, il render completo con i default (1080×1350, 30 fps, 40 s = 1200 frame,
-60 lenti, tutto attivo) richiede **circa 80 secondi** (~15 fps). Un `--test` dura
-5 secondi. La v3 andava a ~1 fps già a *432×540*: a piena risoluzione erano ore.
-
-Cosa la rendeva lenta, e cosa è cambiato:
+Sul M4, il render completo di `crystal_therapy` (1576×1160, 30 fps, 40 s = 1200 frame,
+100 lenti, tutto attivo) richiede **circa 36–40 secondi**: il tempo reale
+(30–33 fps; con `output.encoder = "videotoolbox"` 41 fps). La prima v4 ci metteva 94 s, la v3
+andava a ~1 fps già a *432×540*: a piena risoluzione erano ore.
 
 | v3 | v4 |
 |---|---|
-| rumore di Perlin calcolato pixel per pixel in un loop Python (~1,5 M chiamate per frame) | rumore vettorizzato numpy, calcolato su una griglia e interpolato |
+| rumore di Perlin calcolato pixel per pixel in un loop Python (~1,5 M chiamate per frame) | rumore vettorizzato, su una griglia rada il cui passo segue la frequenza del rumore |
+| tre deformazioni = tre `remap` del logo a piena risoluzione | le tre mappe si compongono (su una griglia a 2 px) e il logo si interpola **una volta sola** |
 | 60 lenti, ognuna calcolata su tutto il frame | ogni lente lavora solo nel suo riquadro |
 | maschera del logo ricostruita da zero a ogni frame | calcolata una volta sola |
-| scie: somma di 85 + 105 frame passati a ogni frame | un buffer che sfuma (stesso risultato a vista) |
-| fusione logo/sfondo su tutto il frame | solo sui pixel vicini al logo |
-| `seek` nel video di sfondo a ogni frame, encoder OpenCV `mp4v` | ffmpeg legge lo sfondo già scalato e codifica in H.264 in parallelo |
-| un solo processo | deformazioni su più processi (`output.workers`) |
+| scie: somma di 85 + 105 frame passati a ogni frame | un buffer che sfuma, aggiornato con OpenCV |
+| fusione logo/sfondo su tutto il frame | solo sui pixel del logo; armonizzazione e luminanza ridotte a un colore |
+| `seek` nel video di sfondo a ogni frame, encoder OpenCV `mp4v` | ffmpeg (con decodifica hardware) legge lo sfondo già scalato e codifica in H.264 in parallelo |
+| un solo processo | deformazioni su più processi, composizione di più frame in parallelo su più thread |
 
 A fine render viene stampato quanto pesa ogni fase per frame, così si vede subito
 cosa rallenta se si esagera.
 
-## 7. Struttura del codice
+**Preview e video finale coincidono anche a risoluzione ridotta**: le misure in pixel si
+scalano, e i bordi che generano le scie si cercano sempre alla scala del video finale
+(altrimenti a metà risoluzione le scie verrebbero 2-3 volte più fitte).
+
+## 8. Struttura del codice
 
 ```
 crystal/
-  cli.py            comandi: render, frame, preview, presets
+  cli.py            comandi: render, frame, studio (= preview), presets
   config.py         caricamento a strati + preset di blending
   defaults.toml     TUTTI i parametri, commentati
   render.py         Renderer: prepara tutto e produce i frame (pipeline in cima al file)
@@ -175,27 +203,38 @@ crystal/
     noise.py        Perlin vettorizzato
     deform.py       organic, stretch, lenti (deformano la maschera del logo)
     compose.py      scie, texture, blend mode, fusione logo/sfondo
+  studio/           la preview web
+    engine.py       motore della preview: riproduzione, salti, modifiche al volo
+    server.py       server HTTP (solo libreria standard), render lanciati dalla pagina
+    schema.py       parametri per l'interfaccia, letti da defaults.toml (+ range degli slider)
+    presetfile.py   salvataggio dei preset mantenendo i commenti
+    static/         la pagina (HTML, CSS, JS senza dipendenze)
 presets/            i tuoi look
 legacy/v3/          il codice della v3 (Natisone Trip Generator) com'era, con il tuo ultimo config
 ```
 
 Idea chiave: **la Timeline precalcola tutto ciò che evolve nel tempo**, quindi
 deformare il frame *k* è una funzione pura e si può fare in parallelo. Le scie invece
-dipendono dai frame precedenti e restano nel processo principale.
+dipendono dai frame precedenti: si aggiornano in ordine (`Renderer.advance`), ma ogni
+frame dipende solo dallo stato delle scie prima di lui, quindi la composizione
+(`Renderer.compose`) di frame diversi gira in parallelo. Render, `frame` e studio usano
+le stesse primitive (`Renderer.step`).
 
 ### Aggiungere un effetto
 
 - **Una deformazione del logo**:
-  1. aggiungi un metodo `_nome(self, mask, k)` in `effects/deform.py` e il nome in
-     `Deformer.STAGES`;
-  2. aggiungi la sezione `[nome]` (con `enabled`) in `defaults.toml`;
+  1. in `effects/deform.py` scrivi un metodo che restituisce lo spostamento (dx, dy),
+     componilo in `Deformer.maps()` e aggiungi il nome a `Deformer.STAGES`;
+  2. aggiungi la sezione `[nome]` (con `enabled`) in `defaults.toml`: nello studio
+     compare da sola; per un range dello slider migliore aggiungi la chiave a
+     `HINTS` in `studio/schema.py`;
   3. se ti serve qualcosa che varia nel tempo, calcolalo in `Timeline` e leggilo con
      l'indice `k`.
 - **Un effetto sul frame** (colore, distorsione dello sfondo, overlay...): aggiungilo
   in `Renderer.frames()` / `_composite()` in `render.py`, con la sua sezione in
   `defaults.toml`.
 
-## 8. Differenze rispetto alla v3
+## 9. Differenze rispetto alla v3
 
 - **Niente più commit/tag/push git automatici** prima di ogni render. Il `.json`
   accanto al video fa la stessa cosa senza toccare il repo.
@@ -218,8 +257,9 @@ dipendono dai frame precedenti e restano nel processo principale.
   - il logo è centrato correttamente (in v3 era spostato di ~25 px in alto a sinistra).
 - **`--test` scala tutto**, anche lenti, glow e deformazioni. In v3 il test a 432 px
   "incollava" il logo molto più del render finale.
-- **La preview live è più semplice**: prima erano 690 righe con un file di parametri a
-  parte, ora è un loop che ricarica il preset quando lo salvi.
+- **La preview live è nel browser** (`python -m crystal studio`): tempo reale, slider per
+  ogni parametro, salvataggio nel preset. Prima era una finestra OpenCV con un file di
+  parametri a parte.
 - **La v3 completa è in `legacy/v3/`**, compreso il `config` con i ritocchi non
   committati (tradotti nel preset `crystal_therapy`). Per farla girare di nuovo:
   `cd legacy/v3 && ln -s ../../input input && ../../.venv-v3/bin/python natisone_trip_generator.py --test`.

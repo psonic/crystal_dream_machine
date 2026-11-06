@@ -7,10 +7,13 @@ mentre Python calcola i frame: le due cose girano in parallelo.
 
 from __future__ import annotations
 
+import functools
 import glob
 import io
+import os
 import queue
 import subprocess
+import sys
 import threading
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -23,6 +26,34 @@ import numpy as np
 #  File e probe
 # ═════════════════════════════════════════════════════════════════════════════
 
+def _mtime(path) -> float:
+    try:
+        return os.stat(path).st_mtime
+    except OSError:
+        return 0.0
+
+
+def cached(maxsize=16):
+    """
+    Cache in memoria per funzioni lente con un file come primo argomento (logo, audio, probe).
+    La chiave include la data di modifica del file: se lo salvi di nuovo, viene ricaricato.
+    Gli array restituiti sono in sola lettura (sono condivisi fra chi li chiede).
+    """
+    def deco(fn):
+        @functools.lru_cache(maxsize=maxsize)
+        def inner(mtime, *args):
+            out = fn(*args)
+            if isinstance(out, np.ndarray):
+                out.flags.writeable = False
+            return out
+
+        @functools.wraps(fn)
+        def wrapper(path, *args):
+            return inner(_mtime(path), path, *args)
+        return wrapper
+    return deco
+
+
 def expand_files(spec) -> list[str]:
     """Stringa, glob o lista → lista di file esistenti."""
     items = [spec] if isinstance(spec, str) else list(spec or [])
@@ -33,6 +64,7 @@ def expand_files(spec) -> list[str]:
     return out
 
 
+@cached(64)
 def probe_duration(path: str) -> float:
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -58,6 +90,7 @@ def svg_size(path: str) -> tuple[int, int]:
     return int(num(root.get("width", "1920"))), int(num(root.get("height", "1080")))
 
 
+@cached()
 def logo_size(path: str) -> tuple[int, int]:
     if Path(path).suffix.lower() == ".pdf":
         import pymupdf
@@ -149,6 +182,7 @@ def _raster_pdf(path: str, render_w: int) -> np.ndarray:
     return cv2.resize(hard, (pix.width // ss, pix.height // ss), interpolation=cv2.INTER_AREA)
 
 
+@cached()
 def load_logo_mask(path: str, W: int, H: int, padding: float, left_padding: float,
                    zoom: float, fill: str, s: float) -> np.ndarray:
     """Rasterizza il logo (SVG o PDF), lo ritaglia al contenuto e lo centra nel canvas. uint8 (H,W) 0-255."""
@@ -219,33 +253,58 @@ class _Prefetch:
             pass
 
 
-class BackgroundReader:
-    """Legge il video di sfondo già scalato/ritagliato/rallentato da ffmpeg."""
+def background_filters(W: int, H: int, fps: float, cfg) -> str:
+    """Catena di filtri ffmpeg: adatta lo sfondo al formato (cover/crop + zoom), rallenta, porta agli fps."""
+    if cfg.fit == "crop":
+        vf = [f"crop=iw*{cfg.crop_w}:ih*{cfg.crop_h}:(iw-iw*{cfg.crop_w})*{cfg.crop_x}:(ih-ih*{cfg.crop_h})*{cfg.crop_y}",
+              f"scale={W}:{H}"]
+    else:  # cover: riempie il frame mantenendo le proporzioni, poi zoom e crop centrale
+        z = cfg.zoom
+        r = W / H
+        vf = [f"scale=w='if(gt(a,{r}),-2,{W * z})':h='if(gt(a,{r}),{H * z},-2)'",
+              f"crop='min(iw,{W})':'min(ih,{H})'",
+              f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2"]
+    vf += [f"setpts={cfg.slowdown}*PTS", f"fps={fps}"]
+    return ",".join(vf)
 
-    def __init__(self, path: str, W: int, H: int, fps: float, start: float, cfg):
+
+# decodifica hardware (VideoToolbox) sul Mac: l'HEVC 4K dell'iPhone si decodifica ~2.5× più veloce
+_HWACCEL = ["-hwaccel", "videotoolbox"] if sys.platform == "darwin" else []
+
+
+class BackgroundReader:
+    """Legge il video di sfondo già scalato/ritagliato/rallentato da ffmpeg, a partire da `start` secondi."""
+
+    def __init__(self, path: str, W: int, H: int, fps: float, start: float, cfg, count: int | None = None):
         self.W, self.H = W, H
         self.frame_bytes = W * H * 3
-        if cfg.fit == "crop":
-            vf = [f"crop=iw*{cfg.crop_w}:ih*{cfg.crop_h}:(iw-iw*{cfg.crop_w})*{cfg.crop_x}:(ih-ih*{cfg.crop_h})*{cfg.crop_y}",
-                  f"scale={W}:{H}"]
-        else:  # cover: riempie il frame mantenendo le proporzioni, poi zoom e crop centrale
-            z = cfg.zoom
-            r = W / H
-            vf = [f"scale=w='if(gt(a,{r}),-2,{W * z})':h='if(gt(a,{r}),{H * z},-2)'",
-                  f"crop='min(iw,{W})':'min(ih,{H})'",
-                  f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2"]
-        vf += [f"setpts={cfg.slowdown}*PTS", f"fps={fps}"]
-        cmd = ["ffmpeg", "-nostdin", "-loglevel", "error",
-               "-ss", f"{start:.3f}", "-stream_loop", "-1", "-i", path,
-               "-vf", ",".join(vf), "-an", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
-        self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                     bufsize=self.frame_bytes * 2)
+        self.args = (path, background_filters(W, H, fps, cfg), start, count)
+        self.got_any = False
+        self.proc = self._spawn(_HWACCEL)
         self.pre = _Prefetch(self._read_one)
+
+    def _spawn(self, hw):
+        path, vf, start, count = self.args
+        cmd = ["ffmpeg", "-nostdin", "-loglevel", "error", *hw,
+               "-ss", f"{start:.3f}", "-stream_loop", "-1", "-i", path,
+               "-vf", vf, "-an"]
+        if count:
+            cmd += ["-frames:v", str(int(count))]
+        cmd += ["-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
+        return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                bufsize=self.frame_bytes * 2)
 
     def _read_one(self):
         buf = self.proc.stdout.read(self.frame_bytes)
+        if (not buf or len(buf) < self.frame_bytes) and not self.got_any and _HWACCEL:
+            # la decodifica hardware non va con questo file: riprova in software
+            self.proc.kill()
+            self.proc.wait()
+            self.proc = self._spawn([])
+            buf = self.proc.stdout.read(self.frame_bytes)
         if not buf or len(buf) < self.frame_bytes:
             return None
+        self.got_any = True
         return np.frombuffer(buf, np.uint8).reshape(self.H, self.W, 3)
 
     def read(self) -> np.ndarray | None:
@@ -261,7 +320,7 @@ class VideoWriter:
     """Encoding H.264 (yuv420p, faststart: va bene per WhatsApp/Instagram) + audio opzionale."""
 
     def __init__(self, path: str, W: int, H: int, fps: float, crf: int, preset: str,
-                 audio: tuple[str, float, float] | None = None):
+                 audio: tuple[str, float, float] | None = None, encoder: str = "x264"):
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         cmd = ["ffmpeg", "-y", "-loglevel", "error",
                "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-"]
@@ -269,8 +328,16 @@ class VideoWriter:
             file, start, dur = audio
             cmd += ["-ss", f"{start:.3f}", "-t", f"{dur:.3f}", "-i", file,
                     "-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "192k", "-shortest"]
-        cmd += ["-c:v", "libx264", "-preset", preset, "-crf", str(crf),
-                "-pix_fmt", "yuv420p", "-movflags", "+faststart", path]
+        if encoder == "videotoolbox":
+            # encoder hardware del Mac: quasi niente CPU. Qualità a bitrate costante, alta
+            mbps = max(4, round(W * H * fps / 1e6 * 0.28 * (2 ** ((18 - crf) / 6))))
+            cmd += ["-c:v", "h264_videotoolbox", "-b:v", f"{mbps}M", "-maxrate", f"{mbps * 2}M",
+                    "-bufsize", f"{mbps * 2}M", "-profile:v", "high"]
+        elif encoder == "x264":
+            cmd += ["-c:v", "libx264", "-preset", preset, "-crf", str(crf)]
+        else:
+            raise ValueError(f"output.encoder '{encoder}' non valido: x264 | videotoolbox")
+        cmd += ["-pix_fmt", "yuv420p", "-movflags", "+faststart", path]
         self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         self.q: queue.Queue = queue.Queue(maxsize=8)
         self.error = None
@@ -313,6 +380,7 @@ class VideoWriter:
 #  Audio
 # ═════════════════════════════════════════════════════════════════════════════
 
+@cached(8)
 def decode_audio(path: str, start: float, duration: float, sr: int = 22050) -> np.ndarray:
     cmd = ["ffmpeg", "-nostdin", "-loglevel", "error", "-ss", f"{start:.3f}", "-t", f"{duration:.3f}",
            "-i", path, "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"]

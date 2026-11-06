@@ -113,13 +113,15 @@ def to_ns(d):
     return d
 
 
-def load_config(preset: str | None = None, overrides: list[str] = (), test: bool = False):
-    """Ritorna (cfg_namespace, cfg_dict, nome_preset)."""
+def load_defaults() -> dict:
     with open(DEFAULTS_FILE, "rb") as f:
-        defaults = tomllib.load(f)
+        return tomllib.load(f)
 
+
+def load_user(preset: str | None = None, overrides: list[str] = ()) -> tuple[dict, str, Path | None]:
+    """Le chiavi scritte dall'utente (preset + --set), il nome del preset e il suo file."""
     user: dict = {}
-    name = "default"
+    name, path = "default", None
     if preset:
         path = find_preset(preset)
         user = _load_file(path)
@@ -128,8 +130,13 @@ def load_config(preset: str | None = None, overrides: list[str] = (), test: bool
             name = json.loads(path.read_text()).get("preset", path.stem)
     for o in overrides:
         user = deep_merge(user, parse_override(o))
-    _check_keys(defaults, user)
+    return user, name, path
 
+
+def resolve(user: dict, test: bool = False, defaults: dict | None = None) -> dict:
+    """defaults ← chiavi dell'utente (con i preset di blending) → config completo (dict)."""
+    defaults = defaults if defaults is not None else load_defaults()
+    _check_keys(defaults, user)
     data = deep_merge(defaults, user)
 
     # preset di blending: default < preset < chiavi esplicite dell'utente
@@ -145,5 +152,11 @@ def load_config(preset: str | None = None, overrides: list[str] = (), test: bool
         data["output"]["duration"] = min(data["output"]["duration"], data["test"]["duration"])
         if Path(data["output"]["dir"]).name != "test":
             data["output"]["dir"] = str(Path(data["output"]["dir"]) / "test")
+    return data
 
+
+def load_config(preset: str | None = None, overrides: list[str] = (), test: bool = False):
+    """Ritorna (cfg_namespace, cfg_dict, nome_preset)."""
+    user, name, _ = load_user(preset, overrides)
+    data = resolve(user, test)
     return to_ns(data), data, name

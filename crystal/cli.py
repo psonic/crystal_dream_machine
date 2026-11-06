@@ -3,16 +3,15 @@ Riga di comando.
 
     python -m crystal render  [preset] [--test] [--set chiave=valore ...] [-o file.mp4]
     python -m crystal frame   [preset] [--at SECONDI] [--test] [-o file.png]
-    python -m crystal preview [preset] [--set ...]
+    python -m crystal studio  [preset] [--set ...]       (preview live nel browser; alias: preview)
     python -m crystal presets
 """
 
 import argparse
 import sys
-import time
 from pathlib import Path
 
-from .config import ConfigError, find_preset, list_presets, load_config
+from .config import ConfigError, list_presets, load_config
 
 
 def _common(p):
@@ -41,7 +40,9 @@ def cmd_frame(args):
     import cv2
     r = _build(args)
     i = min(r.n_frames - 1, int(args.at * r.fps))
-    warm = int(max(r.cfg.tracers.logo.trail, r.cfg.tracers.background.trail) * r.fps / 30) if args.trails else 0
+    tr = r.cfg.tracers
+    trail = max(tr.logo.trail if tr.logo.enabled else 0, tr.background.trail if tr.background.enabled else 0)
+    warm = int(1.5 * trail * r.fps / 30) if args.trails else 0  # come lo studio: la scia scende sotto il 5%
     print(r.describe())
     print(f"  Frame    : {i} ({args.at}s){f', scaldo le scie con {warm} frame' if warm else ''}")
     frame = None
@@ -53,67 +54,9 @@ def cmd_frame(args):
     print(f"✅ {out}")
 
 
-def cmd_preview(args):
-    import cv2
-    print("👁  Preview — q/esc esci · spazio pausa · s salva frame · r ricomincia · n nuovo seed")
-    print("   Salva il file del preset e la preview si ricarica da sola.\n")
-    preset_file = find_preset(args.preset) if args.preset else None
-    seed_override = args.seed
-
-    def mtime():
-        return preset_file.stat().st_mtime if preset_file else 0
-
-    while True:
-        try:
-            args.seed = seed_override
-            r = _build(args, test=True)
-        except (ConfigError, Exception) as e:  # errore nel preset: aspetta che venga corretto
-            print(f"❌ {e}")
-            m = mtime()
-            while mtime() == m:
-                time.sleep(0.5)
-            continue
-        print(r.describe())
-        stamp, action = mtime(), None
-        paused = False
-        t_last = time.perf_counter()
-        frames = r.frames()
-        while action is None:
-            if not paused:
-                try:
-                    i, frame = next(frames)
-                except StopIteration:
-                    action = "restart"
-                    break
-                now = time.perf_counter()
-                cv2.imshow("crystal preview", frame)
-                print(f"\r  frame {i + 1}/{r.n_frames}  {1 / max(now - t_last, 1e-6):4.1f} fps   ", end="", flush=True)
-                t_last = now
-            key = cv2.waitKey(1 if not paused else 100) & 0xFF
-            if key in (ord("q"), 27):
-                cv2.destroyAllWindows()
-                frames.close()
-                print()
-                return
-            if key == ord(" "):
-                paused = not paused
-            elif key == ord("s"):
-                out = Path(r.cfg.output.dir) / f"preview_{r.preset_name}_{i}.png"
-                out.parent.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(out), frame)
-                print(f"\n  💾 {out}")
-            elif key == ord("r"):
-                action = "restart"
-            elif key == ord("n"):
-                seed_override = 0
-                action = "restart"
-            if mtime() != stamp:
-                print("\n  🔄 preset modificato, ricarico...")
-                action = "reload"
-        frames.close()
-        if action == "restart" and seed_override is None:
-            seed_override = r.seed  # "r" = stesso video da capo
-        print()
+def cmd_studio(args):
+    from .studio.server import serve
+    serve(args.preset, args.overrides, args.seed, port=args.port, open_browser=not args.no_browser)
 
 
 def cmd_presets(_args):
@@ -137,9 +80,13 @@ def main(argv=None):
     p.add_argument("-o", "--output")
     p.set_defaults(func=cmd_frame)
 
-    p = sub.add_parser("preview", help="anteprima live in una finestra, si ricarica quando salvi il preset")
-    _common(p)
-    p.set_defaults(func=cmd_preview)
+    for cmd in ("studio", "preview"):
+        p = sub.add_parser(cmd, help="preview live nel browser con tutti i parametri" if cmd == "studio"
+                           else "come studio")
+        _common(p)
+        p.add_argument("--port", type=int, default=8765)
+        p.add_argument("--no-browser", action="store_true", help="non aprire il browser")
+        p.set_defaults(func=cmd_studio)
 
     p = sub.add_parser("presets", help="elenca i preset")
     p.set_defaults(func=cmd_presets)

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crystal Studio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 1l6 7-6 7-6-7z' fill='%239f8cff'/></svg>">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header id="top">
+  <div class="brand"><span class="gem">◆</span> Crystal <em>studio</em></div>
+
+  <div class="tg">
+    <select id="preset" title="Preset"></select>
+    <span id="dirty" class="dirty" title="Modifiche non salvate" hidden></span>
+    <button id="save" title="Salva nel preset (⌘S)">Salva</button>
+    <button id="saveas" title="Salva in un preset nuovo">Salva come…</button>
+    <button id="revert" class="ghost" title="Scarta le modifiche non salvate">Ripristina</button>
+  </div>
+
+  <div class="tg">
+    <button id="undo" class="icon" title="Annulla (⌘Z)">↶</button>
+    <button id="redo" class="icon" title="Ripeti (⇧⌘Z)">↷</button>
+  </div>
+
+  <div class="tg seed">
+    <label for="seed">seed</label>
+    <input id="seed" type="number" min="0" step="1">
+    <button id="seed-rnd" class="icon" title="Nuovo seed: nuove scelte casuali (sfondo, punto di partenza, lenti, audio)">🎲</button>
+    <button id="seed-fix" class="icon" title="Scrivi il seed nel preset">📌</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="tg">
+    <label>preview</label>
+    <select id="view-scale" title="Risoluzione della preview (rispetto al video finale)">
+      <option value="0.25">25%</option><option value="0.5">50%</option>
+      <option value="0.75">75%</option><option value="1">100%</option>
+    </select>
+    <select id="view-fps" title="Fotogrammi al secondo della preview">
+      <option value="">fps output</option><option value="15">15 fps</option>
+      <option value="24">24 fps</option><option value="30">30 fps</option><option value="60">60 fps</option>
+    </select>
+  </div>
+
+  <div class="tg">
+    <button id="btn-frame" title="PNG a piena risoluzione del frame mostrato">Frame PNG</button>
+    <button id="btn-test" title="Video breve a risoluzione ridotta (sezione «Render di test»)">Render test</button>
+    <button id="btn-render" class="primary" title="Il video finale, identico alla preview (stesso seed)">Render video</button>
+  </div>
+  <button id="btn-help" class="icon ghost" title="Scorciatoie (?)">?</button>
+</header>
+
+<div id="jobbar" hidden>
+  <div class="job-text" id="job-text"></div>
+  <div class="job-prog"><div id="job-fill"></div></div>
+  <div class="job-actions" id="job-actions"></div>
+</div>
+
+<main>
+  <section id="viewer">
+    <div id="stage-wrap">
+      <div id="stage">
+        <canvas id="live"></canvas>
+        <div id="pin-layer" hidden><img id="pin" alt=""></div>
+        <div id="divider" hidden><span></span></div>
+        <div id="tag-a" class="tag" hidden>A</div>
+        <div id="tag-b" class="tag right" hidden>B · live</div>
+        <div id="stage-msg" hidden></div>
+        <div id="cold" class="chip" hidden title="Dopo un salto le scie ripartono vuote: si stanno riempiendo">scie in riscaldamento</div>
+      </div>
+      <div id="error" hidden></div>
+    </div>
+
+    <div id="transport">
+      <div class="row">
+        <button id="t-start" class="icon" title="Inizio (Home)">⏮</button>
+        <button id="t-prev" class="icon" title="Frame precedente (←, ⇧← = 1 s)">◀︎</button>
+        <button id="t-play" class="icon big" title="Play/pausa (spazio)">▶︎</button>
+        <button id="t-next" class="icon" title="Frame successivo (→, ⇧→ = 1 s)">▶︎❙</button>
+        <div class="time"><span id="t-time">0:00.00</span><span class="dim"> / <span id="t-dur">0:00</span></span></div>
+        <div class="dim small" id="t-frame"></div>
+        <div class="spacer"></div>
+        <button id="b-pin" title="Fissa il frame attuale per confrontarlo (P)">📌 Fissa A</button>
+        <button id="b-compare" title="Confronto A/B a tendina (C)" disabled>⇆ Confronta</button>
+        <button id="b-audio" class="icon" title="Audio della preview (M)">🔈</button>
+      </div>
+      <div id="timeline-wrap">
+        <canvas id="timeline"></canvas>
+        <div id="tl-hover" hidden></div>
+      </div>
+      <div class="row stats" id="stats"></div>
+    </div>
+  </section>
+
+  <aside id="panel">
+    <div class="panel-head">
+      <input id="search" type="search" placeholder="Cerca un parametro…  ( / )">
+      <label class="check" title="Mostra solo le chiavi scritte nel preset"><input type="checkbox" id="only-set"> solo nel preset</label>
+      <button id="fold" class="icon ghost" title="Apri/chiudi tutte le sezioni">⇕</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot set"></i>scritto nel preset</span>
+      <span><i class="dot changed"></i>cambiato, da salvare</span>
+    </div>
+    <div id="groups"></div>
+  </aside>
+</main>
+
+<div id="toasts"></div>
+
+<dialog id="dlg-saveas">
+  <form method="dialog">
+    <h3>Salva come nuovo preset</h3>
+    <label>Nome <input id="saveas-name" required pattern="[\w\-]+" placeholder="es. tramonto_viola" autocomplete="off"></label>
+    <p class="dim small">Va in <code>presets/&lt;nome&gt;.toml</code>. Solo lettere, numeri, _ e -.</p>
+    <p id="saveas-warn" class="warn small" hidden>Esiste già: verrà sovrascritto.</p>
+    <menu><button value="cancel" class="ghost">Annulla</button><button value="ok" class="primary">Salva</button></menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-confirm">
+  <form method="dialog">
+    <h3 id="confirm-title"></h3>
+    <p id="confirm-text" class="dim"></p>
+    <menu><button value="cancel" class="ghost">Annulla</button><button value="ok" class="primary" id="confirm-ok">OK</button></menu>
+  </form>
+</dialog>
+
+<dialog id="dlg-media" class="media">
+  <form method="dialog">
+    <div class="media-head"><span id="media-title"></span><button value="close" class="icon ghost">✕</button></div>
+    <div id="media-body"></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-help">
+  <form method="dialog">
+    <h3>Scorciatoie</h3>
+    <table class="keys">
+      <tr><td><kbd>spazio</kbd></td><td>play / pausa</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>frame precedente / successivo</td></tr>
+      <tr><td><kbd>⇧</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>indietro / avanti 1 secondo</td></tr>
+      <tr><td><kbd>Home</kbd></td><td>inizio</td></tr>
+      <tr><td><kbd>P</kbd></td><td>fissa il frame (A) per il confronto</td></tr>
+      <tr><td><kbd>C</kbd></td><td>confronto A/B a tendina</td></tr>
+      <tr><td><kbd>M</kbd></td><td>audio on/off</td></tr>
+      <tr><td><kbd>⌘Z</kbd> <kbd>⇧⌘Z</kbd></td><td>annulla / ripeti</td></tr>
+      <tr><td><kbd>⌘S</kbd></td><td>salva il preset</td></tr>
+      <tr><td><kbd>/</kbd></td><td>cerca un parametro</td></tr>
+      <tr><td><kbd>doppio clic</kbd></td><td>su un parametro: torna al default</td></tr>
+    </table>
+    <p class="dim small">Puoi anche modificare il file del preset nell'editor: quando salvi, lo studio lo ricarica.</p>
+    <menu><button value="ok" class="primary">Chiudi</button></menu>
+  </form>
+</dialog>
+
+<audio id="audio" preload="auto"></audio>
+<datalist id="dl-logo"></datalist><datalist id="dl-video"></datalist>
+<datalist id="dl-audio"></datalist><datalist id="dl-image"></datalist>
+<script src="/static/app.js"></script>
+</body>
+</html>
