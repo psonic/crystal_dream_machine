@@ -64,3 +64,8 @@ output/*.temp
 # Backup files
 *.bak
 *.backup
+
+# Crystal v4
+output/test/
+output/*.png
+.venv-v3/

@@ -1,0 +1,12 @@
+# Natisone — il look dei video di agosto 2025 (= i default).
+# Copia questo file per partire con un preset tuo.
+
+[output]
+format   = "ig_post"
+duration = 40
+
+[background]
+video = "input/sfondo.mov"
+
+[blend]
+preset = "soft"

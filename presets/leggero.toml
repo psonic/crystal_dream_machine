@@ -1,0 +1,19 @@
+# Leggero — pochi effetti, render velocissimo. Buono per provare sfondi e formati.
+
+[output]
+duration = 15
+
+[logo]
+fill = "none"     # il logo esattamente com'è nell'SVG
+
+[lenses]
+count = 15
+
+[stretch]
+enabled = false
+
+[tracers.background]
+enabled = false
+
+[blend]
+preset = "cinematic"

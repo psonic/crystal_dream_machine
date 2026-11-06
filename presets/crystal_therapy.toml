@@ -1,0 +1,33 @@
+# Crystal Therapy — l'ultimo config della v3 (27 agosto 2025): la scritta
+# calligrafica presa dal PDF, formato orizzontale 1576×1160, 100 lenti delicate.
+# (Era il file `config` non committato in CrystalPython3: l'originale è in legacy/v3/config.)
+
+[output]
+format = "custom"      # = INPUT_VIDEO_SIZE della v3: logo.svg (1496×1080) + 40 px per lato
+width  = 1576
+height = 1160
+
+[logo]
+file         = "input/logo.pdf"
+fill         = "none"  # col PDF la v3 teneva le lettere com'erano, buchi compresi
+left_padding = 0       # col PDF la v3 lo ignorava
+
+[background]
+zoom     = 1.1
+slowdown = 1.3
+darken   = 0.7
+contrast = 1.0
+
+[lenses]
+count        = 100
+min_strength = -0.3
+max_radius   = 90
+
+[tracers.logo]
+trail   = 35
+opacity = 0.15
+
+[tracers.background]
+trail      = 65
+threshold1 = 5
+threshold2 = 20

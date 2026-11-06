@@ -1,0 +1,58 @@
+# Delirio — tutto più forte e più veloce: lenti che si muovono davvero,
+# scie colorate, fusione psichedelica, sfondo a caso fra fiumi e ghiaccio.
+
+[output]
+format   = "ig_story"
+duration = 20
+
+[logo]
+color = [255, 240, 250]
+
+[background]
+video    = ["input/fiume*.MOV", "input/ghiaccio.MOV", "input/fumo*.MOV"]
+slowdown = 1.5
+darken   = 0.7
+
+[organic]
+speed     = 0.02
+intensity = 30.0
+
+[stretch]
+speed       = 0.003
+intensity   = 30.0
+vertical    = 0.3
+fine_detail = 0.3
+
+[lenses]
+count               = 80
+min_strength        = -1.2
+max_strength        = 1.4
+max_radius          = 150
+speed               = 1.5
+path_speed          = 0.4
+rotation_speed      = 1.0
+rotation_min        = -0.02
+rotation_max        = 0.02
+pulsation_speed     = 0.02
+pulsation_amplitude = 0.5
+worm_length         = 2.5
+worm_wave           = 45
+
+[tracers.logo]
+color     = [220, 200, 255]
+opacity   = 0.05
+hue_shift = 2.0
+
+[tracers.background]
+color     = [200, 170, 200]
+opacity   = 0.015       # su acqua/fumo i contorni sono ovunque: tenerla bassa
+hue_shift = 1.0
+
+[blend]
+preset = "psychedelic"
+
+[audio]
+bass = 0.5
+mid  = 0.3
+high = 0.25
+smoothing = 0.6

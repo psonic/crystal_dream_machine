@@ -1,16 +1,10 @@
-# Input Files Required
+# input/
 
-This folder should contain the following files for the Crystal Video Generator to work:
+Materiale sorgente per i video. Percorsi e scelte si impostano nei preset (vedi il README principale).
 
-## Required Files:
-- `logo-estratto-ai.svg` - Main logo SVG file with unified paths
-- `logo.pdf` - Alternative PDF version of the logo
-- `texture.jpg/png/tif` - Texture file (automatically detected)
-- `26.png` - Fallback texture file
+- `logo.svg` — il logo (`logo.svg` in `[logo]`)
+- `*.MOV` — video di sfondo (`video` in `[background]`, anche glob tipo `"input/fiume*.MOV"`)
+- `*.aif` — audio (`files` in `[audio]`)
+- `texture.*` — immagini per `[texture]`
 
-## Video Files (ignored by git):
-- `*.MOV` files - Background video files (kept locally only)
-
-## Usage:
-Place your logo SVG/PDF and texture files in this directory before running the generator.
-Video files should be placed here as well but won't be tracked by git due to their size.
+I video e gli audio sono esclusi da git (troppo grandi): restano solo su questo disco.

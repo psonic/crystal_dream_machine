@@ -1,0 +1,181 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  CRYSTAL — parametri di default
+#
+#  Non toccare questo file per fare un video: crea (o copia) un preset in
+#  presets/ e scrivici SOLO le chiavi che vuoi cambiare. Vedi README.md.
+#
+#  Questi valori sono il tuo ultimo config della v3 (agosto 2025), cioè il look
+#  dei video "Natisone Trip".
+#
+#  Convenzioni:
+#   • misure in pixel = riferite alla risoluzione PIENA del formato scelto
+#     (in --test vengono scalate da sole, così il test somiglia al finale)
+#   • velocità = "per frame a 30 fps": cambiando fps il movimento non cambia
+#   • colori = [R, G, B] 0-255
+# ─────────────────────────────────────────────────────────────────────────────
+
+seed = 0   # 0 = casuale. Il seed usato viene salvato nel .json accanto al video
+
+[output]
+format      = "ig_post"   # ig_story 1080x1920 | ig_post 1080x1350 | square 1080x1080
+                          # landscape 1920x1080 | logo (dimensioni del file logo + padding) | custom
+width       = 1080        # usati solo con format = "custom"
+height      = 1350
+scale       = 1.0         # moltiplicatore di risoluzione (0.5 = metà, veloce)
+fps         = 30
+duration    = 40          # secondi
+crf         = 18          # qualità x264: 0 = lossless, 18 = ottima, 23 = default ffmpeg
+x264_preset = "medium"    # ultrafast … veryslow (più lento = file più piccolo)
+dir         = "output"
+workers     = 0           # processi per le deformazioni. 0 = automatico, 1 = niente parallelismo
+
+[test]                    # cosa cambia con --test
+scale    = 0.5
+fps      = 15
+duration = 6
+
+# ─── Logo ────────────────────────────────────────────────────────────────────
+[logo]
+file         = "input/logo.svg"   # .svg o .pdf (dal PDF si usa la prima pagina)
+color        = [255, 255, 255]
+padding      = 40         # margine attorno al logo
+left_padding = 20         # spostamento orizzontale extra (+ = verso destra)
+zoom         = 1.0
+fill         = "blob"     # blob  = sagoma piena (il look dei video v3)
+                          # none  = il logo esattamente com'è nell'SVG
+                          # holes = come none ma con i buchi interni riempiti
+
+# ─── Video di sfondo ─────────────────────────────────────────────────────────
+[background]
+enabled      = true
+video        = "input/sfondo.mov"   # un file, un glob ("input/fiume*.MOV") o una lista → ne sceglie uno
+fit          = "cover"    # cover = riempie il frame | crop = ritaglio manuale con crop_*
+zoom         = 1.2        # solo cover
+slowdown     = 1.0        # 2 = metà velocità, 0.5 = doppia
+darken       = 0.6        # moltiplicatore di luminosità (1 = invariato)
+contrast     = 1.1        # secondo moltiplicatore (come nella v3)
+random_start = true       # parte da un punto a caso (entro i primi 2/3)
+start        = 0.0        # secondo di partenza se random_start = false
+crop_x       = 0.6        # solo fit = "crop": posizione e dimensione del ritaglio (0-1)
+crop_y       = 0.0
+crop_w       = 1.0
+crop_h       = 0.5
+
+# ─── Texture (immagine fusa su logo e/o sfondo) ──────────────────────────────
+[texture]
+enabled          = false
+path             = "input/texture.jpg"
+target           = "both"     # logo | background | both
+alpha            = 0.6        # opacità sul logo
+background_alpha = 0.8        # opacità sullo sfondo
+mode             = "multiply" # vedi blend mode nel README
+
+# ─── Glow ────────────────────────────────────────────────────────────────────
+[glow]
+enabled   = true
+size      = 20        # raggio del bagliore
+intensity = 0.3       # pulsa da sola di +0.2 a metà video
+
+# ─── Deformazione organica: ondulazioni morbide (Perlin) ─────────────────────
+[organic]
+enabled        = true
+speed          = 0.008
+scale          = 0.001    # frequenza: più alto = onde più strette
+intensity      = 20.0     # spostamento in px
+audio_reactive = true
+bass_intensity = 0.022    # quanto i bassi aumentano l'intensità
+bass_speed     = 0.003    # quanto i bassi aumentano la velocità
+mid_scale      = 0.0002   # quanto i medi cambiano la frequenza
+smoothing      = 0.95     # inerzia della reazione all'audio (0-1)
+
+# ─── Deformazione stretch: stiramenti lunghi ─────────────────────────────────
+[stretch]
+enabled        = true
+speed          = 0.0003
+scale          = 0.0015
+intensity      = 25.0
+horizontal     = 0.6      # forza dello stiramento orizzontale
+vertical       = 0.01     # forza dello stiramento verticale
+fine_detail    = 0.1      # increspature fini aggiuntive (0 = off)
+audio_reactive = false
+bass_intensity = 0.025
+bass_speed     = 0.0025
+mid_scale      = 0.00025
+smoothing      = 0.95
+
+# ─── Lenti: "creature" che deformano il logo passandoci sopra ────────────────
+[lenses]
+enabled                   = true
+count                     = 60
+min_strength              = -0.5     # negativo = ingrandisce, positivo = rimpicciolisce
+max_strength              = 0.8
+min_radius                = 10
+max_radius                = 120      # le lenti piccole sono molte più delle grandi
+speed                     = 0.000001 # velocità di spostamento (px/frame). Col tuo config erano quasi ferme
+path_speed                = 0.001    # velocità lungo il percorso
+inertia                   = 0.95     # 0.3 = scattoso, 0.95 = fluido
+rotation_min              = -0.001
+rotation_max              = 0.001
+rotation_speed            = 0.001
+pulsation                 = true
+pulsation_speed           = 0.0005
+pulsation_amplitude       = 0.2
+force_pulsation           = true
+force_pulsation_amplitude = 0.2
+worm                      = true     # forma allungata e ondulata
+worm_length               = 1.5
+worm_wave                 = 30       # ampiezza dell'ondulazione del verme (px)
+
+# ─── Scie (tracers) ──────────────────────────────────────────────────────────
+[tracers.logo]            # scie dei bordi del logo
+enabled   = true
+trail     = 85            # lunghezza in frame (a 30 fps)
+opacity   = 0.18
+color     = [27, 37, 37]
+hue_shift = 0.5           # cambio di tinta lungo la scia
+
+[tracers.background]      # scie dei contorni del video di sfondo
+enabled    = true
+trail      = 105
+opacity    = 0.12
+color      = [40, 40, 40]
+hue_shift  = 0.3
+threshold1 = 4            # soglie Canny: più basse = più contorni
+threshold2 = 21
+
+# ─── Fusione logo / sfondo ───────────────────────────────────────────────────
+[blend]
+enabled = true            # false = logo incollato sopra, senza fusione
+preset  = "soft"          # cinematic artistic soft dramatic bright intense psychedelic
+                          # glow dark geometric | manual
+# Le chiavi qui sotto valgono con preset = "manual". Con un preset, quelle che
+# scrivi nel TUO file preset lo sovrascrivono.
+mode            = "multiply"
+strength        = 0.5
+edge_detection  = true
+edge_blur       = 3
+adaptive        = true    # adatta il logo ai colori dello sfondo
+harmonize       = true
+luminance_match = true
+transparency    = 0.0
+color_strength  = 0.8
+edge_softness   = 0       # sfumatura del bordo del logo (px)
+
+# ─── Audio ───────────────────────────────────────────────────────────────────
+[audio]
+enabled      = true
+files        = ["input/audio1.aif", "input/audio2.aif"]   # anche glob; ne sceglie uno
+random_start = true
+start        = 0.0        # secondo di partenza se random_start = false
+mux          = true       # mette la traccia nel video finale
+bass         = 0.05       # sensibilità: bassi → velocità lenti
+mid          = 0.03       # medi → forza lenti
+high         = 0.025      # alti → pulsazione lenti
+smoothing    = 0.95       # inerzia della reazione (0 = nervoso, 0.95 = fluido)
+
+# ─── Variazioni lente automatiche ────────────────────────────────────────────
+[variation]
+enabled      = false
+amplitude    = 0.8
+speed_medium = 0.025      # forza lenti
+speed_fast   = 0.005      # opacità scie
