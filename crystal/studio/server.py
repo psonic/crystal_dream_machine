@@ -34,6 +34,7 @@ from urllib.parse import parse_qs, urlparse
 import numpy as np
 
 from ..config import PRESETS_DIR, ROOT_DIR, ConfigError, list_presets, load_defaults, load_user, resolve
+from ..procs import Registration, graceful_signals
 from .engine import CACHE_DIR, Engine
 from .presetfile import write_preset
 from .schema import build_schema
@@ -91,7 +92,7 @@ def coerce(default, value):
 
 
 class Studio:
-    def __init__(self, preset: str | None, overrides=(), seed: int | None = None):
+    def __init__(self, preset: str | None, overrides=(), seed: int | None = None, workers: int | None = None):
         self.defaults = load_defaults()
         user, name, path = load_user(preset, overrides)
         if seed is not None:
@@ -102,7 +103,8 @@ class Studio:
         self.clients: set[queue.Queue] = set()
         self.clients_lock = threading.Lock()
         self.render_job: RenderJob | None = None
-        self.engine = Engine(user, name, self.emit)
+        self.engine = Engine(user, name, self.emit, workers=workers)
+        self.last_client = time.time()  # ultimo momento in cui c'era una pagina aperta
         self.engine.post("seek", 0, False)
         self._mtime = self._file_mtime()
         threading.Thread(target=self._watch, daemon=True, name="watch").start()
@@ -618,13 +620,37 @@ def make_handler(studio: Studio):
             finally:
                 with studio.clients_lock:
                     studio.clients.discard(q)
+                    studio.last_client = time.time()
             self.close_connection = True
 
     return H
 
 
-def serve(preset=None, overrides=(), seed=None, port=8765, open_browser=True):
-    studio = Studio(preset, overrides, seed)
+def _idle_watch(studio: Studio, httpd, idle_exit: float):
+    """Nessuna pagina aperta: la preview si ferma subito, lo studio si chiude dopo `idle_exit` minuti."""
+    paused = False
+    while True:
+        time.sleep(2)
+        with studio.clients_lock:
+            n = len(studio.clients)
+            if n:
+                studio.last_client = time.time()
+        idle = time.time() - studio.last_client
+        rendering = bool(studio.render_job and studio.render_job.running())
+        if n:
+            paused = False
+        elif idle > 5 and not paused:
+            studio.engine.post("play", False)  # nessuno guarda: niente CPU sprecata
+            paused = True
+        if idle_exit and not n and not rendering and idle > idle_exit * 60:
+            print(f"\n💤 nessuna pagina aperta da {idle_exit:g} minuti: chiudo lo studio")
+            httpd.shutdown()
+            return
+
+
+def serve(preset=None, overrides=(), seed=None, port=8765, open_browser=True, workers=None, idle_exit=15.0):
+    graceful_signals()
+    studio = Studio(preset, overrides, seed, workers)
     httpd = None
     for p in range(port, port + 20):
         try:
@@ -637,7 +663,13 @@ def serve(preset=None, overrides=(), seed=None, port=8765, open_browser=True):
     httpd.daemon_threads = True
     url = f"http://127.0.0.1:{httpd.server_address[1]}/"
     print(f"\n✨ Crystal Studio → {url}")
-    print(f"   preset: {studio.engine.name}   ·   ctrl-c per chiudere\n")
+    print(f"   preset: {studio.engine.name}   ·   worker: {studio.engine.masks.workers}   ·   ctrl-c per chiudere")
+    if idle_exit:
+        print(f"   si chiude da solo dopo {idle_exit:g} min senza pagine aperte")
+    print()
+    reg = Registration("studio", url=url, port=httpd.server_address[1], preset=studio.engine.name,
+                       workers=studio.engine.masks.workers, idle_exit=idle_exit)
+    threading.Thread(target=_idle_watch, args=(studio, httpd, idle_exit), daemon=True, name="idle").start()
     if open_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:
@@ -645,6 +677,7 @@ def serve(preset=None, overrides=(), seed=None, port=8765, open_browser=True):
     except KeyboardInterrupt:
         print("\n⏹  studio chiuso")
     finally:
+        reg.remove()
         httpd.server_close()
         studio.engine.close()
         if studio.render_job and studio.render_job.running():

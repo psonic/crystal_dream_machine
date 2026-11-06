@@ -52,6 +52,25 @@ l'effetto, mentre il video continua (o, da fermo, sul frame che stai guardando).
 
 `python -m crystal preview` è un sinonimo di `studio`.
 
+### Il pannello di controllo (senza terminale)
+
+Doppio clic su **Crystal** (in `~/Applications`, o Spotlight → "Crystal") apre nel browser
+un pannello che mostra cosa sta girando e quanta CPU usa, e permette di:
+
+- avviare uno **studio** (preset, *potenza* = numero di processi, auto-spegnimento) o un **render**;
+- **fermare** uno studio/render, con i suoi processi;
+- **pulire** eventuali processi rimasti appesi; **⏻ Spegni tutto**.
+
+Dal terminale: `python -m crystal panel`, e `python -m crystal stop` spegne tutto.
+L'app si (ri)crea con `tools/make_app.sh` (va rifatta se sposti la cartella del progetto).
+
+Per non scaldare il Mac per niente:
+- lo studio **mette in pausa** la preview quando nessuna pagina è aperta e **si chiude da solo**
+  dopo 15 minuti senza pagine (`--idle-exit MINUTI`, 0 = mai); mai durante un render;
+- `--workers N` limita i processi delle deformazioni (default: core − 2, max 8);
+- se lo studio o un render muoiono in qualunque modo (kill, crash, terminale chiuso)
+  i loro processi figli si chiudono da soli entro un secondo.
+
 ## 3. Fare un video dal terminale
 
 ```bash

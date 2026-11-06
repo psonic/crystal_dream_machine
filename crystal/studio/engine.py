@@ -39,6 +39,7 @@ import numpy as np
 from .. import media
 from ..config import ROOT_DIR, ConfigError, deep_merge, resolve, to_ns
 from ..render import LIGHT_KEYS, Renderer
+from ..procs import kill_pool, watch_parent
 from .presetfile import flatten
 
 CACHE_DIR = ROOT_DIR / ".cache" / "studio"
@@ -54,6 +55,7 @@ _WS: dict = {"path": None}
 
 def _w_init():
     signal.signal(signal.SIGINT, signal.SIG_IGN)  # ctrl-c lo gestisce il processo principale
+    watch_parent()  # se lo studio muore (kill, crash, terminale chiuso) il worker esce
     cv2.setNumThreads(1)
 
 
@@ -115,7 +117,7 @@ class MaskSource:
             self.futs.pop(i).cancel()
 
     def close(self):
-        self.ex.shutdown(wait=False, cancel_futures=True)
+        kill_pool(self.ex)
         for f in self._files:
             try:
                 os.unlink(f)

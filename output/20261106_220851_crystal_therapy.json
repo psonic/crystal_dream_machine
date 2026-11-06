@@ -1,0 +1,182 @@
+{
+  "config": {
+    "seed": 596646155,
+    "output": {
+      "format": "custom",
+      "width": 1576,
+      "height": 1160,
+      "scale": 1.0,
+      "fps": 30,
+      "duration": 40,
+      "crf": 18,
+      "x264_preset": "medium",
+      "encoder": "x264",
+      "dir": "output",
+      "workers": 0
+    },
+    "test": {
+      "scale": 0.5,
+      "fps": 15,
+      "duration": 6
+    },
+    "logo": {
+      "file": "input/logo.pdf",
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "padding": 40,
+      "left_padding": 0,
+      "zoom": 1.0,
+      "fill": "none"
+    },
+    "background": {
+      "enabled": true,
+      "video": "input/funghi.MOV",
+      "fit": "cover",
+      "zoom": 1.0,
+      "slowdown": 0.65,
+      "darken": 0.7,
+      "contrast": 1.0,
+      "random_start": false,
+      "start": 3.415,
+      "crop_x": 0.6,
+      "crop_y": 0.0,
+      "crop_w": 1.0,
+      "crop_h": 0.5
+    },
+    "texture": {
+      "enabled": false,
+      "path": "input/texture.jpg",
+      "target": "both",
+      "alpha": 0.6,
+      "background_alpha": 0.8,
+      "mode": "multiply"
+    },
+    "glow": {
+      "enabled": true,
+      "size": 20,
+      "intensity": 0.3
+    },
+    "organic": {
+      "enabled": true,
+      "speed": 0.00121,
+      "scale": 0.001,
+      "intensity": 20.0,
+      "audio_reactive": true,
+      "bass_intensity": 0.022,
+      "bass_speed": 0.003,
+      "mid_scale": 0.0002,
+      "smoothing": 0.95
+    },
+    "stretch": {
+      "enabled": true,
+      "speed": 0.000178,
+      "scale": 0.000155,
+      "intensity": 34.0,
+      "horizontal": 0.33,
+      "vertical": 0.01,
+      "fine_detail": 0.1,
+      "audio_reactive": false,
+      "bass_intensity": 0.025,
+      "bass_speed": 0.0025,
+      "mid_scale": 0.00025,
+      "smoothing": 0.95
+    },
+    "lenses": {
+      "enabled": true,
+      "count": 36,
+      "min_strength": -2.05,
+      "max_strength": -0.4,
+      "min_radius": 10,
+      "max_radius": 104,
+      "speed": 1e-06,
+      "path_speed": 0.001,
+      "inertia": 0.95,
+      "rotation_min": -0.001,
+      "rotation_max": 0.001,
+      "rotation_speed": 0.001,
+      "pulsation": true,
+      "pulsation_speed": 0.0005,
+      "pulsation_amplitude": 0.2,
+      "force_pulsation": true,
+      "force_pulsation_amplitude": 0.2,
+      "worm": true,
+      "worm_length": 1.5,
+      "worm_wave": 30
+    },
+    "tracers": {
+      "logo": {
+        "enabled": true,
+        "trail": 121,
+        "opacity": 0.555,
+        "color": [
+          27,
+          37,
+          37
+        ],
+        "hue_shift": 0.4
+      },
+      "background": {
+        "enabled": true,
+        "trail": 109,
+        "opacity": 0.12,
+        "color": [
+          40,
+          40,
+          40
+        ],
+        "hue_shift": 0.3,
+        "threshold1": 5,
+        "threshold2": 20
+      }
+    },
+    "blend": {
+      "enabled": true,
+      "preset": "soft",
+      "mode": "soft_light",
+      "strength": 0.6,
+      "edge_detection": false,
+      "edge_blur": 3,
+      "adaptive": true,
+      "harmonize": true,
+      "luminance_match": true,
+      "transparency": 0.4,
+      "color_strength": 0.5,
+      "edge_softness": 0
+    },
+    "audio": {
+      "enabled": true,
+      "files": [
+        "input/audio1.aif"
+      ],
+      "random_start": false,
+      "start": 51.099,
+      "mux": true,
+      "bass": 0.05,
+      "mid": 0.03,
+      "high": 0.025,
+      "smoothing": 0.95
+    },
+    "variation": {
+      "enabled": false,
+      "amplitude": 0.8,
+      "speed_medium": 0.025,
+      "speed_fast": 0.005
+    }
+  },
+  "run": {
+    "seed": 596646155,
+    "size": [
+      1576,
+      1160
+    ],
+    "background": "input/funghi.MOV",
+    "background_start": 3.415,
+    "audio": "input/audio1.aif",
+    "audio_start": 51.099
+  },
+  "preset": "crystal_therapy",
+  "created": "2026-11-06T22:08:51"
+}

@@ -186,6 +186,8 @@ _W = {}
 
 
 def worker_init(deformer, mask0):
+    from ..procs import watch_parent
+    watch_parent()  # se il render muore, il worker esce invece di restare appeso
     cv2.setNumThreads(1)
     _W["d"], _W["m"] = deformer, mask0
 

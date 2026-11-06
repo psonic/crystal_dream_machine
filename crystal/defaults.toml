@@ -108,6 +108,8 @@ smoothing      = 0.95
 # ─── Lenti: "creature" che deformano il logo passandoci sopra ────────────────
 [lenses]
 enabled                   = true
+motion                    = "paths"  # paths = percorsi geometrici (look v3) | drift = nascono sul logo e
+                                     # vagano piano, trasportate da correnti organiche (le chiavi drift_*)
 count                     = 60
 min_strength              = -0.5     # negativo = ingrandisce, positivo = rimpicciolisce
 max_strength              = 0.8
@@ -124,6 +126,11 @@ pulsation_speed           = 0.0005
 pulsation_amplitude       = 0.2
 force_pulsation           = true
 force_pulsation_amplitude = 0.2
+drift_speed               = 0.6      # drift: velocità in px/frame (0.3 = lentissime, 2 = vivaci)
+drift_scale               = 350      # drift: grandezza delle correnti in px (piccolo = vortici fitti)
+drift_change              = 1.0      # drift: quanto in fretta le correnti cambiano nel tempo
+drift_turbulence          = 0.35     # drift: 0 = si muovono tutte insieme col flusso, 1 = ognuna per conto suo
+drift_follow_logo         = 0.6      # drift: quanto le tiene sul logo (0 = libere di andarsene)
 worm                      = true     # forma allungata e ondulata
 worm_length               = 1.5
 worm_wave                 = 30       # ampiezza dell'ondulazione del verme (px)

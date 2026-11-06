@@ -4,6 +4,8 @@ Riga di comando.
     python -m crystal render  [preset] [--test] [--set chiave=valore ...] [-o file.mp4]
     python -m crystal frame   [preset] [--at SECONDI] [--test] [-o file.png]
     python -m crystal studio  [preset] [--set ...]       (preview live nel browser; alias: preview)
+    python -m crystal panel                              (pannello: avvia/ferma studio e render)
+    python -m crystal stop                               (spegne tutto: studio, render, worker)
     python -m crystal presets
 """
 
@@ -30,10 +32,22 @@ def _build(args, test=None):
 
 
 def cmd_render(args):
+    from .procs import Registration
+    from .render import progress
     r = _build(args)
     print("\n🎬 CRYSTAL — render" + ("  [TEST]" if args.test else ""))
     print(r.describe())
-    r.render_video(args.output)
+    reg = Registration("render", preset=r.preset_name, test=args.test, done=0, total=r.n_frames)
+
+    def on_progress(done, total, elapsed):
+        progress(done, total, elapsed)
+        reg.update(throttle=1.0, done=done, total=total, elapsed=elapsed)
+
+    try:
+        path = r.render_video(args.output, on_progress)
+        reg.update(done=r.n_frames, path=str(path))
+    finally:
+        reg.remove()
 
 
 def cmd_frame(args):
@@ -56,7 +70,30 @@ def cmd_frame(args):
 
 def cmd_studio(args):
     from .studio.server import serve
-    serve(args.preset, args.overrides, args.seed, port=args.port, open_browser=not args.no_browser)
+    serve(args.preset, args.overrides, args.seed, port=args.port, open_browser=not args.no_browser,
+          workers=args.workers or None, idle_exit=args.idle_exit)
+
+
+def cmd_panel(args):
+    from .panel.server import serve
+    serve(port=args.port, open_browser=not args.no_browser)
+
+
+def cmd_stop(args):
+    from .procs import Census, kill_all, stop
+    c = Census()
+    s = c.scan()
+    mains = [m for m in s["processes"] if args.all or m["kind"] != "panel"]
+    if not mains and not s["orphans"]:
+        print("✨ niente da spegnere")
+        return
+    for m in mains:
+        print(f" ⏹  {m['kind']:7} pid {m['pid']}  ({m['workers']} worker)")
+        stop(m["pid"])
+    if s["orphans"]:
+        print(f" 🧹 {len(s['orphans'])} worker orfani")
+        kill_all(s["orphans"])
+    print("✅ fatto")
 
 
 def cmd_presets(_args):
@@ -86,12 +123,27 @@ def main(argv=None):
         _common(p)
         p.add_argument("--port", type=int, default=8765)
         p.add_argument("--no-browser", action="store_true", help="non aprire il browser")
+        p.add_argument("--workers", type=int, default=0,
+                       help="processi per le deformazioni (default: core - 2, max 8). Meno = Mac più fresco")
+        p.add_argument("--idle-exit", type=float, default=15, metavar="MINUTI",
+                       help="si chiude da solo dopo MINUTI senza pagine aperte (0 = mai; default 15)")
         p.set_defaults(func=cmd_studio)
+
+    p = sub.add_parser("panel", help="pannello di controllo nel browser: avvia/ferma studio e render")
+    p.add_argument("--port", type=int, default=8700)
+    p.add_argument("--no-browser", action="store_true", help="non aprire il browser")
+    p.set_defaults(func=cmd_panel)
+
+    p = sub.add_parser("stop", help="spegne studio, render e worker rimasti appesi")
+    p.add_argument("--all", action="store_true", help="anche il pannello")
+    p.set_defaults(func=cmd_stop)
 
     p = sub.add_parser("presets", help="elenca i preset")
     p.set_defaults(func=cmd_presets)
 
     args = ap.parse_args(argv)
+    from .procs import graceful_signals
+    graceful_signals()  # kill / terminale chiuso = ctrl-c: si chiude pulito, senza processi appesi
     try:
         args.func(args)
     except ConfigError as e:

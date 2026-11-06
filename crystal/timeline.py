@@ -5,7 +5,10 @@ Si simula a passi di 30 fps "di riferimento" (REF_FPS), così cambiare fps (es. 
 non cambia la velocità del movimento. Il frame di output i usa il passo ref_index[i].
 """
 
+import cv2
 import numpy as np
+
+from .effects.noise import Perlin
 
 REF_FPS = 30
 
@@ -25,7 +28,7 @@ def _phase(speed: np.ndarray) -> np.ndarray:
 
 
 class Timeline:
-    def __init__(self, cfg, W, H, s, fps, duration, rng, bands=None):
+    def __init__(self, cfg, W, H, s, fps, duration, rng, bands=None, mask=None):
         self.n_ref = n = max(1, int(round(duration * REF_FPS)))
         self.n_out = max(1, int(round(duration * fps)))
         self.ref_index = np.minimum(np.round(np.arange(self.n_out) * REF_FPS / fps).astype(int), n - 1)
@@ -70,29 +73,27 @@ class Timeline:
 
         self.glow = glow_curve(cfg.glow.intensity, n)
 
-        self._simulate_lenses(cfg.lenses, W, H, s, n, rng)
+        self._simulate_lenses(cfg.lenses, W, H, s, n, rng, mask)
 
     # ═════════════════════════════════════════════════════════════════════════
-    def _simulate_lenses(self, c, W, H, s, n, rng):
+    def _simulate_lenses(self, c, W, H, s, n, rng, mask=None):
         L = c.count if c.enabled else 0
-        horiz = ["horizontal_sweep", "horizontal_zigzag", "horizontal_wave_complex", "wave"]
-        mixed = ["figure_eight", "spiral", "circular", "cross"]
-        nh = int(L * 0.7)  # 70% percorsi orizzontali (seguono la scritta)
-        kinds = [horiz[i % 4] for i in range(nh)] + [mixed[i % 4] for i in range(L - nh)]
-        rng.shuffle(kinds)
-
-        paths = np.stack([cinematic_path(W, H, kd, n) for kd in kinds]) if L else np.zeros((0, n, 2))
-        off = rng.integers(0, n, L)
+        drift = c.motion == "drift"
+        if c.motion not in ("paths", "drift"):
+            raise ValueError(f"lenses.motion '{c.motion}' non valido: paths | drift")
+        if not drift:
+            horiz = ["horizontal_sweep", "horizontal_zigzag", "horizontal_wave_complex", "wave"]
+            mixed = ["figure_eight", "spiral", "circular", "cross"]
+            nh = int(L * 0.7)  # 70% percorsi orizzontali (seguono la scritta)
+            kinds = [horiz[i % 4] for i in range(nh)] + [mixed[i % 4] for i in range(L - nh)]
+            rng.shuffle(kinds)
+            paths = np.stack([cinematic_path(W, H, kd, n) for kd in kinds]) if L else np.zeros((0, n, 2))
+            off = rng.integers(0, n, L)
         base_r = (c.min_radius + (c.max_radius - c.min_radius) * rng.random(L) ** 2.5) * s
         base_s = rng.uniform(c.min_strength, c.max_strength, L)
         angle = rng.uniform(0, 2 * np.pi, L)
         rot = rng.uniform(c.rotation_min, c.rotation_max, L)
         self.lens_phase = rng.uniform(0, 2 * np.pi, L)
-
-        pos = paths[np.arange(L), off].astype(np.float64)
-        vel = np.zeros((L, 2))
-        inertia = min(0.99, c.inertia + 0.01)
-        margin = c.min_radius * s
 
         self.lens_pos = np.zeros((n, L, 2), np.float32)
         self.lens_radius = np.zeros((n, L), np.float32)
@@ -100,6 +101,15 @@ class Timeline:
         self.lens_angle = np.zeros((n, L), np.float32)
         if L == 0:
             return
+
+        if drift:
+            swarm = _Drift(c, W, H, s, rng, mask, L)
+            pos = swarm.pos
+        else:
+            pos = paths[np.arange(L), off].astype(np.float64)
+        vel = np.zeros((L, 2))
+        inertia = min(0.99, c.inertia + 0.01)
+        margin = c.min_radius * s
 
         for f in range(n):
             pt = (f * c.pulsation_speed + self.lens_phase) * self.puls_f[f]
@@ -109,22 +119,99 @@ class Timeline:
             self.lens_pos[f], self.lens_radius[f] = pos, radius
             self.lens_strength[f], self.lens_angle[f] = strength, angle
 
-            # movimento lungo il percorso con inerzia
-            prog = ((f + off) * c.path_speed * self.speed_f[f]) % n
-            i0 = prog.astype(int)
-            i1 = (i0 + 1) % n
-            fr = prog - i0
-            smooth = (3 * fr ** 2 - 2 * fr ** 3)[:, None]
-            a, b = paths[np.arange(L), i0], paths[np.arange(L), i1]
-            target = a + (b - a) * smooth
-            d = target - pos
-            dist = np.linalg.norm(d, axis=1, keepdims=True)
-            desired = np.where(dist > 0, d / np.maximum(dist, 1e-9), 0) * (c.speed * s * self.speed_f[f])
+            if drift:
+                # correnti lente + vagare personale + guinzaglio verso il logo
+                desired = swarm.velocity(pos, f) * (c.drift_speed * s * self.speed_f[f])
+            else:
+                # movimento lungo il percorso con inerzia
+                prog = ((f + off) * c.path_speed * self.speed_f[f]) % n
+                i0 = prog.astype(int)
+                i1 = (i0 + 1) % n
+                fr = prog - i0
+                smooth = (3 * fr ** 2 - 2 * fr ** 3)[:, None]
+                a, b = paths[np.arange(L), i0], paths[np.arange(L), i1]
+                target = a + (b - a) * smooth
+                d = target - pos
+                dist = np.linalg.norm(d, axis=1, keepdims=True)
+                desired = np.where(dist > 0, d / np.maximum(dist, 1e-9), 0) * (c.speed * s * self.speed_f[f])
             vel = vel * inertia + desired * (1 - inertia)
             pos = pos + vel
             angle = angle + rot * c.rotation_speed
             pos[:, 0] = np.clip(pos[:, 0], margin, W - margin)
             pos[:, 1] = np.clip(pos[:, 1], margin, H - margin)
+
+
+class _Drift:
+    """
+    Movimento "organico" delle lenti (lenses.motion = "drift").
+
+    • nascono sul logo (in punti a caso della sua sagoma, allargata di poco);
+    • si lasciano trasportare da correnti lente: il campo di velocità è il curl di un
+      rumore di Perlin, cioè un fluido senza sorgenti né pozzi → le lenti scorrono e
+      girano come plancton, vicine si muovono simili, e non si ammassano;
+    • ognuna aggiunge un po' del suo vagare (drift_turbulence);
+    • se si allontanano dal logo un guinzaglio morbido le riporta indietro (drift_follow_logo).
+    Tutte le misure sono in px di riferimento (risoluzione piena), così test e preview
+    si muovono come il video finale.
+    """
+
+    Q = 4  # il campo "distanza dal logo" si calcola a 1/4 di risoluzione
+
+    def __init__(self, c, W, H, s, rng, mask, L):
+        self.c, self.s, self.W, self.H = c, s, W, H
+        self.perlin = Perlin(int(rng.integers(1, 2**31)))
+        self.own = rng.uniform(0, 1000, (L, 2))          # rumore personale di ogni lente
+        q = self.Q
+        w, h = max(1, W // q), max(1, H // q)
+        if mask is None or not np.any(mask > 20):
+            region = np.full((h, w), 255, np.uint8)
+        else:
+            small = cv2.resize(np.asarray(mask), (w, h), interpolation=cv2.INTER_AREA)
+            r = max(1, int(round(c.max_radius * s * 0.35 / q)))
+            region = cv2.dilate((small > 20).astype(np.uint8) * 255,
+                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1)))
+        ys, xs = np.nonzero(region)
+        pick = rng.integers(0, len(xs), L)
+        jitter = rng.uniform(0, q, (L, 2))
+        self.pos = np.stack([xs[pick] * q + jitter[:, 0], ys[pick] * q + jitter[:, 1]], axis=1).astype(np.float64)
+        # distanza dal logo (px di output) e direzione per tornarci
+        dist = cv2.distanceTransform(255 - region, cv2.DIST_L2, 5) * q
+        gy, gx = np.gradient(cv2.GaussianBlur(dist, (0, 0), 2))
+        self.dist, self.gx, self.gy = dist, gx, gy
+
+    def velocity(self, pos, f):
+        """Velocità desiderata (circa unitaria) di ogni lente al frame di riferimento f."""
+        c, s = self.c, self.s
+        t = f * 0.004 * c.drift_change
+        sc = 1.0 / max(1e-6, c.drift_scale * s)
+        x, y = pos[:, 0] * sc, pos[:, 1] * sc
+        e = 0.05
+        psi = lambda a, b: self.perlin.fbm(a + t, b - 0.7 * t, octaves=2)
+        vx = (psi(x, y + e) - psi(x, y - e)) / (2 * e)
+        vy = -(psi(x + e, y) - psi(x - e, y)) / (2 * e)
+        flow = np.stack([vx, vy], axis=1)
+        # velocità ~costante, direzione dal flusso: |flow| va da 0 a ~3, la comprimo verso 1
+        n = np.linalg.norm(flow, axis=1, keepdims=True)
+        flow = flow / np.maximum(n, 1e-9) * np.tanh(n * 1.5)
+
+        # vagare personale: una direzione che gira piano, diversa per ogni lente
+        tt = f * 0.003 * c.drift_change
+        a = self.perlin.noise(self.own[:, 0] + tt, self.own[:, 1]) * 2 * np.pi
+        own = np.stack([np.cos(a), np.sin(a)], axis=1)
+        tb = c.drift_turbulence
+        v = flow * (1 - tb) + own * tb
+
+        # guinzaglio verso il logo
+        if c.drift_follow_logo > 0:
+            q = self.Q
+            ix = np.clip((pos[:, 0] / q).astype(int), 0, self.dist.shape[1] - 1)
+            iy = np.clip((pos[:, 1] / q).astype(int), 0, self.dist.shape[0] - 1)
+            d = self.dist[iy, ix]
+            g = np.stack([self.gx[iy, ix], self.gy[iy, ix]], axis=1)
+            g /= np.maximum(np.linalg.norm(g, axis=1, keepdims=True), 1e-9)
+            pull = np.clip(d / (40 * s), 0, 1)[:, None] * c.drift_follow_logo * 1.5
+            v = v - g * pull
+        return v
 
 
 def glow_curve(intensity: float, n: int) -> np.ndarray:

@@ -116,7 +116,7 @@ class Renderer:
                 self.run_info.update(audio=file, audio_start=round(start, 3))
 
         self.bands = bands
-        self.tl = Timeline(cfg, self.W, self.H, self.s, self.fps, self.duration, rng, bands)
+        self.tl = Timeline(cfg, self.W, self.H, self.s, self.fps, self.duration, rng, bands, self.mask0)
         self.deformer = Deformer(cfg, self.tl, self.W, self.H, self.s, self.seed)
         self.n_frames = self.tl.n_out
         self.timing = defaultdict(float)

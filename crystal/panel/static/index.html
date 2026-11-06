@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crystal · Pannello</title>
+<style>
+:root {
+  --bg: #0d0e12; --bg2: #14161c; --bg3: #1b1e26; --line: #262a35; --line2: #333847;
+  --text: #e6e8ee; --dim: #8a90a2; --faint: #5b6172;
+  --accent: #9f8cff; --accent2: #7c68f0; --ok: #5fd39a; --warn: #f5b94a; --err: #ff6b7a;
+  --radius: 10px; --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+header h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+header .sp { flex: 1; }
+button, select, input { font: inherit; color: inherit; }
+button {
+  background: var(--bg3); border: 1px solid var(--line2); border-radius: 8px;
+  padding: 7px 13px; cursor: pointer; white-space: nowrap;
+}
+button:hover:not(:disabled) { border-color: var(--accent2); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: .4; cursor: default; }
+button.primary { background: var(--accent2); border-color: var(--accent2); color: #fff; font-weight: 600; }
+button.danger { border-color: #5a2a33; color: var(--err); }
+button.danger:hover:not(:disabled) { border-color: var(--err); }
+button.big { padding: 11px 18px; font-size: 15px; }
+button.ghost { background: none; border-color: transparent; color: var(--dim); }
+button.ghost:hover { color: var(--text); }
+select, input[type=number] {
+  background: var(--bg3); border: 1px solid var(--line2); border-radius: 8px; padding: 6px 9px;
+}
+input[type=range] { accent-color: var(--accent); width: 100%; }
+
+/* ── la "salute": quanto sta lavorando il Mac ─────────────────────────────── */
+.health {
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 22px; align-items: center;
+  background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 22px; margin-bottom: 18px;
+}
+.orb {
+  grid-row: span 2; width: 58px; height: 58px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6, transparent 55%), var(--ok);
+  box-shadow: 0 0 26px -4px var(--ok); transition: background .6s, box-shadow .6s;
+}
+.orb.warm { background: radial-gradient(circle at 35% 35%, #fff6, transparent 55%), var(--warn); box-shadow: 0 0 26px -4px var(--warn); }
+.orb.hot  { background: radial-gradient(circle at 35% 35%, #fff6, transparent 55%), var(--err);  box-shadow: 0 0 30px -2px var(--err); animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 10px -4px var(--err); } }
+.health .msg { font-size: 19px; font-weight: 600; }
+.health .sub { color: var(--dim); font-size: 13px; }
+.meter { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 8px; grid-column: 2; }
+.meter > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .6s; }
+
+/* ── card ─────────────────────────────────────────────────────────────────── */
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--faint); margin: 26px 0 10px; font-weight: 600; }
+.card {
+  background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 15px 18px; margin-bottom: 10px;
+}
+.proc { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: center; }
+.proc .ico { font-size: 22px; grid-row: span 2; }
+.proc .name { font-weight: 600; font-size: 15px; }
+.proc .name .tag { font-weight: 500; font-size: 11px; color: var(--dim); background: var(--bg3); border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+.proc .meta { color: var(--dim); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.proc .acts { grid-row: span 2; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.proc .bar { grid-column: 2 / 4; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.proc .bar > i { display: block; height: 100%; background: var(--ok); transition: width .5s; }
+.proc pre {
+  grid-column: 1 / 4; margin: 10px 0 0; max-height: 260px; overflow: auto;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px;
+  font: 11.5px/1.5 var(--mono); color: var(--dim); white-space: pre-wrap;
+}
+.cpu-hi { color: var(--warn); } .cpu-max { color: var(--err); }
+.empty { color: var(--faint); text-align: center; padding: 22px; border-style: dashed; }
+.orphans { border-color: #5a4a22; background: #1d1a12; display: flex; gap: 14px; align-items: center; }
+.orphans .txt { flex: 1; } .orphans b { color: var(--warn); }
+
+/* ── avvio ───────────────────────────────────────────────────────────────── */
+.launch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.launch .card { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.launch h3 { margin: 0; font-size: 15px; }
+.launch .hint { color: var(--dim); font-size: 12.5px; margin-top: -6px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row label { color: var(--dim); font-size: 12.5px; width: 110px; flex-shrink: 0; }
+.row > :last-child { flex: 1; min-width: 0; }
+.power { display: flex; align-items: center; gap: 10px; }
+.power output { font-variant-numeric: tabular-nums; width: 76px; text-align: right; color: var(--dim); font-size: 12.5px; }
+.launch .go { margin-top: auto; }
+.check { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 13px; }
+
+footer { display: flex; gap: 8px; margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+footer .sp { flex: 1; }
+
+#toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); opacity: 0;
+  background: var(--bg3); border: 1px solid var(--line2); border-radius: 8px; padding: 9px 16px;
+  transition: .25s; pointer-events: none; max-width: calc(100vw - 32px);
+}
+#toast.show { opacity: 1; transform: translateX(-50%); }
+#toast.error { border-color: var(--err); color: var(--err); }
+.offline { position: fixed; inset: 0; background: #0d0e12ee; display: grid; place-items: center; text-align: center; z-index: 9; }
+.offline div { max-width: 340px; color: var(--dim); }
+.offline b { color: var(--text); font-size: 17px; display: block; margin-bottom: 6px; }
+
+@media (max-width: 640px) {
+  .launch { grid-template-columns: 1fr; }
+  .proc { grid-template-columns: auto 1fr; }
+  .proc .acts { grid-row: auto; grid-column: 1 / 3; justify-content: flex-start; }
+  .proc .bar { grid-column: 1 / 3; }
+  .proc pre { grid-column: 1 / 3; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>✨ Crystal</h1>
+    <span class="sp"></span>
+    <button class="ghost" data-open="output">📂 Video fatti</button>
+  </header>
+
+  <section class="health">
+    <div class="orb" id="orb"></div>
+    <div class="msg" id="msg">…</div>
+    <div class="sub" id="sub">&nbsp;</div>
+    <div class="meter" title="CPU usata da Crystal sul totale del Mac"><i id="meter"></i></div>
+  </section>
+
+  <div id="orphans" class="card orphans" hidden>
+    <div class="txt"><b id="orph-n"></b> rimasti appesi da sessioni vecchie: non servono a niente e scaldano.</div>
+    <button class="primary" id="clean">🧹 Pulisci</button>
+  </div>
+
+  <h2>In funzione</h2>
+  <div id="procs"></div>
+
+  <h2>Avvia</h2>
+  <div class="launch">
+    <div class="card">
+      <h3>🎨 Studio</h3>
+      <div class="hint">La preview live dove giochi con i parametri.</div>
+      <div class="row"><label>Preset</label><select id="s-preset"></select></div>
+      <div class="row"><label>Potenza</label>
+        <div class="power"><input type="range" id="s-workers" min="1" max="8"><output id="s-workers-o"></output></div></div>
+      <div class="row"><label>Si spegne dopo</label>
+        <select id="s-idle">
+          <option value="5">5 min senza pagina aperta</option>
+          <option value="15" selected>15 min senza pagina aperta</option>
+          <option value="60">1 ora senza pagina aperta</option>
+          <option value="0">mai (lo spegni tu)</option>
+        </select></div>
+      <button class="primary big go" id="s-go">▶ Apri studio</button>
+    </div>
+    <div class="card">
+      <h3>🎬 Render</h3>
+      <div class="hint">Fa il video finale, senza aprire lo studio.</div>
+      <div class="row"><label>Preset</label><select id="r-preset"></select></div>
+      <div class="row"><label>Potenza</label>
+        <div class="power"><input type="range" id="r-workers" min="1" max="8"><output id="r-workers-o"></output></div></div>
+      <label class="check"><input type="checkbox" id="r-test"> prova veloce (metà risoluzione, pochi secondi)</label>
+      <button class="big go" id="r-go">🎬 Fai il video</button>
+    </div>
+  </div>
+
+  <footer>
+    <button class="danger big" id="stop-all">⏻ Spegni tutto</button>
+    <span class="sp"></span>
+    <button class="ghost" id="quit">Chiudi pannello</button>
+  </footer>
+</main>
+
+<div id="toast"></div>
+<div class="offline" id="offline" hidden><div><b>Pannello chiuso</b>Per riaprirlo fai doppio clic su <b style="display:inline;font-size:inherit">Crystal.app</b> nella cartella del progetto.</div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+let S = null, openLogs = new Set(), starting = new Map(), inited = false, quitting = false;
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+let tt;
+function toast(msg, kind = "") {
+  const t = $("#toast"); t.textContent = msg; t.className = "show " + kind;
+  clearTimeout(tt); tt = setTimeout(() => t.className = "", 3200);
+}
+const act = fn => async (...a) => { try { await fn(...a); } catch (e) { toast(e.message, "error"); } finally { tick(); } };
+
+const fmtMem = b => b > 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.round(b / 1e6) + " MB";
+function fmtAge(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return sec + " s";
+  if (sec < 3600) return Math.floor(sec / 60) + " min";
+  return Math.floor(sec / 3600) + " h " + Math.floor(sec % 3600 / 60) + " min";
+}
+const cores = c => (c / 100).toFixed(c < 100 ? 1 : 0);
+const workersLabel = (n, max) => n <= max * .34 ? "🍃 fresco" : n <= max * .7 ? "⚖️ medio" : "🔥 massima";
+
+// ── avvio (una volta: preset e potenza) ─────────────────────────────────────
+function initForms(s) {
+  const opts = ['<option value="">(default)</option>'].concat(s.presets.map(p => `<option>${esc(p)}</option>`)).join("");
+  for (const id of ["#s-preset", "#r-preset"]) $(id).innerHTML = opts;
+  let last = {};
+  try { last = JSON.parse(localStorage.getItem("crystal-panel") || "{}"); } catch {}
+  const maxW = Math.max(2, s.system.cores);
+  for (const k of ["s", "r"]) {
+    const sl = $(`#${k}-workers`), o = $(`#${k}-workers-o`);
+    sl.max = maxW; sl.value = last[k + "w"] || s.default_workers;
+    const upd = () => o.textContent = `${sl.value} · ${workersLabel(+sl.value, maxW)}`;
+    sl.oninput = upd; upd();
+    if (last[k + "p"] && s.presets.includes(last[k + "p"])) $(`#${k}-preset`).value = last[k + "p"];
+  }
+  if (last.idle !== undefined) $("#s-idle").value = last.idle;
+}
+function remember() {
+  try {
+    localStorage.setItem("crystal-panel", JSON.stringify({
+      sp: $("#s-preset").value, sw: $("#s-workers").value, rp: $("#r-preset").value, rw: $("#r-workers").value, idle: $("#s-idle").value,
+    }));
+  } catch {}
+}
+
+// ── rendering dello stato ───────────────────────────────────────────────────
+function renderHealth(s) {
+  const crystal = s.cpu, max = s.system.cores * 100;
+  const frac = Math.min(1, crystal / max);
+  const orb = $("#orb");
+  orb.className = "orb" + (frac > .55 ? " hot" : frac > .2 ? " warm" : "");
+  const n = s.processes.filter(p => p.pid !== s.me).length;
+  let msg;
+  if (crystal < 8) msg = n ? "Crystal è acceso ma tranquillo" : "Tutto spento, il Mac riposa";
+  else if (frac > .55) msg = `Crystal sta tirando: ~${cores(crystal)} core su ${s.system.cores}`;
+  else msg = `Crystal sta lavorando: ~${cores(crystal)} core`;
+  $("#msg").textContent = msg;
+  $("#sub").textContent = `Mac: CPU ${Math.round(s.system.cpu)}% · RAM ${Math.round(s.system.mem)}% · carico ${s.system.load[0].toFixed(1)} — Crystal: ${fmtMem(s.mem)}`;
+  $("#meter").style.width = (frac * 100).toFixed(1) + "%";
+
+  const o = s.orphans.length;
+  $("#orphans").hidden = !o;
+  $("#orph-n").textContent = `${o} processi`;
+}
+
+function procCard(p, s) {
+  const age = fmtAge(s.now - p.started);
+  const info = p.info || {};
+  const cpuCls = p.cpu_total > 250 ? "cpu-max" : p.cpu_total > 100 ? "cpu-hi" : "";
+  const cpu = `<span class="${cpuCls}">CPU ${Math.round(p.cpu_total)}%</span> · ${fmtMem(p.mem_total)}`;
+  let ico = "⚙️", name = p.kind, meta = "", bar = "", acts = "";
+  if (p.kind === "studio") {
+    ico = "🎨"; name = `Studio <span class="tag">${esc(info.preset || "…")}</span>`;
+    meta = `${cpu} · ${p.workers} worker · acceso da ${age}`;
+    if (info.idle_exit) meta += ` · si spegne dopo ${info.idle_exit} min senza pagina`;
+    acts += info.url ? `<button class="primary" data-url="${esc(info.url)}">Apri ↗</button>` : `<button disabled>avvio…</button>`;
+  } else if (p.kind === "render") {
+    ico = "🎬"; name = `Render <span class="tag">${esc(info.preset || "…")}${info.test ? " · test" : ""}</span>`;
+    const pct = info.total ? info.done / info.total : 0;
+    let eta = "";
+    if (info.done && info.elapsed) eta = ` · mancano ~${fmtAge((info.total - info.done) * info.elapsed / info.done)}`;
+    meta = `${cpu} · ${info.total ? Math.round(pct * 100) + "%" : "preparazione…"}${eta}`;
+    bar = `<div class="bar"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>`;
+  } else if (p.kind === "panel") {
+    ico = "🎛"; name = "Pannello"; meta = `${cpu} · acceso da ${age}`;
+  } else {
+    meta = `${cpu} · ${age}`;
+  }
+  if (p.has_log) acts += `<button class="ghost" data-log="${p.pid}">${openLogs.has(p.pid) ? "Nascondi log" : "Log"}</button>`;
+  if (p.pid !== s.me)
+    acts += `<button class="danger" data-stop="${p.pid}" ${p.stopping ? "disabled" : ""}>${p.stopping ? "spengo…" : "⏹ Ferma"}</button>`;
+  const log = openLogs.has(p.pid) ? `<pre data-logbox="${p.pid}">${esc(logCache[p.pid] || "…")}</pre>` : "";
+  return `<div class="card proc"><div class="ico">${ico}</div><div class="name">${name}</div><div class="acts">${acts}</div><div class="meta">${meta}</div>${bar}${log}</div>`;
+}
+
+const logCache = {};
+function renderProcs(s) {
+  const list = s.processes.filter(p => p.pid !== s.me);
+  const box = $("#procs");
+  // non ridisegnare mentre si sta scorrendo un log
+  const scroll = {};
+  box.querySelectorAll("pre[data-logbox]").forEach(pre => scroll[pre.dataset.logbox] = [pre.scrollTop, pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 4]);
+  box.innerHTML = list.length ? list.map(p => procCard(p, s)).join("")
+    : `<div class="card empty">Niente in funzione.</div>`;
+  box.querySelectorAll("pre[data-logbox]").forEach(pre => {
+    const sc = scroll[pre.dataset.logbox];
+    pre.scrollTop = !sc || sc[1] ? pre.scrollHeight : sc[0];
+  });
+  // uno studio appena avviato dal pannello: lo apre da solo quando è pronto
+  for (const p of list) {
+    if (starting.has(p.pid) && p.info && p.info.url) {
+      const w = starting.get(p.pid);
+      starting.delete(p.pid);
+      if (w && !w.closed) w.location = p.info.url;
+      else toast("Studio pronto: premi «Apri ↗»");
+    }
+  }
+  $("#stop-all").disabled = !list.length && !s.orphans.length;
+}
+
+async function tick() {
+  if (quitting) return;
+  try {
+    const s = await api("/api/status");
+    S = s;
+    $("#offline").hidden = true;
+    if (!inited) { initForms(s); inited = true; }
+    renderHealth(s);
+    renderProcs(s);
+    for (const pid of openLogs) {
+      api("/api/log?pid=" + pid).then(r => {
+        logCache[pid] = r.log;
+        const pre = document.querySelector(`pre[data-logbox="${pid}"]`);
+        if (pre) { const bottom = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 4; pre.textContent = r.log || "(vuoto)"; if (bottom) pre.scrollTop = pre.scrollHeight; }
+      }).catch(() => {});
+    }
+  } catch {
+    $("#offline").hidden = false;
+  }
+}
+
+// ── azioni ──────────────────────────────────────────────────────────────────
+document.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.url) return window.open(b.dataset.url, "_blank");
+  if (b.dataset.open) return act(() => api("/api/open", {what: b.dataset.open}))();
+  if (b.dataset.stop) return act(async () => { await api("/api/stop", {pid: +b.dataset.stop}); toast("Lo sto spegnendo…"); })();
+  if (b.dataset.log) {
+    const pid = +b.dataset.log;
+    openLogs.has(pid) ? openLogs.delete(pid) : openLogs.add(pid);
+    return tick();
+  }
+});
+$("#s-go").onclick = act(async () => {
+  remember();
+  // la scheda va aperta adesso (dentro il clic), sennò il browser la blocca
+  const w = window.open("", "_blank");
+  if (w) w.document.write('<body style="background:#0d0e12;color:#8a90a2;font:15px -apple-system,sans-serif;display:grid;place-items:center;height:90vh">✨ avvio lo studio…</body>');
+  const r = await api("/api/studio", {preset: $("#s-preset").value, workers: +$("#s-workers").value, idle_exit: +$("#s-idle").value});
+  starting.set(r.pid, w);
+  toast("Avvio lo studio, si apre da solo fra qualche secondo…");
+});
+$("#r-go").onclick = act(async () => {
+  remember();
+  await api("/api/render", {preset: $("#r-preset").value, workers: +$("#r-workers").value, test: $("#r-test").checked});
+  toast("Render partito");
+});
+$("#clean").onclick = act(async () => { const r = await api("/api/clean", {}); toast(`🧹 Tolti ${r.killed} processi`); });
+$("#stop-all").onclick = act(async () => { await api("/api/stop_all", {}); toast("Spengo tutto…"); });
+$("#quit").onclick = act(async () => {
+  await api("/api/quit", {}); quitting = true; $("#offline").hidden = false;
+});
+
+tick();
+setInterval(tick, 1500);
+</script>
+</body>
+</html>
